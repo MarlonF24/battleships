@@ -54,7 +54,9 @@ export function createShipElement(
     const el = document.createElement('div');
     el.className = 'ship';
     el.style.boxSizing = 'border-box';
+    el.dataset.rotation = ship.orientation;
 
+    
     el.addEventListener("mousedown", mouseDownHandler);
 
     if (ship.orientation === Orientation.HORIZONTAL) {

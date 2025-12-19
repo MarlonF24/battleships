@@ -87,6 +87,9 @@ export var Orientation;
     Orientation["HORIZONTAL"] = "horizontal";
     Orientation["VERTICAL"] = "vertical";
 })(Orientation || (Orientation = {}));
+export function toggle_orientation(orientation) {
+    return orientation === Orientation.HORIZONTAL ? Orientation.VERTICAL : Orientation.HORIZONTAL;
+}
 export class Ship {
     constructor(length, orientation = Orientation.HORIZONTAL) {
         this.length = length;

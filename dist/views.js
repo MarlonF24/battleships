@@ -30,6 +30,7 @@ export function createShipElement(ship, cellSize = CELL_SIZE, src, position) {
     const el = document.createElement('div');
     el.className = 'ship';
     el.style.boxSizing = 'border-box';
+    el.dataset.rotation = ship.orientation;
     el.addEventListener("mousedown", mouseDownHandler);
     if (ship.orientation === Orientation.HORIZONTAL) {
         el.style.width = `${ship.length * cellSize}px`;

@@ -101,6 +101,9 @@ export enum Orientation {
     VERTICAL = "vertical"
 }
 
+export function toggle_orientation(orientation: Orientation | string): Orientation {
+    return orientation === Orientation.HORIZONTAL ? Orientation.VERTICAL : Orientation.HORIZONTAL;
+}
 
 export class Ship {
     constructor(readonly length: number, public orientation = Orientation.HORIZONTAL) {
