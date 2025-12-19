@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./frontend",
+    "module": "esnext",
+    "target": "es6",
+    "strict": true,
+  },
+  "include": ["frontend/**/*.ts"]
+}
