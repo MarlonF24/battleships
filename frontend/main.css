@@ -1,63 +1,10 @@
-.grid {
-  border-collapse: collapse;
-  box-sizing: border-box;
-}
-
-.grid td {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #333;
-  box-sizing: border-box;
-  padding: 0;
-}
-
-.main-grid {
-  background: #e0f7fa;
-}
-
-.main-grid td {
-  background: #e0f7fa;
-}
-
-.garage-grid {
-  background: #e3f2fd;
-  border: 2px solid #1976d2;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-/* If you want to style garage grid cells differently, you can add a selector like: */
-.garage-grid td {
-  background: #bbdefb;
-  border: 1px solid #1976d2;
-}
-
-/* Ship overlay styling */
-.ship {
-  background: #2e7d32;
-  border: 2px solid #145a23;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  opacity: 0.9;
-  z-index: 2;
-}
-
-.ship:hover {
-  cursor: grab;
-  background: #388e3c;
-  border-color: #1b5e20;
-  transform: scale(1.05);
-  transition: transform 0.1s, background 0.1s, border-color 0.1s;
-}
-
-.dragged_clone {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1000;
-  opacity: 0.8;
-}
+/* main.css: global/shared styles only. Feature-specific styles moved to styles/ subfolder. */
+@import url("./grid/grid.css");
+@import url("./garage/garage.css");
+@import url("./ship/ship.css");
+@import url("./battle_grid/battle_grid.css");
 
 .dragged {
-  opacity: 0.7;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0.7 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
-

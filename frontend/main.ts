@@ -1,20 +1,27 @@
-"use strict";
+import { BattleGrid } from "./battle_grid/battle_grid.js";
+import { Grid } from "./grid/grid.js";
+import { ShipGarage } from "./garage/garage.js";    
+import { Ship } from "./ship/ship.js";
 
-import * as Structs from "./structs.js";
-import * as Views from "./views.js";
-
-
-
-const container: HTMLElement  = document.getElementById("grid")!;
+const container: HTMLElement = document.getElementById("main-flex")!;
 container.style.position = "relative";
 
+
+function renderView(container: HTMLElement, battle_grid: BattleGrid, ship_garage: ShipGarage) {
+  container.innerHTML = "";
+  container.appendChild(battle_grid.html);
+  container.appendChild(ship_garage.html);
+}
+
+
 // example initialization
-const gameGrid = new Structs.BattleGrid(new Structs.Grid(10, 10));
+const gameGrid = new BattleGrid(new Grid(10, 10));
 
-Views.renderView(gameGrid, container);
+const garage = new ShipGarage([
+  new Ship(5),
+  new Ship(4),
+  new Ship(3),
+]);
 
 
-const garageContainer = document.getElementById("ship-garage")!;
-const garage = new Structs.ShipGarage([
-    new Structs.Ship(5), new Structs.Ship(4), new Structs.Ship(3)]);
-Views.renderGarage(garage, garageContainer);
+renderView(container, gameGrid, garage);
