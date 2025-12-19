@@ -1,6 +1,7 @@
 "use strict";
 
 import { ShipGarage, Orientation, Ship, BattleGrid , Grid} from './structs.js';
+import { mouseDownHandler } from './drag.js';
 
 const CELL_SIZE = 30;
 
@@ -54,11 +55,7 @@ export function createShipElement(
     el.className = 'ship';
     el.style.boxSizing = 'border-box';
 
-    el.draggable = true;
-    el.addEventListener("dragstart", () => {
-        el.classList.add('dragging');
-        console.log('Ship dragging!', el);
-    });
+    el.addEventListener("mousedown", mouseDownHandler);
 
     if (ship.orientation === Orientation.HORIZONTAL) {
         el.style.width = `${ship.length * cellSize}px`;

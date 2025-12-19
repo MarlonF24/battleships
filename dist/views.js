@@ -1,5 +1,6 @@
 "use strict";
 import { Orientation } from './structs.js';
+import { mouseDownHandler } from './drag.js';
 const CELL_SIZE = 30;
 // View helpers: stateless pure functions
 export function createGridElement(grid) {
@@ -29,11 +30,7 @@ export function createShipElement(ship, cellSize = CELL_SIZE, src, position) {
     const el = document.createElement('div');
     el.className = 'ship';
     el.style.boxSizing = 'border-box';
-    el.draggable = true;
-    el.addEventListener("dragstart", () => {
-        el.classList.add('dragging');
-        console.log('Ship dragging!', el);
-    });
+    el.addEventListener("mousedown", mouseDownHandler);
     if (ship.orientation === Orientation.HORIZONTAL) {
         el.style.width = `${ship.length * cellSize}px`;
         el.style.height = `${cellSize}px`;
