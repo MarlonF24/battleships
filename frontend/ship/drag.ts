@@ -20,10 +20,18 @@ export class ShipDragger {
     
     const originalElement = this.element;
     const clone = originalElement.cloneNode(true) as HTMLElement;
+    
+    
     clone.classList.add("clone");
-    clone.style.pointerEvents = "none";
-    clone.style.zIndex = "1000";
+   
     originalElement.parentElement!.appendChild(clone);
+    
+    
+    const original_styles = getComputedStyle(originalElement);
+    clone.style.left = original_styles.left;
+    clone.style.top = original_styles.top;
+    
+    
     originalElement.classList.add("dragged");
     this.state = {
       originalElement,
@@ -43,10 +51,12 @@ export class ShipDragger {
   private onMouseMove = (e: MouseEvent) => {
     if (!this.state) return;
     const { clone } = this.state;
+    const computed_styles = getComputedStyle(clone);
+    console.log("Current:", computed_styles.left, computed_styles.top);
     const shiftX = e.pageX - this.state.lastX;
     const shiftY = e.pageY - this.state.lastY;
-    const currentLeft = parseInt(clone.style.left, 10) || 0;
-    const currentTop = parseInt(clone.style.top, 10) || 0;
+    const currentLeft = parseInt(clone.style.left, 10);
+    const currentTop = parseInt(clone.style.top, 10);
     clone.style.left = currentLeft + shiftX + "px";
     clone.style.top = currentTop + shiftY + "px";
     this.state.lastX = e.pageX;
