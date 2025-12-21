@@ -8,7 +8,6 @@ export interface DragState {
   lastY: number;
 }
 
-
 // Class encapsulating ship drag logic
 export class ShipDragger {
   private state: DragState | null = null;
@@ -17,21 +16,20 @@ export class ShipDragger {
 
   public mouseDownHandler = (event: MouseEvent) => {
     if (event.button !== 0) return; // only left click
-    
+
     const originalElement = this.element;
     const clone = originalElement.cloneNode(true) as HTMLElement;
-    
-    
+
     clone.classList.add("clone");
-   
+    // Set initial rotation angle to 0
+    clone.style.setProperty("--rotation-angle", "0deg");
+
     originalElement.parentElement!.appendChild(clone);
-    
-    
+
     const original_styles = getComputedStyle(originalElement);
     clone.style.left = original_styles.left;
     clone.style.top = original_styles.top;
-    
-    
+
     originalElement.classList.add("dragged");
     this.state = {
       originalElement,
@@ -39,13 +37,12 @@ export class ShipDragger {
       lastX: event.pageX,
       lastY: event.pageY,
     };
-    
+
     this.element.addEventListener("dragstart", (e) => e.preventDefault());
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("mouseup", this.onMouseUp);
     document.addEventListener("wheel", this.onWheel, { passive: false });
     document.addEventListener("contextmenu", this.onContextMenu);
-
   };
 
   private onMouseMove = (e: MouseEvent) => {
@@ -77,19 +74,24 @@ export class ShipDragger {
   };
 
   private onWheel = (e: WheelEvent) => {
-    if (!this.state) return;
     e.preventDefault();
-    const clone = this.state.clone;
-    clone.style.transform = clone.style.transform ? "" : `rotate(0.25turn)`;
-    clone.style.setProperty("--rotation", toggle_orientation(clone.style.getPropertyValue("--rotation")));
+    const clone = this.state!.clone;
+    let angle = parseInt(clone.style.getPropertyValue("--rotation-angle"), 10);
+    
+
+    e.deltaY > 0 ? angle += 90 : angle -= 90;
+    clone.dataset.rotation = toggle_orientation(clone.dataset.rotation!);
+
+    clone.style.setProperty("--rotation-angle", `${angle}deg`);
   };
 
   private onContextMenu = (e: MouseEvent) => {
-    if (!this.state) return;
     e.preventDefault();
-    const clone = this.state.clone;
-    clone.style.transform = clone.style.transform ? "" : `rotate(0.25turn)`;
-    clone.style.setProperty("--rotation", toggle_orientation(clone.style.getPropertyValue("--rotation")));
+    const clone = this.state!.clone;
+    
+    let angle = parseInt(clone.style.getPropertyValue("--rotation-angle"), 10);
+    angle += 90;
+    clone.dataset.rotation = toggle_orientation(clone.dataset.rotation!);
+    clone.style.setProperty("--rotation-angle", `${angle}deg`);
   };
 }
-

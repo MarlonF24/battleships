@@ -16,12 +16,32 @@ export class Ship extends Component {
   html!: HTMLElement;
 
   constructor(
-    readonly length: number,
-    public orientation = Orientation.HORIZONTAL
+    length: number,
+    orientation: Orientation = Orientation.HORIZONTAL
   ) {
     super();
     this.update_html();
+    this.length = length;
+    this.orientation = orientation;
   }
+
+  get length(): number {
+      return parseInt(this.html.style.getPropertyValue("--ship-length"), 10);
+  }
+
+  set length(value: number) {
+    if (this.html.style.getPropertyValue("--ship-length")) throw new Error("Length is already set and cannot be changed.");
+    this.html.style.setProperty("--ship-length", value.toString());
+  }
+
+  get orientation(): Orientation {
+    return this.html.dataset.rotation as Orientation;
+  }
+
+  set orientation(value: Orientation) {
+    this.html.dataset.rotation = value;
+  }
+
 
   rotate() {
     this.orientation === Orientation.HORIZONTAL
@@ -34,9 +54,8 @@ export class Ship extends Component {
     const el = document.createElement("div");
     el.className = "ship";
     el.style.boxSizing = "border-box";
-
-    el.style.setProperty("--ship-length", this.length.toString());
-    el.dataset.rotation = this.orientation;
+    
+    el.dataset.rotation = el.dataset.rotation ?? Orientation.HORIZONTAL;
     
 
     el.addEventListener("mousedown", new ShipDragger(el).mouseDownHandler);

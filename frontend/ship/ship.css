@@ -8,11 +8,13 @@
   position: absolute;
   left: calc(var(--col) * var(--cell-size));
   top: calc(var(--row) * var(--cell-size));
+  /* transition: width 0.2s, height 0.2s, background 0.1s, border-color 0.1s; */
 }
 
 .ship[data-rotation="horizontal"] {
   width: calc(var(--cell-size) * var(--ship-length));
   height: var(--cell-size);
+
 }
 
 .ship[data-rotation="vertical"] {
@@ -32,8 +34,15 @@
   transition: transform 0.1s, background 0.1s, border-color 0.1s;
 }
 
+
 .ship.clone {
   z-index: 1000;
+  /* Keep width/height constant for clone */
+  width: calc(var(--cell-size) * var(--ship-length));
+  height: var(--cell-size);
+  transition: transform 0.2s, background 0.1s, border-color 0.1s;
+  transform: rotate(var(--rotation-angle, 0deg));
+  transform-origin: center;
 }
 
 .ship.clone:hover {
