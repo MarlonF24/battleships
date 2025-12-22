@@ -15,7 +15,6 @@
   height: var(--cell-size);
   text-align: center;
   vertical-align: middle;
-  cursor: pointer;
   border: 1px solid #444;
   box-sizing: border-box;
   padding: 0;

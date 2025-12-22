@@ -5,8 +5,6 @@ export class Grid extends Component {
 
   constructor(readonly rows: number, readonly cols: number) {
     super();
-    this.rows = rows;
-    this.cols = cols;
     this.update_html();
   }
 
@@ -18,8 +16,6 @@ export class Grid extends Component {
         const tr = document.createElement("tr");
         for (let c = 0; c < this.cols; c++) {
           const td = document.createElement("td");
-          td.dataset.row = r.toString();
-          td.dataset.col = c.toString();
           td.className = "cell";
           tr.appendChild(td);
         }
