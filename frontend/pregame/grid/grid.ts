@@ -1,14 +1,14 @@
 import { Component } from "../utility/component.js";
 
 export class Grid extends Component {
-	html!: HTMLElement;
+	html!: HTMLTableElement;
 
 	constructor(readonly rows: number, readonly cols: number) {
 		super();
 		this.update_html();
 	}
 
-	render(): HTMLElement {
+	render(): HTMLTableElement {
 		const table = document.createElement("table");
 		table.className = "grid";
 
@@ -21,7 +21,7 @@ export class Grid extends Component {
 			}
 			table.appendChild(tr);
 		}
-		
+
 		return table;
 	}
 }

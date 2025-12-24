@@ -1,0 +1,10 @@
+/* main.css: global/shared styles only. Feature-specific styles moved to styles/ subfolder. */
+@import url("./grid/grid.css");
+@import url("./garage/garage.css");
+@import url("./ship/ship.css");
+@import url("./battle_grid/battle_grid.css");
+
+.dragged {
+  opacity: 0.7 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

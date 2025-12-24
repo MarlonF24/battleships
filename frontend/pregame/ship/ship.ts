@@ -12,7 +12,7 @@ export function toggle_orientation(current: string): string {
 }
 
 export class Ship extends Component {
-	html!: HTMLElement;
+	html!: HTMLDivElement;
 
 	constructor(
 		readonly length: number,
@@ -35,7 +35,7 @@ export class Ship extends Component {
 		this.setOrientation(toggle_orientation(this.orientation) as Orientation);
 	}
 
-	render(): HTMLElement {
+	render(): HTMLDivElement {
 		const el = document.createElement("div");
 		el.className = "ship";
 
@@ -45,4 +45,3 @@ export class Ship extends Component {
 		return el;
 	}
 }
-

@@ -22,20 +22,21 @@ export class BattleGrid extends ShipGrid {
 		this.update_html();
 	}
 
-	prepareCellHTML(cell: HTMLElement) {
+	prepareCellHTML(cell: HTMLTableCellElement) {
 		cell.addEventListener(
 			"ship-over",
 			new SuggestionHandler(this, cell).suggestShip.bind(this)
 		);
 	}
 
-	render(): HTMLElement {
+	render(): HTMLDivElement {
 		const el = document.createElement("div");
 		el.id = "battle-grid";
 
-		const cells = this.grid.html.getElementsByClassName("cell");
-		for (const cell of cells) {
-			this.prepareCellHTML(cell as HTMLElement);
+		for (const row of this.grid.html.rows) {
+			for (const cell of row.cells) {
+				this.prepareCellHTML(cell);
+			}
 		}
 
 		el.appendChild(this.grid.html);
@@ -47,6 +48,14 @@ export class BattleGrid extends ShipGrid {
 		}
 		return el;
 	}
+
+
+	reset() {
+		this.ships.forEach((_, ship) => {
+			this.removeShip(ship);
+		});
+	}
+
 
 	canPlaceShip(ship: Ship, startRow: number, startCol: number): boolean {
 		// basic bounds
@@ -150,10 +159,13 @@ class SuggestionHandler extends BaseSuggestionHandler {
 	readonly cellRow: number;
 	readonly cellCol: number;
 
-	constructor(private battleGrid: BattleGrid, private cell: HTMLElement) {
+	constructor(
+		private battleGrid: BattleGrid,
+		private cell: HTMLTableCellElement
+	) {
 		super();
-		this.cellRow = (this.cell.parentElement as HTMLTableRowElement).rowIndex;
-		this.cellCol = (this.cell as HTMLTableCellElement).cellIndex;
+		this.cellRow = (this.cell.parentElement! as HTMLTableRowElement).rowIndex;
+		this.cellCol = this.cell.cellIndex;
 		this.suggestShip = this.suggestShip.bind(this);
 	}
 

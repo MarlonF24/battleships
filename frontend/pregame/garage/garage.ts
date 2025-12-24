@@ -6,7 +6,7 @@ export class ShipGarage extends ShipGrid {
 	public ships: Map<Ship, number>;
 	readonly shipArray: (Ship | null)[];
 	readonly maxLen: number;
-	html!: HTMLElement;
+	html!: HTMLDivElement;
 
 	constructor(ships: Ship[]) {
 		super(
@@ -26,22 +26,37 @@ export class ShipGarage extends ShipGrid {
 
 		this.maxLen = this.grid.cols;
 		this.update_html();
+
+		sessionStorage.setItem("initial-garage", JSON.stringify(
+			ships.map((s) => s.length)
+		));
 	}
 
-	prepareRowHTML(row: HTMLElement) {
+	reset() {
+		this.ships.forEach((_, ship) => {
+			this.removeShip(ship);
+		});
+
+		const initialShips = JSON.parse(sessionStorage.getItem("initial-garage")!);
+		
+		initialShips.forEach((length: number, index: number) => {
+			this.placeShip(index, new Ship(length, Orientation.HORIZONTAL));
+		});
+	}
+
+	prepareRowHTML(row: HTMLTableRowElement) {
 		row.addEventListener(
 			"ship-over",
 			new SuggestionHandler(this, row).suggestShip
 		);
 	}
 
-	render(): HTMLElement {
+	render(): HTMLDivElement {
 		const el = document.createElement("div");
 		el.id = "ship-garage";
 
-		const rows = this.grid.html.getElementsByTagName("tr");
-		for (const row of rows) {
-			this.prepareRowHTML(row as HTMLElement);
+		for (const row of this.grid.html.rows) {
+			this.prepareRowHTML(row);
 		}
 
 		el.appendChild(this.grid.html);
@@ -123,10 +138,11 @@ import {
 class SuggestionHandler extends BaseSuggestionHandler {
 	readonly rowIdx: number;
 
-	constructor(private garage: ShipGarage, readonly row: HTMLElement) {
+	constructor(private garage: ShipGarage, readonly row: HTMLTableRowElement) {
 		super();
-		this.rowIdx = (this.row as HTMLTableRowElement).rowIndex;
+		this.rowIdx = this.row.rowIndex;
 		this.suggestShip = this.suggestShip.bind(this);
+		
 	}
 
 	suggestShip(event: Event) {

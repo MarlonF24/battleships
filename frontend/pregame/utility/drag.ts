@@ -6,8 +6,18 @@ interface DragState {
 	clone: Ship;
 	lastX: number;
 	lastY: number;
-	currentCell?: HTMLElement;
+	currentCellInfo?: {
+		currentCell: HTMLTableCellElement;
+		inCellPos: { x: number; y: number };
+	};
 }
+
+const CELLSIZE = parseInt(
+	getComputedStyle(document.documentElement)
+		.getPropertyValue("--cell-size")
+		.trim()
+		.replace("px", "")
+);
 
 // Class encapsulating ship drag logic
 export class Dragger {
@@ -55,8 +65,6 @@ export class Dragger {
 		document.addEventListener("contextmenu", this.onContextMenu);
 
 		document.body.style.cursor = "grabbing";
-
-		this.dispatchMouseOver();
 	};
 
 	private onMouseMove = (e: MouseEvent) => {
@@ -78,7 +86,21 @@ export class Dragger {
 		this.state.lastX = e.pageX;
 		this.state.lastY = e.pageY;
 
-		this.dispatchMouseOver();
+		// // Check if we've moved out of the current cell
+		// if (this.state.currentCellInfo) {
+		// 	const newInCellX = shiftX + this.state.currentCellInfo.inCellPos.x;
+		// 	const newInCellY = shiftY + this.state.currentCellInfo.inCellPos.y;
+		// 	if (
+		// 		newInCellX < 0 ||
+		// 		newInCellX > CELLSIZE ||
+		// 		newInCellY < 0 ||
+		// 		newInCellY > CELLSIZE
+		// 	) {
+		// 		this.dispatchMouseOver();
+		// 	}
+		// } else {
+			this.dispatchMouseOver();
+		// }
 	};
 
 	private dispatchMouseOver() {
@@ -89,16 +111,14 @@ export class Dragger {
 		// this helps for computing a good suggestion position
 		if (cloneLength % 2 === 0) {
 			if (this.state.clone.getOrientation() === Orientation.HORIZONTAL) {
-				const cellSize = boundingRect.width / cloneLength;
 				var cloneCenter = {
-					x: boundingRect.left + cellSize * (cloneLength / 2 + 0.5),
+					x: boundingRect.left + CELLSIZE * (cloneLength / 2 + 0.5), // add one pixel
 					y: boundingRect.top + boundingRect.height / 2,
 				};
 			} else {
-				const cellSize = boundingRect.height / cloneLength;
 				var cloneCenter = {
 					x: boundingRect.left + boundingRect.width / 2,
-					y: boundingRect.top + cellSize * (cloneLength / 2 + 0.5),
+					y: boundingRect.top + CELLSIZE * (cloneLength / 2 + 0.5),
 				};
 			}
 		} else {
@@ -115,33 +135,50 @@ export class Dragger {
 		);
 		const cell = Array.from(elementsBelow).find((el) =>
 			el.classList.contains("cell")
-		) as HTMLElement | undefined;
+		) as HTMLTableCellElement | undefined;
 
-		if (cell && cell !== this.state.currentCell) {
-			this.state.currentCell?.dispatchEvent(
+		if (!cell) {
+			this.state.currentCellInfo?.currentCell.dispatchEvent(
 				new CustomEvent("ship-out", {
 					bubbles: true,
 				})
 			);
+			this.state.currentCellInfo = undefined;
+		} else {
+			const cellRect = cell.getBoundingClientRect();
 
-			cell.dispatchEvent(
-				new CustomEvent("ship-over", {
-					detail: {
-						shipClone: this.state.clone,
-						originalShip: this.originalShip,
-						source: this.source,
+			if (cell !== this.state.currentCellInfo?.currentCell) {
+				this.state.currentCellInfo?.currentCell.dispatchEvent(
+					new CustomEvent("ship-out", {
+						bubbles: true,
+					})
+				);
+
+				cell.dispatchEvent(
+					new CustomEvent("ship-over", {
+						detail: {
+							shipClone: this.state.clone,
+							originalShip: this.originalShip,
+							source: this.source,
+						},
+						bubbles: true, // let bubble so that row handlers can catch it
+					})
+				);
+
+				this.state.currentCellInfo = {
+					currentCell: cell,
+					inCellPos: {
+						x: cloneCenter.x - cellRect.left,
+						y: cloneCenter.y - cellRect.top,
 					},
-					bubbles: true, // let bubble so that row handlers can catch it
-				})
-			);
-			this.state.currentCell = cell;
-		} else if (!cell) {
-			this.state.currentCell?.dispatchEvent(
-				new CustomEvent("ship-out", {
-					bubbles: true,
-				})
-			);
-			this.state.currentCell = undefined;
+				};
+				
+			} else { // should never happen, as we check for cell change above
+				this.state.currentCellInfo!.inCellPos = {
+					x: cloneCenter.x - cellRect.left,
+					y: cloneCenter.y - cellRect.top,
+				};
+			}
 		}
 	}
 
@@ -156,8 +193,8 @@ export class Dragger {
 
 		this.state.clone.html.remove();
 
-		if (this.state.currentCell) {
-			this.state.currentCell.dispatchEvent(
+		if (this.state.currentCellInfo) {
+			this.state.currentCellInfo.currentCell.dispatchEvent(
 				new CustomEvent("ship-placed", {
 					bubbles: true,
 				})
@@ -178,14 +215,12 @@ export class Dragger {
 			10
 		);
 
-		if (!this.state.currentCell) console.log("No current cell on wheel event");
-
 		e.deltaY > 0 ? (angle += 90) : (angle -= 90);
 
 		clone.rotate();
 
 		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
-		this.state.currentCell?.dispatchEvent(
+		this.state.currentCellInfo?.currentCell.dispatchEvent(
 			new CustomEvent("ship-rotate", {
 				bubbles: true,
 			})
@@ -204,8 +239,9 @@ export class Dragger {
 		angle += 90;
 
 		clone.rotate();
+
 		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
-		this.state.currentCell?.dispatchEvent(
+		this.state.currentCellInfo?.currentCell.dispatchEvent(
 			new CustomEvent("ship-rotate", {
 				bubbles: true,
 			})
