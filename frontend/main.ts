@@ -22,13 +22,15 @@ const garage = new ShipGarage([
   new Ship(5),
   new Ship(4),
   new Ship(3),
+  new Ship(3),
+  new Ship(2),
 ]);
 
 if (gameGrid.grid.cols < garage.maxLen && gameGrid.grid.cols < garage.maxLen) {
   throw new Error("Some garage ships do not fit in the game grid");
 }
 
-if (garage.ships.length > gameGrid.grid.rows && garage.ships.length > gameGrid.grid.cols) {
+if (garage.shipArray.length > gameGrid.grid.rows && garage.shipArray.length > gameGrid.grid.cols) {
   throw new Error("Too many ships for the game grid");
 }
 

@@ -1,306 +1,313 @@
-import { Component } from "../component.js";
 import { Ship, Orientation } from "../ship/ship.js";
 import { Grid } from "../grid/grid.js";
+import { ShipGrid, ShipPosition } from "../utility/ship_grid.js";
 
-export interface ShipPosition {
-  startRow: number;
-  startCol: number;
+export class BattleGrid extends ShipGrid {
+	private cells: (Ship | null)[][];
+	public ships: Map<Ship, ShipPosition>;
+
+	constructor(grid: Grid, ships?: Map<Ship, ShipPosition>) {
+		super(grid);
+
+		this.cells = Array.from({ length: grid.rows }, () =>
+			Array(grid.cols).fill(null)
+		);
+		this.ships = new Map<Ship, ShipPosition>();
+
+		if (ships)
+			ships.forEach((pos, ship) => {
+				this.placeShip(ship, pos.startRow, pos.startCol);
+			});
+
+		this.update_html();
+	}
+
+	prepareCellHTML(cell: HTMLElement) {
+		cell.addEventListener(
+			"ship-over",
+			new SuggestionHandler(this, cell).suggestShip.bind(this)
+		);
+	}
+
+	render(): HTMLElement {
+		const el = document.createElement("div");
+		el.id = "battle-grid";
+
+		const cells = this.grid.html.getElementsByClassName("cell");
+		for (const cell of cells) {
+			this.prepareCellHTML(cell as HTMLElement);
+		}
+
+		el.appendChild(this.grid.html);
+
+		for (const [ship, pos] of this.ships) {
+			const ship_el = ship.html;
+			this.prepareShipHTML(ship, pos.startRow, pos.startCol);
+			el.appendChild(ship_el);
+		}
+		return el;
+	}
+
+	canPlaceShip(ship: Ship, startRow: number, startCol: number): boolean {
+		// basic bounds
+		if (startRow < 0 || startCol < 0) return false;
+
+		if (!this.shipFitsBounds(ship, startRow, startCol)) return false;
+
+		if (!this.shipHasNoOverlap(ship, startRow, startCol)) return false;
+
+		return true;
+	}
+
+	shipHasNoOverlap(
+		ship: Ship,
+		startRow: number = 0,
+		startCol: number = 0,
+		disregard?: Ship
+	): boolean {
+		if (ship.getOrientation() === Orientation.HORIZONTAL) {
+			for (let c = startCol; c < startCol + ship.length; c++) {
+				const cell = this.cells[startRow][c];
+				if (cell && cell !== disregard) {
+					return false;
+				}
+			}
+		} else {
+			for (let r = startRow; r < startRow + ship.length; r++) {
+				const cell = this.cells[r][startCol];
+				if (cell && cell !== disregard) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	shipFitsBounds(
+		ship: Ship,
+		startRow: number = 0,
+		startCol: number = 0
+	): boolean {
+		if (ship.getOrientation() === Orientation.HORIZONTAL) {
+			return startCol + ship.length <= this.grid.cols;
+		} else {
+			return startRow + ship.length <= this.grid.rows;
+		}
+	}
+
+	placeShip(ship: Ship, startRow: number, startCol: number) {
+		if (!this.canPlaceShip(ship, startRow, startCol))
+			throw new RangeError("cannot place ship");
+
+		if (ship.getOrientation() === Orientation.HORIZONTAL) {
+			for (let c = startCol; c < startCol + ship.length; c++) {
+				this.cells[startRow][c] = ship;
+			}
+		} else {
+			for (let r = startRow; r < startRow + ship.length; r++) {
+				this.cells[r][startCol] = ship;
+			}
+		}
+
+		this.ships.set(ship, { startRow, startCol });
+
+		this.prepareShipHTML(ship, startRow, startCol);
+
+		this.html.appendChild(ship.html);
+	}
+
+	containsShip(ship: Ship): boolean {
+		return this.ships.has(ship);
+	}
+
+	removeShip(ship: Ship) {
+		const pos = this.ships.get(ship);
+		if (!pos) throw new Error("ship not found on grid");
+
+		if (ship.getOrientation() === Orientation.HORIZONTAL) {
+			for (let c = pos.startCol; c < pos.startCol + ship.length; c++) {
+				this.cells[pos.startRow][c] = null;
+			}
+		} else {
+			for (let r = pos.startRow; r < pos.startRow + ship.length; r++) {
+				this.cells[r][pos.startCol] = null;
+			}
+		}
+
+		this.ships.delete(ship);
+		ship.html.remove();
+	}
 }
 
-export class BattleGrid extends Component {
-  private cells: (Ship | null)[][];
-  public ships: Map<Ship, ShipPosition>;
-  public readonly grid: Grid;
+import {
+	BaseSuggestionHandler,
+	ShipOverEventDetail,
+} from "../utility/suggestion_handler.js";
 
-  constructor(grid: Grid, ships?: Map<Ship, ShipPosition>) {
-    super();
-    this.grid = grid;
-    this.cells = Array.from({ length: grid.rows }, () =>
-      Array(grid.cols).fill(null)
-    );
-    this.ships = ships || new Map();
-    this.update_html();
-  }
+class SuggestionHandler extends BaseSuggestionHandler {
+	// private state!: SuggestionState;
+	readonly cellRow: number;
+	readonly cellCol: number;
 
-  render(): HTMLElement {
-    const el = document.createElement("div");
-    el.id = "battle-grid";
+	constructor(private battleGrid: BattleGrid, private cell: HTMLElement) {
+		super();
+		this.cellRow = (this.cell.parentElement as HTMLTableRowElement).rowIndex;
+		this.cellCol = (this.cell as HTMLTableCellElement).cellIndex;
+		this.suggestShip = this.suggestShip.bind(this);
+	}
 
-    const cells = this.grid.html.getElementsByClassName("cell");
-    for (const cell of cells) {
-      cell.addEventListener(
-        "ship-over",
-        new SuggestionHandler(this, cell as HTMLElement).suggestShip
-      );
-    }
+	clearSuggestion() {
+		this.state.current_suggestion?.ship.html.remove();
+		this.state.current_suggestion = undefined;
+	}
 
-    el.appendChild(this.grid.html);
+	suggestShip(event: Event) {
+		// prevent multiple suggestions when hovering over the same cell
+		if (this.state.current_suggestion) {
+			return;
+		}
 
-    for (const [ship, pos] of this.ships) {
-      const ship_el = ship.html;
-      ship_el.style.setProperty("--row", pos.startRow.toString());
-      ship_el.style.setProperty("--col", pos.startCol.toString());
-      el.appendChild(ship_el);
-    }
-    return el;
-  }
+		const detail = (event as CustomEvent<ShipOverEventDetail>).detail;
 
-  canPlaceShip(ship: Ship, startRow: number, startCol: number): boolean {
-    // basic bounds
-    if (startRow < 0 || startCol < 0) return false;
+		// clone the clone to be the suggestion ship
+		let shipClone_clone = new Ship(
+			detail.shipClone.length,
+			detail.shipClone.getOrientation()
+		);
 
-    if (!this.shipFitsBounds(ship, startRow, startCol)) return false;
+		// initial bounds check
+		if (!this.battleGrid.shipFitsBounds(shipClone_clone)) return;
 
-    if (!this.shipHasNoOverlap(ship, startRow, startCol)) return false;
+		let { headRow: inBoundsHeadRow, headCol: inBoundsHeadCol } =
+			SuggestionHandler.closestInBoundsPosition(
+				this.battleGrid,
+				shipClone_clone,
+				this.cellRow,
+				this.cellCol
+			);
 
-    return true;
-  }
+		if (
+			this.battleGrid.shipHasNoOverlap(
+				shipClone_clone,
+				inBoundsHeadRow,
+				inBoundsHeadCol,
+				detail.originalShip // disregard the original ship to allow moving ships on their old position
+			)
+		) {
+			shipClone_clone.html.classList.add("suggestion");
+			shipClone_clone.html.style.setProperty(
+				"--row",
+				inBoundsHeadRow.toString()
+			);
+			shipClone_clone.html.style.setProperty(
+				"--col",
+				inBoundsHeadCol.toString()
+			);
 
-  shipHasNoOverlap(
-    ship: Ship,
-    startRow: number = 0,
-    startCol: number = 0,
-    disregard?: Ship
-  ): boolean {
-    if (ship.getOrientation() === Orientation.HORIZONTAL) {
-      for (let c = startCol; c < startCol + ship.length; c++) {
-        const cell = this.cells[startRow][c];
-        if (cell && cell !== disregard) {
-          return false;
-        }
-      }
-    } else {
-      for (let r = startRow; r < startRow + ship.length; r++) {
-        const cell = this.cells[r][startCol];
-        if (cell && cell !== disregard) {
-          return false;
-        }
-      }
-    }
+			this.battleGrid.html.appendChild(shipClone_clone.html);
 
-    return true;
-  }
+			this.state.current_suggestion = {
+				ship: shipClone_clone,
+				row: inBoundsHeadRow,
+				col: inBoundsHeadCol,
+			};
 
-  shipFitsBounds(
-    ship: Ship,
-    startRow: number = 0,
-    startCol: number = 0
-  ): boolean {
-    if (ship.getOrientation() === Orientation.HORIZONTAL) {
-      return startCol + ship.length <= this.grid.cols;
-    } else {
-      return startRow + ship.length <= this.grid.rows;
-    }
-  }
+			this.cell.addEventListener("ship-out", this.removeSuggestion.bind(this));
+			this.cell.addEventListener(
+				"ship-rotate",
+				this.rotateSuggestion.bind(this)
+			);
+			this.cell.addEventListener(
+				"ship-placed",
+				this.placeSuggestion.bind(this)
+			);
+		}
 
-  placeShip(ship: Ship, startRow: number, startCol: number) {
-    if (!this.canPlaceShip(ship, startRow, startCol))
-      throw new RangeError("cannot place ship");
+		this.state.originalShip = detail.originalShip;
+		this.state.shipClone = detail.shipClone;
+		this.state.sourceShipGrid = detail.source;
+	}
 
-    if (ship.getOrientation() === Orientation.HORIZONTAL) {
-      for (let c = startCol; c < startCol + ship.length; c++) {
-        this.cells[startRow][c] = ship;
-      }
-    } else {
-      for (let r = startRow; r < startRow + ship.length; r++) {
-        this.cells[r][startCol] = ship;
-      }
-    }
+	rotateSuggestion() {
+		this.clearSuggestion();
 
-    this.ships.set(ship, { startRow, startCol });
-    ship.html.style.setProperty("--row", startRow.toString());
-    ship.html.style.setProperty("--col", startCol.toString());
-    this.html.appendChild(ship.html);
-  }
+		// retry suggestion after rotation
+		this.suggestShip(
+			new CustomEvent("ship-over", {
+				detail: {
+					source: this.state.sourceShipGrid!,
+					originalShip: this.state.originalShip!,
+					shipClone: this.state.shipClone!,
+				},
+				bubbles: false,
+			})
+		);
+	}
 
-  containsShip(ship: Ship): boolean {
-    return this.ships.has(ship);
-  }
+	placeSuggestion() {
+		// case 1: no suggestion to place
+		if (!this.state.current_suggestion) {
+			const originalShip = this.state.originalShip!;
 
-  removeShip(ship: Ship) {
-    const pos = this.ships.get(ship);
-    if (!pos) throw new Error("ship not found on grid");
+			originalShip.html.classList.remove("dragged");
+			originalShip.html.style.pointerEvents = "auto";
+			return;
+		}
 
-    if (ship.getOrientation() === Orientation.HORIZONTAL) {
-      for (let c = pos.startCol; c < pos.startCol + ship.length; c++) {
-        this.cells[pos.startRow][c] = null;
-      }
-    } else {
-      for (let r = pos.startRow; r < pos.startRow + ship.length; r++) {
-        this.cells[r][pos.startCol] = null;
-      }
-    }
+		// case 2: place the suggestion
 
-    this.ships.delete(ship);
-    ship.html.remove();
-  }
-}
+		if (this.state.sourceShipGrid!.containsShip(this.state.originalShip!)) {
+			this.state.sourceShipGrid!.removeShip(this.state.originalShip!);
+		}
 
-interface ShipOverEventDetail {
-  original_ship: Ship;
-  ship_clone: Ship;
-}
+		this.state.originalShip!.html.remove();
 
-interface SuggestionState {
-  original_ship?: Ship;
-  ship_clone?: Ship;
-  current_suggestion?: {
-    ship: Ship;
-    row: number;
-    col: number;
-  }
-  
-}
+		let { ship, row, col } = this.state.current_suggestion!;
 
-class SuggestionHandler {
-  // private state!: SuggestionState;
-  readonly cellRow: number;
-  readonly cellCol: number;
-  private state: SuggestionState = {};
+		this.removeSuggestion();
 
-  constructor(private battleGrid: BattleGrid, private cell: HTMLElement) {
-    this.cellRow = (this.cell.parentElement as HTMLTableRowElement).rowIndex;
-    this.cellCol = (this.cell as HTMLTableCellElement).cellIndex;
-    this.suggestShip = this.suggestShip.bind(this);
-  }
+		ship.html.classList.remove("suggestion");
 
-  
-  
-  clearSuggestion() {
-    this.state.current_suggestion?.ship.html.remove();
-    this.state.current_suggestion = undefined;
-  }
-  
-  suggestShip(event: Event) {
-    // prevent multiple suggestions when hovering over the same cell
-    if (this.state.current_suggestion) {
-      return;
-    }
+		this.battleGrid.placeShip(ship, row, col);
+	}
 
-    const detail = (event as CustomEvent<ShipOverEventDetail>).detail;
-    
-    // clone the clone to be the suggestion ship
-    let ship_clone_clone = new Ship(
-      detail.ship_clone.length,
-      detail.ship_clone.getOrientation()
-    );
+	removeSuggestion() {
+		this.clearSuggestion();
 
-    
-    // initial bounds check
-    if (!this.battleGrid.shipFitsBounds(ship_clone_clone)) return;
+		this.cell.removeEventListener("ship-out", this.removeSuggestion.bind(this));
+		this.cell.removeEventListener(
+			"ship-rotate",
+			this.rotateSuggestion.bind(this)
+		);
+		this.cell.removeEventListener(
+			"ship-placed",
+			this.placeSuggestion.bind(this)
+		);
+	}
 
-
-    let { headRow: inBoundsHeadRow, headCol: inBoundsHeadCol } =
-      SuggestionHandler.closestInBoundsPosition(
-        this.battleGrid,
-        ship_clone_clone,
-        this.cellRow,
-        this.cellCol
-      );
-
-    if (
-      this.battleGrid.shipHasNoOverlap(
-        ship_clone_clone,
-        inBoundsHeadRow,
-        inBoundsHeadCol,
-        detail.original_ship // disregard the original ship to allow moving ships on their old position
-      )
-    ) {
-      ship_clone_clone.html.classList.add("suggestion");
-      ship_clone_clone.html.style.setProperty("--row", inBoundsHeadRow.toString());
-      ship_clone_clone.html.style.setProperty("--col", inBoundsHeadCol.toString());
-      
-      this.battleGrid.html.appendChild(ship_clone_clone.html);
-
-      
-      this.state.current_suggestion = {
-        ship: ship_clone_clone,
-        row: inBoundsHeadRow,
-        col: inBoundsHeadCol
-      };
-
-      this.cell.addEventListener("ship-out", this.removeSuggestion.bind(this));
-      this.cell.addEventListener("ship-rotate", this.rotateSuggestion.bind(this));
-      this.cell.addEventListener("ship-placed", this.placeSuggestion.bind(this));
-    }
-
-    this.state.original_ship = detail.original_ship;
-    this.state.ship_clone = detail.ship_clone;
-  }
-
-  
-  rotateSuggestion() {
-    this.clearSuggestion();
-    
-    // retry suggestion after rotation
-    this.suggestShip(
-      new CustomEvent("ship-over", {
-        detail: {
-          original_ship: this.state.original_ship!,
-          ship_clone: this.state.ship_clone!,
-        },
-        bubbles: false,
-      })
-    );
-  
-  }
-
-  placeSuggestion() {
-    // case 1: no suggestion to place
-    if (!this.state.current_suggestion) {
-      const originalShip = this.state.original_ship!;
-      
-      originalShip.html.classList.remove("dragged");
-      originalShip.html.style.pointerEvents = "auto";
-      return;
-    };
-  
-    // case 2: place the suggestion
-    if (this.battleGrid.containsShip(this.state.original_ship!)) {
-      this.battleGrid.removeShip(this.state.original_ship!);
-    }
-
-    this.state.original_ship!.html.remove();
-
-    let { ship, row, col } = this.state.current_suggestion!;
-    
-    this.removeSuggestion();
-    
-    ship.html.classList.remove("suggestion");
-
-    this.battleGrid.placeShip(ship, row, col);
-  }
-
-  removeSuggestion() {
-    this.clearSuggestion();
-    
-    this.cell.removeEventListener("ship-out", this.removeSuggestion.bind(this));
-    this.cell.removeEventListener("ship-rotate", this.rotateSuggestion.bind(this));
-    this.cell.removeEventListener("ship-placed",this.placeSuggestion.bind(this));
-  }
-
-  static closestInBoundsPosition(
-    battleGrid: BattleGrid,
-    ship: Ship,
-    centerRow: number,
-    centerCol: number
-  ): { headRow: number; headCol: number } {
-    if (ship.getOrientation() === Orientation.HORIZONTAL) {
-      let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
-      let headRow = centerRow;
-      let headCol = Math.max(
-        0,
-        Math.min(centerCol - lengthOffset, battleGrid.grid.cols - ship.length)
-      );
-      return { headRow, headCol };
-    } else {
-      let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
-      let headRow = Math.max(
-        0,
-        Math.min(centerRow - lengthOffset, battleGrid.grid.rows - ship.length)
-      );
-      let headCol = centerCol;
-      return { headRow, headCol };
-    }
-  }
+	static closestInBoundsPosition(
+		battleGrid: BattleGrid,
+		ship: Ship,
+		centerRow: number,
+		centerCol: number
+	): { headRow: number; headCol: number } {
+		if (ship.getOrientation() === Orientation.HORIZONTAL) {
+			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
+			let headRow = centerRow;
+			let headCol = Math.max(
+				0,
+				Math.min(centerCol - lengthOffset, battleGrid.grid.cols - ship.length)
+			);
+			return { headRow, headCol };
+		} else {
+			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
+			let headRow = Math.max(
+				0,
+				Math.min(centerRow - lengthOffset, battleGrid.grid.rows - ship.length)
+			);
+			let headCol = centerCol;
+			return { headRow, headCol };
+		}
+	}
 }
