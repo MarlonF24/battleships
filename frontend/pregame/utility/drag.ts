@@ -86,21 +86,23 @@ export class Dragger {
 		this.state.lastX = e.pageX;
 		this.state.lastY = e.pageY;
 
-		// // Check if we've moved out of the current cell
-		// if (this.state.currentCellInfo) {
-		// 	const newInCellX = shiftX + this.state.currentCellInfo.inCellPos.x;
-		// 	const newInCellY = shiftY + this.state.currentCellInfo.inCellPos.y;
-		// 	if (
-		// 		newInCellX < 0 ||
-		// 		newInCellX > CELLSIZE ||
-		// 		newInCellY < 0 ||
-		// 		newInCellY > CELLSIZE
-		// 	) {
-		// 		this.dispatchMouseOver();
-		// 	}
-		// } else {
+		// Check if we've moved out of the current cell
+		if (this.state.currentCellInfo) {
+			const newInCellX = shiftX + this.state.currentCellInfo.inCellPos.x;
+			const newInCellY = shiftY + this.state.currentCellInfo.inCellPos.y;
+			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
+			console.log("New in cell position:", newInCellX, newInCellY);
+			if (
+				newInCellX < 0 ||
+				newInCellX > CELLSIZE ||
+				newInCellY < 0 ||
+				newInCellY > CELLSIZE
+			) {
+				this.dispatchMouseOver();
+			}
+		} else {
 			this.dispatchMouseOver();
-		// }
+		}
 	};
 
 	private dispatchMouseOver() {
@@ -179,6 +181,7 @@ export class Dragger {
 					y: cloneCenter.y - cellRect.top,
 				};
 			}
+			console.log(this.state.currentCellInfo.inCellPos);
 		}
 	}
 

@@ -23,7 +23,7 @@ export class ResetButton extends Component {
 		button.textContent = "Reset Board";
 		button.onclick = () => {
 			// Logic to reset the board goes here
-			console.log("Resetting the board...");
+			console.log("Resetting the board....");
 			this.battleGrid.reset();
 			this.shipGarage.reset();
 		};
