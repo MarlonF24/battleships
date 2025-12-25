@@ -25,7 +25,7 @@ export class BattleGrid extends ShipGrid {
 	prepareCellHTML(cell: HTMLTableCellElement) {
 		cell.addEventListener(
 			"ship-over",
-			new SuggestionHandler(this, cell).suggestShip.bind(this)
+			new SuggestionHandler(this, cell).suggestShip
 		);
 	}
 
@@ -166,15 +166,14 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		super();
 		this.cellRow = (this.cell.parentElement! as HTMLTableRowElement).rowIndex;
 		this.cellCol = this.cell.cellIndex;
-		this.suggestShip = this.suggestShip.bind(this);
 	}
 
-	clearSuggestion() {
+	clearSuggestion = () => {
 		this.state.current_suggestion?.ship.html.remove();
 		this.state.current_suggestion = undefined;
 	}
 
-	suggestShip(event: Event) {
+	suggestShip = (event: Event) => {
 		// prevent multiple suggestions when hovering over the same cell
 		if (this.state.current_suggestion) {
 			return;
@@ -225,14 +224,14 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				col: inBoundsHeadCol,
 			};
 
-			this.cell.addEventListener("ship-out", this.removeSuggestion.bind(this));
+			this.cell.addEventListener("ship-out", this.removeSuggestion);
 			this.cell.addEventListener(
 				"ship-rotate",
-				this.rotateSuggestion.bind(this)
+				this.rotateSuggestion
 			);
 			this.cell.addEventListener(
 				"ship-placed",
-				this.placeSuggestion.bind(this)
+				this.placeSuggestion
 			);
 		}
 
@@ -241,7 +240,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.state.sourceShipGrid = detail.source;
 	}
 
-	rotateSuggestion() {
+	rotateSuggestion = () => {
 		this.clearSuggestion();
 
 		// retry suggestion after rotation
@@ -257,7 +256,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		);
 	}
 
-	placeSuggestion() {
+	placeSuggestion = () => {
 		// case 1: no suggestion to place
 		if (!this.state.current_suggestion) {
 			const originalShip = this.state.originalShip!;
@@ -284,17 +283,17 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.battleGrid.placeShip(ship, row, col);
 	}
 
-	removeSuggestion() {
+	removeSuggestion = () => {
 		this.clearSuggestion();
 
-		this.cell.removeEventListener("ship-out", this.removeSuggestion.bind(this));
+		this.cell.removeEventListener("ship-out", this.removeSuggestion);
 		this.cell.removeEventListener(
 			"ship-rotate",
-			this.rotateSuggestion.bind(this)
+			this.rotateSuggestion
 		);
 		this.cell.removeEventListener(
 			"ship-placed",
-			this.placeSuggestion.bind(this)
+			this.placeSuggestion
 		);
 	}
 

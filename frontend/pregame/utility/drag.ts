@@ -91,7 +91,7 @@ export class Dragger {
 			const newInCellX = shiftX + this.state.currentCellInfo.inCellPos.x;
 			const newInCellY = shiftY + this.state.currentCellInfo.inCellPos.y;
 			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
-			console.log("New in cell position:", newInCellX, newInCellY);
+
 			if (
 				newInCellX < 0 ||
 				newInCellX > CELLSIZE ||
@@ -105,7 +105,7 @@ export class Dragger {
 		}
 	};
 
-	private dispatchMouseOver() {
+	private dispatchMouseOver = () => {
 		let boundingRect = this.state.clone.html.getBoundingClientRect();
 
 		const cloneLength = this.state.clone.length;
@@ -135,6 +135,7 @@ export class Dragger {
 			cloneCenter.x,
 			cloneCenter.y
 		);
+
 		const cell = Array.from(elementsBelow).find((el) =>
 			el.classList.contains("cell")
 		) as HTMLTableCellElement | undefined;
@@ -174,16 +175,15 @@ export class Dragger {
 						y: cloneCenter.y - cellRect.top,
 					},
 				};
-				
-			} else { // should never happen, as we check for cell change above
+			} else {
+				// should never happen, as we check for cell change above
 				this.state.currentCellInfo!.inCellPos = {
 					x: cloneCenter.x - cellRect.left,
 					y: cloneCenter.y - cellRect.top,
 				};
 			}
-			console.log(this.state.currentCellInfo.inCellPos);
 		}
-	}
+	};
 
 	private onMouseUp = (e: MouseEvent) => {
 		if (e.button === 2) return; // right click

@@ -30,16 +30,16 @@ export interface SuggestionState {
 export abstract class BaseSuggestionHandler {
 	protected state: Partial<SuggestionState> = {};
 
-	clearSuggestion() {
+	clearSuggestion = () => {
 		this.state.current_suggestion?.ship.html.remove();
 		this.state.current_suggestion = undefined;
-	}
+	};
 
-	abstract suggestShip(event: CustomEvent<ShipOverEventDetail>): void;
+	abstract suggestShip: (event: CustomEvent<ShipOverEventDetail>) => void;
 
-	abstract removeSuggestion(): void;
+	abstract removeSuggestion: () => void;
 
-	abstract placeSuggestion(): void;
+	abstract placeSuggestion: () => void;
 
-	abstract rotateSuggestion(): void;
+	abstract rotateSuggestion: () => void;
 }

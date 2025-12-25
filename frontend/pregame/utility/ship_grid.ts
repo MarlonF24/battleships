@@ -26,7 +26,7 @@ export abstract class ShipGrid extends Component {
 		ship.html.style.setProperty("--col", col.toString());
 		ship.html.addEventListener(
 			"mousedown",
-			new Dragger(ship, this).mouseDownHandler.bind(this)
+			new Dragger(ship, this).mouseDownHandler
 		);
 	}
 }

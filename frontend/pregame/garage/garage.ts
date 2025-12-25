@@ -27,9 +27,10 @@ export class ShipGarage extends ShipGrid {
 		this.maxLen = this.grid.cols;
 		this.update_html();
 
-		sessionStorage.setItem("initial-garage", JSON.stringify(
-			ships.map((s) => s.length)
-		));
+		sessionStorage.setItem(
+			"initial-garage",
+			JSON.stringify(ships.map((s) => s.length))
+		);
 	}
 
 	reset() {
@@ -38,7 +39,7 @@ export class ShipGarage extends ShipGrid {
 		});
 
 		const initialShips = JSON.parse(sessionStorage.getItem("initial-garage")!);
-		
+
 		initialShips.forEach((length: number, index: number) => {
 			this.placeShip(index, new Ship(length, Orientation.HORIZONTAL));
 		});
@@ -141,11 +142,9 @@ class SuggestionHandler extends BaseSuggestionHandler {
 	constructor(private garage: ShipGarage, readonly row: HTMLTableRowElement) {
 		super();
 		this.rowIdx = this.row.rowIndex;
-		this.suggestShip = this.suggestShip.bind(this);
-		
 	}
 
-	suggestShip(event: Event) {
+	suggestShip = (event: Event) => {
 		if (this.state.current_suggestion) return;
 
 		const detail = (event as CustomEvent<ShipOverEventDetail>).detail;
@@ -153,9 +152,12 @@ class SuggestionHandler extends BaseSuggestionHandler {
 
 		this.garage.shipFits(shipClone, "Ship doesnt fit in garage");
 
-		var freeRow = SuggestionHandler.closestFreeRow(this.garage, this.rowIdx, detail.originalShip);
-		
-		
+		var freeRow = SuggestionHandler.closestFreeRow(
+			this.garage,
+			this.rowIdx,
+			detail.originalShip
+		);
+
 		if (freeRow !== null) {
 			// clone the clone to be the suggestion ship
 			let shipClone_clone = new Ship(
@@ -170,8 +172,8 @@ class SuggestionHandler extends BaseSuggestionHandler {
 
 			this.garage.html.appendChild(shipClone_clone.html);
 
-			this.row.addEventListener("ship-out", this.removeSuggestion.bind(this));
-			this.row.addEventListener("ship-placed", this.placeSuggestion.bind(this));
+			this.row.addEventListener("ship-out", this.removeSuggestion);
+			this.row.addEventListener("ship-placed", this.placeSuggestion);
 
 			this.state = {
 				originalShip: detail.originalShip,
@@ -184,18 +186,15 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				},
 			};
 		}
-	}
+	};
 
-	removeSuggestion() {
+	removeSuggestion = () => {
 		this.clearSuggestion();
-		this.row.removeEventListener("ship-out", this.removeSuggestion.bind(this));
-		this.row.removeEventListener(
-			"ship-placed",
-			this.placeSuggestion.bind(this)
-		);
-	}
+		this.row.removeEventListener("ship-out", this.removeSuggestion);
+		this.row.removeEventListener("ship-placed", this.placeSuggestion);
+	};
 
-	placeSuggestion() {
+	placeSuggestion = () => {
 		if (!this.state.current_suggestion) {
 			const originalShip = this.state.originalShip!;
 
@@ -213,13 +212,17 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.removeSuggestion();
 		suggestion.ship.html.classList.remove("suggestion");
 		this.garage.placeShip(suggestion.row, suggestion.ship);
-	}
+	};
 
-	rotateSuggestion(): void {
+	rotateSuggestion = () => {
 		// no rotation in garage
-	}
+	};
 
-	static closestFreeRow(garage: ShipGarage, row: number, disregard?: Ship): number | null {
+	static closestFreeRow(
+		garage: ShipGarage,
+		row: number,
+		disregard?: Ship
+	): number | null {
 		// check given row first
 		if (garage.rowEmpty(row, disregard)) return row;
 
