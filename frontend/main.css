@@ -1,6 +1,11 @@
+/* Disable pointer events for all ships except the one being dragged */
 @import url("./pregame/main.css"); 
 
 /* Layout for Battleships app */
+
+.ships-no-pointer .ship:not(.clone) {
+	pointer-events: none !important;
+}
 
 body {
 	margin: 0;

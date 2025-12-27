@@ -48,8 +48,9 @@ export class Dragger {
 		cloneHTML.style.width = original_styles.getPropertyValue("width");
 		cloneHTML.style.height = original_styles.getPropertyValue("height");
 
+		// Add class to body to disable pointer events for all ships except the dragged one
+		document.body.classList.add("ships-no-pointer");
 		originalHTML.classList.add("dragged");
-		originalHTML.style.pointerEvents = "none";
 
 		this.state = {
 			clone: clone,
@@ -65,6 +66,7 @@ export class Dragger {
 		document.addEventListener("contextmenu", this.onContextMenu);
 
 		document.body.style.cursor = "grabbing";
+	
 	};
 
 	private onMouseMove = (e: MouseEvent) => {
@@ -88,47 +90,58 @@ export class Dragger {
 
 		// Check if we've moved out of the current cell
 		if (this.state.currentCellInfo) {
-			const newInCellX = shiftX + this.state.currentCellInfo.inCellPos.x;
-			const newInCellY = shiftY + this.state.currentCellInfo.inCellPos.y;
+			
+			const oldInCellX = this.state.currentCellInfo.inCellPos.x;
+			const oldInCellY = this.state.currentCellInfo.inCellPos.y;
+			
+			const newInCellX = shiftX / CELLSIZE + this.state.currentCellInfo.inCellPos.x;
+			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPos.y;
+			
 			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
 
 			if (
 				newInCellX < 0 ||
-				newInCellX > CELLSIZE ||
+				newInCellX > 1 ||
 				newInCellY < 0 ||
-				newInCellY > CELLSIZE
+				newInCellY > 1
 			) {
 				this.dispatchMouseOver();
+			} else if (this.state.clone.length % 2 === 0) {
+				const oldCoordToCheck = this.state.clone.getOrientation() == Orientation.HORIZONTAL ? oldInCellX : oldInCellY;
+				const newCoordToCheck = this.state.clone.getOrientation() == Orientation.HORIZONTAL ? newInCellX : newInCellY;
+				
+				if (oldCoordToCheck >= 0.5  !==  newCoordToCheck >= 0.5) {
+				
+					this.state.currentCellInfo!.currentCell.dispatchEvent(
+						new CustomEvent("equator-cross", {
+							detail: {
+								inCellPosition: this.state.currentCellInfo.inCellPos
+							},
+							bubbles: true, // let bubble so that row handlers can catch it
+						})
+					);
+
+				}
 			}
+
 		} else {
 			this.dispatchMouseOver();
 		}
+
+		console.log("Current in cell position:", this.state.currentCellInfo?.inCellPos);
 	};
 
-	private dispatchMouseOver = () => {
+	private dispatchMouseOver = (centerCross: boolean = false) => {
+	
+		
 		let boundingRect = this.state.clone.html.getBoundingClientRect();
 
-		const cloneLength = this.state.clone.length;
-		// For even-length ships, we take the center of the right-/bottom-middle cell
-		// this helps for computing a good suggestion position
-		if (cloneLength % 2 === 0) {
-			if (this.state.clone.getOrientation() === Orientation.HORIZONTAL) {
-				var cloneCenter = {
-					x: boundingRect.left + CELLSIZE * (cloneLength / 2 + 0.5), // add one pixel
-					y: boundingRect.top + boundingRect.height / 2,
-				};
-			} else {
-				var cloneCenter = {
-					x: boundingRect.left + boundingRect.width / 2,
-					y: boundingRect.top + CELLSIZE * (cloneLength / 2 + 0.5),
-				};
-			}
-		} else {
-			var cloneCenter = {
-				x: boundingRect.left + boundingRect.width / 2,
-				y: boundingRect.top + boundingRect.height / 2,
-			};
-		}
+		
+		var cloneCenter = {
+			x: boundingRect.left + boundingRect.width / 2,
+			y: boundingRect.top + boundingRect.height / 2,
+		};
+		
 
 		// Determine the element under the cursor
 		const elementsBelow = document.elementsFromPoint(
@@ -147,43 +160,37 @@ export class Dragger {
 				})
 			);
 			this.state.currentCellInfo = undefined;
-		} else {
-			const cellRect = cell.getBoundingClientRect();
+		} else  {
+			const cellRect = cell.getBoundingClientRect(); // could also use modulo computations instead of getting rect again
+			
+			this.state.currentCellInfo?.currentCell.dispatchEvent(
+				new CustomEvent("ship-out", {
+					bubbles: true,
+				})
+			);
 
-			if (cell !== this.state.currentCellInfo?.currentCell) {
-				this.state.currentCellInfo?.currentCell.dispatchEvent(
-					new CustomEvent("ship-out", {
-						bubbles: true,
-					})
-				);
-
-				cell.dispatchEvent(
-					new CustomEvent("ship-over", {
-						detail: {
-							shipClone: this.state.clone,
-							originalShip: this.originalShip,
-							source: this.source,
-						},
-						bubbles: true, // let bubble so that row handlers can catch it
-					})
-				);
-
-				this.state.currentCellInfo = {
-					currentCell: cell,
-					inCellPos: {
-						x: cloneCenter.x - cellRect.left,
-						y: cloneCenter.y - cellRect.top,
+			this.state.currentCellInfo = {
+				currentCell: cell,
+				inCellPos: {
+					x: (cloneCenter.x - cellRect.left) / CELLSIZE,
+					y: (cloneCenter.y - cellRect.top) / CELLSIZE,
+				},
+			};
+			
+			cell.dispatchEvent(
+				new CustomEvent("ship-in", {
+					detail: {
+						shipClone: this.state.clone,
+						originalShip: this.originalShip,
+						source: this.source,
 					},
-				};
-			} else {
-				// should never happen, as we check for cell change above
-				this.state.currentCellInfo!.inCellPos = {
-					x: cloneCenter.x - cellRect.left,
-					y: cloneCenter.y - cellRect.top,
-				};
-			}
-		}
-	};
+					bubbles: true, // let bubble so that row handlers can catch it
+				})
+			);
+				
+		} 
+	}
+	
 
 	private onMouseUp = (e: MouseEvent) => {
 		if (e.button === 2) return; // right click
@@ -202,11 +209,10 @@ export class Dragger {
 					bubbles: true,
 				})
 			);
-		} else {
-			this.originalShip.html.classList.remove("dragged");
-			this.originalShip.html.style.pointerEvents = "auto";
 		}
-
+		// Always clean up pointer event disabling
+		document.body.classList.remove("ships-no-pointer");
+		
 		document.body.style.cursor = "default";
 	};
 

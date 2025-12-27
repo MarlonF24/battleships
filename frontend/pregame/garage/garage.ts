@@ -46,7 +46,7 @@ export class ShipGarage extends ShipGrid {
 
 	prepareRowHTML(row: HTMLTableRowElement) {
 		row.addEventListener(
-			"ship-over",
+			"ship-in",
 			new SuggestionHandler(this, row).suggestShip
 		);
 	}
@@ -133,7 +133,7 @@ export class ShipGarage extends ShipGrid {
 import {
 	BaseSuggestionHandler,
 	SuggestionState,
-	ShipOverEventDetail,
+	ShipInEventDetail,
 } from "../utility/suggestion_handler.js";
 
 class SuggestionHandler extends BaseSuggestionHandler {
@@ -147,7 +147,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 	suggestShip = (event: Event) => {
 		if (this.state.current_suggestion) return;
 
-		const detail = (event as CustomEvent<ShipOverEventDetail>).detail;
+		const detail = (event as CustomEvent<ShipInEventDetail>).detail;
 		const shipClone = detail.shipClone;
 
 		this.garage.shipFits(shipClone, "Ship doesnt fit in garage");
@@ -212,10 +212,6 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.removeSuggestion();
 		suggestion.ship.html.classList.remove("suggestion");
 		this.garage.placeShip(suggestion.row, suggestion.ship);
-	};
-
-	rotateSuggestion = () => {
-		// no rotation in garage
 	};
 
 	static closestFreeRow(

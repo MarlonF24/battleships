@@ -10,7 +10,11 @@
 import { Ship } from "../ship/ship.js";
 import { ShipGrid } from "./ship_grid.js";
 
-export interface ShipOverEventDetail {
+export interface EquatorCrossEventDetail {
+	inCellPosition: { x: number; y: number };
+}
+
+export interface ShipInEventDetail {
 	originalShip: Ship;
 	shipClone: Ship;
 	source: ShipGrid;
@@ -26,6 +30,7 @@ export interface SuggestionState {
 		row: number;
 		col: number;
 	};
+	inCellPosition: { x: number; y: number };
 }
 
 export abstract class BaseSuggestionHandler {
@@ -36,11 +41,9 @@ export abstract class BaseSuggestionHandler {
 		this.state.current_suggestion = undefined;
 	};
 
-	abstract suggestShip: (event: CustomEvent<ShipOverEventDetail>) => void;
+	abstract suggestShip: (event: CustomEvent<ShipInEventDetail>) => void;
 
 	abstract removeSuggestion: () => void;
 
 	abstract placeSuggestion: () => void;
-
-	abstract rotateSuggestion: () => void;
 }

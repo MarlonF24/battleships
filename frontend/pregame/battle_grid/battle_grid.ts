@@ -27,7 +27,7 @@ export class BattleGrid extends ShipGrid {
 
 	prepareCellHTML(cell: HTMLTableCellElement) {
 		cell.addEventListener(
-			"ship-over",
+			"ship-in",
 			new SuggestionHandler(this, cell).suggestShip
 		);
 	}
@@ -160,7 +160,8 @@ export class BattleGrid extends ShipGrid {
 
 import {
 	BaseSuggestionHandler,
-	ShipOverEventDetail,
+	EquatorCrossEventDetail,
+	ShipInEventDetail,
 } from "../utility/suggestion_handler.js";
 
 class SuggestionHandler extends BaseSuggestionHandler {
@@ -188,7 +189,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 			return;
 		}
 
-		const detail = (event as CustomEvent<ShipOverEventDetail>).detail;
+		const detail = (event as CustomEvent<ShipInEventDetail>).detail;
 
 		// clone the clone to be the suggestion ship
 		let shipClone_clone = new Ship(
@@ -204,7 +205,8 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				this.battleGrid,
 				shipClone_clone,
 				this.cellRow,
-				this.cellCol
+				this.cellCol,
+				detail.inCellPosition
 			);
 
 		if (
@@ -242,6 +244,10 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				"ship-placed",
 				this.placeSuggestion
 			);
+			this.cell.addEventListener(
+				"equator-cross",
+				this.equatorCrossHandler
+			);
 		}
 
 		this.state.originalShip = detail.originalShip;
@@ -249,16 +255,35 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.state.sourceShipGrid = detail.source;
 	}
 
+
+	equatorCrossHandler = (event: Event) => {
+		this.clearSuggestion();
+
+		this.suggestShip(
+			new CustomEvent("ship-in", {
+				detail: {
+					source: this.state.sourceShipGrid,
+					originalShip: this.state.originalShip,
+					shipClone: this.state.shipClone,
+					inCellPosition: (event as CustomEvent<EquatorCrossEventDetail>).detail.inCellPosition
+				},
+				bubbles: false,
+			})
+		);
+	}
+
+
 	rotateSuggestion = () => {
 		this.clearSuggestion();
 
 		// retry suggestion after rotation
 		this.suggestShip(
-			new CustomEvent("ship-over", {
+			new CustomEvent("ship-in", {
 				detail: {
-					source: this.state.sourceShipGrid!,
-					originalShip: this.state.originalShip!,
-					shipClone: this.state.shipClone!,
+					source: this.state.sourceShipGrid,
+					originalShip: this.state.originalShip,
+					shipClone: this.state.shipClone,
+					inCellPosition: this.state.inCellPosition
 				},
 				bubbles: false,
 			})
@@ -303,6 +328,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.cell.removeEventListener(
 			"ship-placed",
 			this.placeSuggestion
+
 		);
 	}
 
@@ -310,7 +336,8 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		battleGrid: BattleGrid,
 		ship: Ship,
 		centerRow: number,
-		centerCol: number
+		centerCol: number,
+		inCellPosition?: { x: number; y: number }
 	): { headRow: number; headCol: number } {
 		if (ship.getOrientation() === Orientation.HORIZONTAL) {
 			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
@@ -319,7 +346,15 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				0,
 				Math.min(centerCol - lengthOffset, battleGrid.grid.cols - ship.length)
 			);
+
+			if (ship.length % 2 === 0 && inCellPosition) {
+				// adjust for even-length ships based on in-cell position
+				if (inCellPosition.x >= 0.5 && headCol + ship.length < battleGrid.grid.cols) {
+					headCol += 1;
+				}
+			}
 			return { headRow, headCol };
+
 		} else {
 			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
 			let headRow = Math.max(
@@ -327,6 +362,13 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				Math.min(centerRow - lengthOffset, battleGrid.grid.rows - ship.length)
 			);
 			let headCol = centerCol;
+
+			if (ship.length % 2 === 0 && inCellPosition) {
+				// adjust for even-length ships based on in-cell position
+				if (inCellPosition.y >= 0.5 && headRow + ship.length < battleGrid.grid.rows) {
+					headRow += 1;
+				}
+			}
 			return { headRow, headCol };
 		}
 	}
