@@ -12,7 +12,7 @@ export function toggle_orientation(current: string): string {
 }
 
 export class Ship extends Component {
-	html!: HTMLDivElement;
+	declare html: HTMLDivElement;
 
 	constructor(
 		readonly length: number,

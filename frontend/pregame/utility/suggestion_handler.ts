@@ -14,6 +14,7 @@ export interface ShipOverEventDetail {
 	originalShip: Ship;
 	shipClone: Ship;
 	source: ShipGrid;
+	inCellPosition: { x: number; y: number };
 }
 
 export interface SuggestionState {

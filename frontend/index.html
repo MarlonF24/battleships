@@ -9,9 +9,22 @@
     <script type="module" src="../dist/main.js" defer></script>
   </head>
   <body>
-    <div
-      id="main-flex"
-      style="display: flex; align-items: flex-start; gap: 32px"
-    ></div>
+    <!-- Header section -->
+    <header id="header-div" class="header">
+      <h1>Battleships</h1>
+    </header>
+
+    <!-- Main content area: contains buttons and game area -->
+    <main class="main-content">
+      <!-- Button controls -->
+      <section id="buttons" class="button-bar">
+        <!-- Buttons will be injected here by JS -->
+      </section>
+
+      <!-- Game area: grid and garage will be rendered here by JS -->
+      <section id="main-flex" class="game-area">
+        <!-- Game grid and garage will be injected here by JS -->
+      </section>
+    </main>
   </body>
 </html>

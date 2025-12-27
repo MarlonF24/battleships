@@ -8,18 +8,21 @@ export class BattleGrid extends ShipGrid {
 
 	constructor(grid: Grid, ships?: Map<Ship, ShipPosition>) {
 		super(grid);
-
+		
 		this.cells = Array.from({ length: grid.rows }, () =>
 			Array(grid.cols).fill(null)
 		);
+		
 		this.ships = new Map<Ship, ShipPosition>();
-
+		
+		this.update_html();
+		
 		if (ships)
 			ships.forEach((pos, ship) => {
 				this.placeShip(ship, pos.startRow, pos.startCol);
 			});
 
-		this.update_html();
+		
 	}
 
 	prepareCellHTML(cell: HTMLTableCellElement) {
@@ -29,12 +32,12 @@ export class BattleGrid extends ShipGrid {
 		);
 	}
 
-	render(): HTMLDivElement {
-		const el = document.createElement("div");
+	 render(): HTMLElement {
+		 const el = document.createElement("section");
 		el.id = "battle-grid";
 
-		for (const row of this.grid.html.rows) {
-			for (const cell of row.cells) {
+		for (const row of Array.from(this.grid.html.rows)) {
+			for (const cell of Array.from(row.cells)) {
 				this.prepareCellHTML(cell);
 			}
 		}
@@ -46,14 +49,20 @@ export class BattleGrid extends ShipGrid {
 			this.prepareShipHTML(ship, pos.startRow, pos.startCol);
 			el.appendChild(ship_el);
 		}
-		return el;
+		 return el;
 	}
 
 
-	reset() {
+	reset(newShips?: Map<Ship, ShipPosition>) {
 		this.ships.forEach((_, ship) => {
 			this.removeShip(ship);
 		});
+
+		if (newShips) {
+			newShips.forEach((pos, ship) => {
+				this.placeShip(ship, pos.startRow, pos.startCol);
+			});
+		}
 	}
 
 

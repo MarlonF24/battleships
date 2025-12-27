@@ -136,7 +136,7 @@ export class Dragger {
 			cloneCenter.y
 		);
 
-		const cell = Array.from(elementsBelow).find((el) =>
+		const cell = elementsBelow.find((el) =>
 			el.classList.contains("cell")
 		) as HTMLTableCellElement | undefined;
 

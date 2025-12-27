@@ -1,7 +1,7 @@
 import { Component } from "../utility/component.js";
 
 export class Grid extends Component {
-	html!: HTMLTableElement;
+	declare html: HTMLTableElement;
 
 	constructor(readonly rows: number, readonly cols: number) {
 		super();

@@ -1,1 +1,62 @@
 @import url("./pregame/main.css"); 
+
+/* Layout for Battleships app */
+
+body {
+	margin: 0;
+	font-family: system-ui, sans-serif;
+	background: #f6f8fa;
+	color: #222;
+}
+
+.header {
+	background: #1a2634;
+	color: #fff;
+	padding: 1.5rem 0 1rem 0;
+	text-align: center;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.main-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 2rem 1rem;
+}
+
+.button-bar {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 24px;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.game-area {
+	display: flex;
+	gap: 32px;
+	align-items: flex-start;
+	width: 100%;
+	justify-content: center;
+}
+
+/* Example: style for grid and garage containers (to be adjusted as needed) */
+.game-grid, .garage {
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+	padding: 1rem;
+}
+
+@media (max-width: 900px) {
+	.main-content {
+		padding: 1rem 0.5rem;
+	}
+	.game-area {
+		flex-direction: column;
+		gap: 20px;
+		align-items: center;
+	}
+}

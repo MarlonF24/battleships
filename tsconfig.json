@@ -3,8 +3,9 @@
     "outDir": "./dist",
     "rootDir": "./frontend",
     "module": "esnext",
-    "target": "es6",
+    "target": "es2022",
     "strict": true,
+    "lib": ["ES2022", "DOM"]
   },
   "include": ["frontend/**/*.ts"]
 }

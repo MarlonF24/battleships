@@ -2,17 +2,24 @@ import { BattleGrid } from "./battle_grid/battle_grid.js";
 import { Grid } from "./grid/grid.js";
 import { ShipGarage } from "./garage/garage.js";
 import { Ship } from "./ship/ship.js";
-import { ResetButton } from "./buttons/reset.js";
+import { ResetButton, ReadyButton, RandomButton } from "./buttons/buttons.js";
+
 
 export function pregameView(
-	container: HTMLElement,
-	
+	mainFlex: HTMLElement,
+	buttonsFlex: HTMLElement
 ) {
-	// example initialization
+	mainFlex.innerHTML = "";
+	buttonsFlex.innerHTML = "";
+	
 	const gameGrid = new BattleGrid(new Grid(10, 10));
-
+	mainFlex.appendChild(gameGrid.html);
+	
 	const garage = new ShipGarage([
+		new Ship(9),
+		new Ship(6),
 		new Ship(5),
+		new Ship(4),
 		new Ship(4),
 		new Ship(3),
 		new Ship(3),
@@ -30,11 +37,17 @@ export function pregameView(
 		throw new Error("Too many ships for the game grid");
 	}
 
-	container.innerHTML = "";
-	container.appendChild(gameGrid.html);
-	container.appendChild(garage.html);
+	mainFlex.appendChild(garage.html);
+	
+	
 	const resetButton = new ResetButton(gameGrid, garage);
-	container.appendChild(resetButton.html);
+	buttonsFlex.appendChild(resetButton.html);
+	
+	const readyButton = new ReadyButton(garage);
+	buttonsFlex.appendChild(readyButton.html);
+
+	const randomButton = new RandomButton(gameGrid, garage);
+	buttonsFlex.appendChild(randomButton.html);
 }
 
 

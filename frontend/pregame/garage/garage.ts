@@ -6,7 +6,7 @@ export class ShipGarage extends ShipGrid {
 	public ships: Map<Ship, number>;
 	readonly shipArray: (Ship | null)[];
 	readonly maxLen: number;
-	html!: HTMLDivElement;
+	declare html: HTMLDivElement;
 
 	constructor(ships: Ship[]) {
 		super(
@@ -16,13 +16,8 @@ export class ShipGarage extends ShipGrid {
 			)
 		);
 
-		this.ships = new Map();
-		this.shipArray = [];
-
-		for (let index = 0; index < ships.length; index++) {
-			this.shipArray[index] = ships[index];
-			this.ships.set(ships[index], index);
-		}
+		this.ships = new Map(ships.map((ship, index) => {return [ship, index]}));
+		this.shipArray = Array.from(ships);
 
 		this.maxLen = this.grid.cols;
 		this.update_html();
@@ -45,18 +40,23 @@ export class ShipGarage extends ShipGrid {
 		});
 	}
 
+	clear() {
+		this.ships.forEach((_, ship) => {this.removeShip(ship);})
+	}
+
 	prepareRowHTML(row: HTMLTableRowElement) {
 		row.addEventListener(
 			"ship-over",
 			new SuggestionHandler(this, row).suggestShip
 		);
 	}
+	
 
-	render(): HTMLDivElement {
-		const el = document.createElement("div");
+	 render(): HTMLElement {
+		 const el = document.createElement("section");
 		el.id = "ship-garage";
-
-		for (const row of this.grid.html.rows) {
+		
+		for (const row of Array.from(this.grid.html.rows)) {
 			this.prepareRowHTML(row);
 		}
 
@@ -71,7 +71,7 @@ export class ShipGarage extends ShipGrid {
 				el.appendChild(ship_el);
 			}
 		});
-		return el;
+		 return el;
 	}
 
 	rowInBounds(row: number, err_msg?: string): boolean {
