@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./frontend",
+    "rootDir": "./src",
     "module": "esnext",
     "target": "es2022",
     "strict": true,
     "lib": ["ES2022", "DOM"]
   },
-  "include": ["frontend/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

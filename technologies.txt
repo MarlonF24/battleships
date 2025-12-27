@@ -1,0 +1,2 @@
+backend: python, fastAPI, REST + websockets, PostGreSQL
+frontend: TS (, later: REACT)
