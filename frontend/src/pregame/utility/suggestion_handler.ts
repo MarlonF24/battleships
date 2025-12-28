@@ -10,15 +10,50 @@
 import { Ship } from "../ship/ship.js";
 import { ShipGrid } from "./ship_grid.js";
 
+
+
+
+
 export interface EquatorCrossEventDetail {
 	inCellPosition: { x: number; y: number };
 }
 
-export interface ShipInEventDetail {
+export class EquatorCrossEvent extends CustomEvent<EquatorCrossEventDetail> {
+	constructor(detail: EquatorCrossEventDetail, bubbles = true) {
+		super("equator-cross", { detail, bubbles });
+	}
+}
+
+
+export interface ShipInEventDetail extends EquatorCrossEventDetail {
 	originalShip: Ship;
 	shipClone: Ship;
 	source: ShipGrid;
-	inCellPosition: { x: number; y: number };
+}
+
+
+export class ShipInEvent extends CustomEvent<ShipInEventDetail> {
+	constructor(detail: ShipInEventDetail, bubbles = true) {
+		super("ship-in", { detail, bubbles });
+	}
+}
+
+export class ShipOutEvent extends Event {
+	constructor(bubbles = true) {
+		super("ship-out", { bubbles });
+	}
+}
+
+export class ShipPlacedEvent extends Event {
+	constructor(bubbles = true) {
+		super("ship-placed", { bubbles });
+	}
+}
+
+export class ShipRotatedEvent extends Event {
+	constructor(bubbles = true) {
+		super("ship-rotate", { bubbles });
+	}
 }
 
 export interface SuggestionState {
@@ -41,9 +76,13 @@ export abstract class BaseSuggestionHandler {
 		this.state.current_suggestion = undefined;
 	};
 
-	abstract suggestShip: (event: CustomEvent<ShipInEventDetail>) => void;
+	abstract suggestShip: (event: Event) => void;
 
 	abstract removeSuggestion: () => void;
 
 	abstract placeSuggestion: () => void;
+
+	abstract rotateSuggestion: () => void;
+	
+	abstract equatorCrossHandler: (event: Event) => void;
 }

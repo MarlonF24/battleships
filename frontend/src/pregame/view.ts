@@ -5,15 +5,22 @@ import { Ship } from "./ship/ship.js";
 import { ResetButton, ReadyButton, RandomButton } from "./buttons/buttons.js";
 
 
+import "./main.css";
+
 export function pregameView(
-	mainFlex: HTMLElement,
-	buttonsFlex: HTMLElement
 ) {
-	mainFlex.innerHTML = "";
-	buttonsFlex.innerHTML = "";
+	const container = document.createElement("div");
+	
+	const gameArea = document.createElement("section");
+	gameArea.id = "pregame-game-area";
+	gameArea.classList.add("game-area");
+
+	const buttonBar = document.createElement("section");
+	buttonBar.id = "pregame-button-bar";
+	buttonBar.classList.add("button-bar");
 	
 	const gameGrid = new BattleGrid(new Grid(10, 10));
-	mainFlex.appendChild(gameGrid.html);
+	gameArea.appendChild(gameGrid.html);
 	
 	const garage = new ShipGarage([
 		new Ship(9),
@@ -37,17 +44,23 @@ export function pregameView(
 		throw new Error("Too many ships for the game grid");
 	}
 
-	mainFlex.appendChild(garage.html);
+	gameArea.appendChild(garage.html);
+	
+	const readyButton = new ReadyButton(garage);
+	buttonBar.appendChild(readyButton.html);
 	
 	
 	const resetButton = new ResetButton(gameGrid, garage);
-	buttonsFlex.appendChild(resetButton.html);
-	
-	const readyButton = new ReadyButton(garage);
-	buttonsFlex.appendChild(readyButton.html);
+	buttonBar.appendChild(resetButton.html);
+
 
 	const randomButton = new RandomButton(gameGrid, garage);
-	buttonsFlex.appendChild(randomButton.html);
+	buttonBar.appendChild(randomButton.html);
+
+	container.appendChild(buttonBar);
+	container.appendChild(gameArea);
+	
+	return container;
 }
 
 

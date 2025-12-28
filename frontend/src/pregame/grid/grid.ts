@@ -1,4 +1,7 @@
-import { Component } from "../utility/component.js";
+import { Component } from "../../utility/component.js";
+
+import "./grid.css";
+
 
 export class Grid extends Component {
 	declare html: HTMLTableElement;

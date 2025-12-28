@@ -1,4 +1,6 @@
-import { Component } from "../utility/component.js";
+import { Component } from "../../utility/component.js";
+
+import "./ship.css";
 
 export enum Orientation {
 	HORIZONTAL = "horizontal",

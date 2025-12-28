@@ -1,6 +1,6 @@
 import { Grid } from "../grid/grid.js";
 import { Ship } from "../ship/ship.js";
-import { Component } from "./component.js";
+import { Component } from "../../utility/component.js";
 import { Dragger } from "./drag.js";
 
 export interface ShipPosition {
@@ -21,9 +21,11 @@ export abstract class ShipGrid extends Component {
 
 	abstract containsShip(ship: Ship): boolean;
 
-	prepareShipHTML(ship: Ship, row: number, col: number) {
+	prepareShipHTML(ship: Ship, row: number, col: number, reload: boolean = false) {
+		if (reload) { ship.update_html(); }
 		ship.html.style.setProperty("--row", row.toString());
 		ship.html.style.setProperty("--col", col.toString());
+		
 		ship.html.addEventListener(
 			"mousedown",
 			new Dragger(ship, this).mouseDownHandler

@@ -1,11 +1,10 @@
-import { pregameView } from "./pregame/view.js";
+import { setUpViewSwitchingListener } from "./view_switch/listener.js";
+import { switchToView, AppPhase } from "./view_switch/types.js";
+import "./main.css";
 
-const mainFlex: HTMLDivElement = document.getElementById(
-	"main-flex"
-) as HTMLDivElement;
+const BackendWebSocket = new WebSocket(`ws://${window.location.host}/ws`);
 
-const buttonsFlex: HTMLDivElement = document.getElementById(
-	"buttons"
-) as HTMLDivElement;
 
-pregameView(mainFlex, buttonsFlex);
+setUpViewSwitchingListener();
+
+switchToView(AppPhase.PREGAME);

@@ -2,6 +2,8 @@ import { Ship, Orientation } from "../ship/ship.js";
 import { Grid } from "../grid/grid.js";
 import { ShipGrid, ShipPosition } from "../utility/ship_grid.js";
 
+import "./battle_grid.css"; 
+
 export class BattleGrid extends ShipGrid {
 	private cells: (Ship | null)[][];
 	public ships: Map<Ship, ShipPosition>;
@@ -130,7 +132,7 @@ export class BattleGrid extends ShipGrid {
 
 		this.ships.set(ship, { startRow, startCol });
 
-		this.prepareShipHTML(ship, startRow, startCol);
+		this.prepareShipHTML(ship, startRow, startCol, true);
 
 		this.html.appendChild(ship.html);
 	}
@@ -162,6 +164,9 @@ import {
 	BaseSuggestionHandler,
 	EquatorCrossEventDetail,
 	ShipInEventDetail,
+	ShipRotatedEvent,
+	EquatorCrossEvent,
+	ShipInEvent,
 } from "../utility/suggestion_handler.js";
 
 class SuggestionHandler extends BaseSuggestionHandler {
@@ -189,7 +194,7 @@ class SuggestionHandler extends BaseSuggestionHandler {
 			return;
 		}
 
-		const detail = (event as CustomEvent<ShipInEventDetail>).detail;
+		const detail = (event as ShipInEvent).detail;
 
 		// clone the clone to be the suggestion ship
 		let shipClone_clone = new Ship(
@@ -260,15 +265,14 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		this.clearSuggestion();
 
 		this.suggestShip(
-			new CustomEvent("ship-in", {
-				detail: {
-					source: this.state.sourceShipGrid,
-					originalShip: this.state.originalShip,
-					shipClone: this.state.shipClone,
-					inCellPosition: (event as CustomEvent<EquatorCrossEventDetail>).detail.inCellPosition
-				},
-				bubbles: false,
-			})
+			new ShipInEvent(
+				{
+					source: this.state.sourceShipGrid!,
+					originalShip: this.state.originalShip!,
+					shipClone: this.state.shipClone!,
+					inCellPosition: (event as EquatorCrossEvent).detail.inCellPosition
+				}
+			)
 		);
 	}
 
@@ -278,15 +282,13 @@ class SuggestionHandler extends BaseSuggestionHandler {
 
 		// retry suggestion after rotation
 		this.suggestShip(
-			new CustomEvent("ship-in", {
-				detail: {
-					source: this.state.sourceShipGrid,
-					originalShip: this.state.originalShip,
-					shipClone: this.state.shipClone,
-					inCellPosition: this.state.inCellPosition
-				},
-				bubbles: false,
-			})
+			new ShipInEvent({
+				source: this.state.sourceShipGrid!,
+				originalShip: this.state.originalShip!,
+				shipClone: this.state.shipClone!,
+				inCellPosition: this.state.inCellPosition!
+				}
+			)
 		);
 	}
 

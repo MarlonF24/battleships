@@ -1,5 +1,6 @@
 import { Ship, Orientation } from "../ship/ship.js";
 import { ShipGrid } from "./ship_grid.js";
+import { ShipInEvent, ShipOutEvent, ShipPlacedEvent, ShipRotatedEvent, EquatorCrossEvent } from "./suggestion_handler.js";
 
 // Interface for drag state
 interface DragState {
@@ -113,12 +114,11 @@ export class Dragger {
 				if (oldCoordToCheck >= 0.5  !==  newCoordToCheck >= 0.5) {
 				
 					this.state.currentCellInfo!.currentCell.dispatchEvent(
-						new CustomEvent("equator-cross", {
-							detail: {
+						new EquatorCrossEvent({
 								inCellPosition: this.state.currentCellInfo.inCellPos
 							},
-							bubbles: true, // let bubble so that row handlers can catch it
-						})
+							true // let bubble so that row handlers can catch it
+						)
 					);
 
 				}
@@ -128,7 +128,6 @@ export class Dragger {
 			this.dispatchMouseOver();
 		}
 
-		console.log("Current in cell position:", this.state.currentCellInfo?.inCellPos);
 	};
 
 	private dispatchMouseOver = (centerCross: boolean = false) => {
@@ -155,18 +154,14 @@ export class Dragger {
 
 		if (!cell) {
 			this.state.currentCellInfo?.currentCell.dispatchEvent(
-				new CustomEvent("ship-out", {
-					bubbles: true,
-				})
+				new ShipOutEvent(true)
 			);
 			this.state.currentCellInfo = undefined;
 		} else  {
 			const cellRect = cell.getBoundingClientRect(); // could also use modulo computations instead of getting rect again
 			
 			this.state.currentCellInfo?.currentCell.dispatchEvent(
-				new CustomEvent("ship-out", {
-					bubbles: true,
-				})
+				new ShipOutEvent(true)
 			);
 
 			this.state.currentCellInfo = {
@@ -178,14 +173,15 @@ export class Dragger {
 			};
 			
 			cell.dispatchEvent(
-				new CustomEvent("ship-in", {
-					detail: {
+				new ShipInEvent(
+					{
 						shipClone: this.state.clone,
 						originalShip: this.originalShip,
 						source: this.source,
+						inCellPosition: this.state.currentCellInfo.inCellPos
 					},
-					bubbles: true, // let bubble so that row handlers can catch it
-				})
+					true // let bubble so that row handlers can catch it
+				)
 			);
 				
 		} 
@@ -205,12 +201,14 @@ export class Dragger {
 
 		if (this.state.currentCellInfo) {
 			this.state.currentCellInfo.currentCell.dispatchEvent(
-				new CustomEvent("ship-placed", {
-					bubbles: true,
-				})
+				new ShipPlacedEvent(true)
 			);
-		}
-		// Always clean up pointer event disabling
+		} 
+		
+		this.originalShip.html.classList.remove("dragged");
+		this.originalShip.html.style.pointerEvents = "auto";
+		
+
 		document.body.classList.remove("ships-no-pointer");
 		
 		document.body.style.cursor = "default";
@@ -230,9 +228,7 @@ export class Dragger {
 
 		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
 		this.state.currentCellInfo?.currentCell.dispatchEvent(
-			new CustomEvent("ship-rotate", {
-				bubbles: true,
-			})
+			new ShipRotatedEvent(true)
 		);
 	};
 
@@ -251,9 +247,7 @@ export class Dragger {
 
 		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
 		this.state.currentCellInfo?.currentCell.dispatchEvent(
-			new CustomEvent("ship-rotate", {
-				bubbles: true,
-			})
+			new ShipRotatedEvent(true)
 		);
 	};
 }

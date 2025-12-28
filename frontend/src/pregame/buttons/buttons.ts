@@ -10,48 +10,36 @@
 import { ShipPosition } from "../utility/ship_grid.js";
 import { BattleGrid } from "../battle_grid/battle_grid.js";
 import { ShipGarage } from "../garage/garage.js";
-import { Component } from "../utility/component.js";
+import { Button } from "../../utility/component.js";
 import { Orientation, Ship } from "../ship/ship.js";
 
-export class ResetButton extends Component {
-	constructor(
-		readonly battleGrid: BattleGrid,
-		readonly shipGarage: ShipGarage
-	) {
-		super();
-		this.update_html();
-	}
+import "./buttons.css";
 
-	render(): HTMLElement {
-		const button = document.createElement("button");
-		button.id = "reset-button";
+export class ResetButton extends Button {
+       constructor(
+	       readonly battleGrid: BattleGrid,
+	       readonly shipGarage: ShipGarage
+       ) {
+	       super("Reset");
+	       this.update_html();
+       }
 
-		button.textContent = "Reset";
-		button.onclick = () => {
-			// Logic to reset the board goes here
+
+	clickHandler = (e: MouseEvent): void => {
 			console.log("Resetting the board....");
 			this.battleGrid.reset();
 			this.shipGarage.reset();
-		};
-		return button;
 	}
 }
 
-export class ReadyButton extends Component {
-	constructor(readonly garage: ShipGarage) {
-		super();
-		this.update_html();
-	}
 
-	render(): HTMLElement {
-		const button = document.createElement("button");
-		button.id = "ready-button";
+export class ReadyButton extends Button {
+       constructor(readonly garage: ShipGarage) {
+	       super("Ready!");
+	       this.update_html();
+       }
 
-		button.textContent = "Ready!";
-		button.onclick = this.clickHandler;
 
-		return button;
-	}
 
 	clickHandler = () => {
 		if (this.garage.ships.size) {
@@ -80,153 +68,155 @@ interface BattleGridInfo {
 }
 
 
-var initialShips: Ship[]
  
 
-export class RandomButton extends Component {
-	constructor(
-		readonly battleGrid: BattleGrid,
-		readonly shipGarage: ShipGarage
-	) {
-		super();
-		this.update_html();
-	}
 
-	render(): HTMLElement {
-		const button = document.createElement("button");
-		button.id = "random-button";
-		button.textContent = "Randomize Ships";
-		button.onclick = this.clickHandler;
-		return button;
-	}
+export class RandomButton extends Button {
+       constructor(
+	       readonly battleGrid: BattleGrid,
+	       readonly shipGarage: ShipGarage
+       ) {
+	       super("Randomize Ships");
+	       this.update_html();
+       }
+
+
+	       render(): HTMLButtonElement {
+		       const button = super.render();
+
+		       button.addEventListener("contextmenu", this.rightClickHandler);
+		       button.title = "Left Click: unplaced ships\nRight Click: all ships";
+		       return button;
+	       }
 
 	clickHandler = () => {
-		// Logic to randomize ship placement goes here
-		console.log("Randomizing ship placement...");
-		
-		initialShips = (
-			JSON.parse(sessionStorage.getItem("initial-garage")!) as Array<number>
-		).map((length) => {
-			return new Ship(length);
-		});
+		this.generateRandomBoard();
+	};
+
+	rightClickHandler = (ev: MouseEvent) => {
+		ev.preventDefault();
+		this.generateRandomBoard(true);
+	}
+
+	generateRandomBoard(resetAll: boolean = false): void {
+		// Logic to randomize ship placement goes here		
+		const initialShips = Array.from(this.shipGarage.ships.keys()).concat(
+			Array.from(this.battleGrid.ships.keys())
+		);
 
 		initialShips.sort((a, b) => {return b.length - a.length}); //sort ships by length (desc) so that we place longer ships first
 		
 		let {rows, cols} = this.battleGrid.grid
 		
-		let initialRowGap: Gap = {size: cols, coord: 0};
-		let intialColGap: Gap = {size: rows, coord: 0};
 
 		let nullSolution: BattleGridInfo = {
 			shipPositions: new Map(),
-			rowGaps: new Array<GapsInfo>(rows).fill(
-				{largestGap: initialRowGap,
-					gaps: [initialRowGap]
-				}
-			),
-			
-			colGaps: new Array<GapsInfo>(cols).fill(
-				{largestGap: intialColGap,
-					gaps: [intialColGap]
-				}
-			)
+			rowGaps: Array.from({ length: rows }, () => {
+            const gap = { size: cols, coord: 0 };
+            return { largestGap: gap, gaps: [gap] };
+        }
+	),
+        colGaps: Array.from({ length: cols }, () => {
+            const gap = { size: rows, coord: 0 };
+            return { largestGap: gap, gaps: [gap] };
+        }
+	)
+	}
+
+		let shipsToPlace = initialShips;
+
+		if (!resetAll) {
+			console.log("Randomly placing unplaced ships.");
+			for (let [ship, position] of this.battleGrid.ships) {
+				RandomButton.placeShip(nullSolution, ship, position); 
+			}
+		
+			shipsToPlace = initialShips.filter((ship) => !nullSolution.shipPositions.has(ship));
+		} else {
+			console.log("Randomly placing all ships.");
 		}
 
-		console.clear()
+		shipsToPlace = shipsToPlace.map((ship) => new Ship(ship.length, ship.getOrientation())); // to avoid rotation mutations on original ships
+
 		
-		const solution = this.DFS(nullSolution, 0);
+		const solution = this.DFS(nullSolution, shipsToPlace);
 
 		if (!solution) throw new Error("Error in DFS for random battle grid.");
-		console.log(...solution.values(), ...solution.keys())
 		this.shipGarage.clear();
 		this.battleGrid.reset(solution);
-	};
+	}
 
-
-
-	DFS(partialSolution: BattleGridInfo, depth: number): (Map<Ship, ShipPosition> | null) {
-		if (depth >= initialShips.length) return partialSolution.shipPositions;
+	DFS(partialSolution: BattleGridInfo, shipsToPlace: Ship[]): (Map<Ship, ShipPosition> | null) {
+		if (shipsToPlace.length === 0) return partialSolution.shipPositions;
 		
 		
-		let shipToPlace = initialShips[depth]; 
-
-		const orientation = Object.values(Orientation)[RandomButton.randInt(0, 1)];
-
-		shipToPlace.setOrientation(orientation);
+		let shipToPlace = shipsToPlace[0]; 
 		
-		let {shipPositions, rowGaps, colGaps} = partialSolution;
-
-		const parallelGaps = orientation == Orientation.HORIZONTAL ? rowGaps : colGaps;  
-
+		const orientations = Object.values(Orientation).sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
 		
-		let candidateParallelIdxs = parallelGaps.reduce((acc, value, index) => {
-			if (value.largestGap.size >= shipToPlace.length) acc.push(index);
-			return acc;
-			},  Array<number>());
+		for (let orientation of orientations) {
 		
-		candidateParallelIdxs.sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
+			shipToPlace.setOrientation(orientation);
+			let {rowGaps, colGaps} = partialSolution;
 
-		for (const candidateParallelIdx of candidateParallelIdxs) {
-			const candidateGaps = parallelGaps[candidateParallelIdx].gaps
-			const candidateGapsIdxs = candidateGaps.flatMap((gap, idx) => gap.size >= shipToPlace.length ? [idx] : []);
+			const parallelGaps = orientation == Orientation.HORIZONTAL ? rowGaps : colGaps;  
+
 			
-			candidateGapsIdxs.sort(() => 0.5 - Math.random()); 
+			let candidateParallelIdxs = parallelGaps.reduce((acc, value, index) => {
+				if (value.largestGap.size >= shipToPlace.length) acc.push(index);
+				return acc;
+				},  Array<number>());
+			
+			candidateParallelIdxs.sort(() => 0.5 - Math.random()); 
 
-			for (let candidateGapIdx of candidateGapsIdxs) {
-				const candidateGap = candidateGaps[candidateGapIdx]
+			for (const candidateParallelIdx of candidateParallelIdxs) {
+				const candidateGaps = parallelGaps[candidateParallelIdx].gaps
+				const candidateGapsIdxs = candidateGaps.flatMap((gap, idx) => gap.size >= shipToPlace.length ? [idx] : []);
 				
-				const candidatePerpOffsets = Array.from(
-				{ length: candidateGap.size - shipToPlace.length + 1 },
-				(_, i) => i
-				);
+				candidateGapsIdxs.sort(() => 0.5 - Math.random()); 
 
-				candidatePerpOffsets.sort(() => 0.5 - Math.random());
-
-				for (const candidatePerpOffset of candidatePerpOffsets) {
-					const actualPerp = candidateGap.coord + candidatePerpOffset
+				for (let candidateGapIdx of candidateGapsIdxs) {
+					const candidateGap = candidateGaps[candidateGapIdx]
 					
-					const cloneSolution = {
-						shipPositions: new Map(shipPositions),
-						rowGaps: RandomButton.shallowCopyGapsInfos(rowGaps),
-						colGaps: RandomButton.shallowCopyGapsInfos(colGaps)
-					}
-					
-					let shipPosition = orientation == Orientation.HORIZONTAL ? 
-					{startRow: candidateParallelIdx, startCol: actualPerp} :
-					{startRow: actualPerp, startCol: candidateParallelIdx}
-					
+					const candidatePerpOffsets = Array.from(
+					{ length: candidateGap.size - shipToPlace.length + 1 },
+					(_, i) => i
+					);
 
-					cloneSolution.shipPositions.set(shipToPlace, shipPosition);
-		
+					candidatePerpOffsets.sort(() => 0.5 - Math.random());
 
-					const [parallelCloneGaps, perpCloneGaps] = orientation == Orientation.HORIZONTAL ? [cloneSolution.rowGaps, cloneSolution.colGaps] : [cloneSolution.colGaps, cloneSolution.rowGaps];  
-
-					RandomButton.updateSplitGap(parallelCloneGaps[candidateParallelIdx], candidateGapIdx, candidatePerpOffset, candidatePerpOffset + shipToPlace.length - 1)
-
-
-					// update split gaps in crossed perps 
-					for (let perp of perpCloneGaps.slice(actualPerp, actualPerp + shipToPlace.length)) {
-						let hitGapIdx = perp.gaps.findIndex((gap) => gap.coord > candidateParallelIdx);
+					for (const candidatePerpOffset of candidatePerpOffsets) {
+						const actualPerp = candidateGap.coord + candidatePerpOffset
 						
-						hitGapIdx = hitGapIdx === -1 ? perp.gaps.length - 1 : hitGapIdx - 1; // found -> go one back, not-found -> last element
+						const cloneSolution = RandomButton.shallowCopyBattleGridInfo(partialSolution);
+						
+						let shipPosition = orientation == Orientation.HORIZONTAL ? 
+							{startRow: candidateParallelIdx, startCol: actualPerp} :
+							{startRow: actualPerp, startCol: candidateParallelIdx};
+						
+						
+						RandomButton.placeShip(cloneSolution, shipToPlace, shipPosition, candidatePerpOffset,candidateGapIdx);
 
-						const relativeParrallelIdx = candidateParallelIdx - perp.gaps[hitGapIdx].coord
+						// recursive call
+						const result = this.DFS(cloneSolution, shipsToPlace.slice(1));
 
-						RandomButton.updateSplitGap(perp, hitGapIdx, relativeParrallelIdx, relativeParrallelIdx);							
+						if (result) return result;
+						
 					}
-					
-					// recursive call
-					const result = this.DFS(cloneSolution, depth + 1);
-
-					if (result) return result;
-					
 				}
 			}
 		}
-		
-		return null;
+	return null;
 	};
 
+
+	static shallowCopyBattleGridInfo(battleGridInfo: BattleGridInfo): BattleGridInfo {
+		return {
+			shipPositions: new Map(battleGridInfo.shipPositions),
+			rowGaps: RandomButton.shallowCopyGapsInfos(battleGridInfo.rowGaps),
+			colGaps: RandomButton.shallowCopyGapsInfos(battleGridInfo.colGaps)
+		};
+	}
 
 	static shallowCopyGapsInfos(gapsInfos: GapsInfo[]): GapsInfo[] {
 		return gapsInfos.map((gapsInfo) => ({
@@ -234,6 +224,41 @@ export class RandomButton extends Component {
 			gaps: gapsInfo.gaps.slice()
 		}));
 	}
+
+
+	static placeShip(battleGridInfo: BattleGridInfo, ship: Ship, position: ShipPosition, perpOffset?: number, gapIdx?: number): void {
+		
+		let {startRow, startCol} = position;
+
+		const [parallelGaps, perpGaps, parallelIdx, perpIdx] = ship.getOrientation() == Orientation.HORIZONTAL ? [battleGridInfo.rowGaps, battleGridInfo.colGaps, startRow, startCol] : [battleGridInfo.colGaps, battleGridInfo.rowGaps, startCol, startRow];  
+
+		gapIdx = gapIdx ?? RandomButton.findGapIdxContainingCoord(parallelGaps[parallelIdx], perpIdx);
+		
+		
+		if (!perpOffset) {
+			perpOffset = perpIdx - parallelGaps[parallelIdx].gaps[gapIdx].coord
+		}
+
+		RandomButton.updateSplitGap(parallelGaps[parallelIdx], gapIdx, perpOffset, perpOffset + ship.length - 1)
+
+		// update split gaps in crossed perps 
+		for (let perp of perpGaps.slice(perpIdx, perpIdx + ship.length)) {
+			let hitGapIdx = RandomButton.findGapIdxContainingCoord(perp, parallelIdx);
+
+			const relativeParrallelIdx = parallelIdx - perp.gaps[hitGapIdx].coord
+
+			RandomButton.updateSplitGap(perp, hitGapIdx, relativeParrallelIdx, relativeParrallelIdx);							
+		}
+		
+		battleGridInfo.shipPositions.set(ship, position);
+	}
+
+
+	static findGapIdxContainingCoord(gapsInfo: GapsInfo, coord: number): number {
+		let hitGapIdx = gapsInfo.gaps.findIndex((gap) => gap.coord > coord);
+		return hitGapIdx === -1 ? gapsInfo.gaps.length - 1 : hitGapIdx - 1; // found -> go one back, not-found -> last element
+	}
+
 
 	//inclusive end idx for the piece thats cut out
 	static updateSplitGap(gapsInfo: GapsInfo, gapToSplitIdx: number, startIdx: number, endIdx: number): void {
@@ -248,11 +273,9 @@ export class RandomButton extends Component {
 		gapsInfo.gaps.splice(gapToSplitIdx, 1, ...splits); // replace candidate Gap with remainders
 
 		// update largest gap
-		if (gap == gapsInfo.largestGap) {
+		if (gap.size == gapsInfo.largestGap.size) {
 			gapsInfo.largestGap = gapsInfo.gaps.reduce((currLargestGap, currGap) => currLargestGap.size < currGap.size ? currGap : currLargestGap, {size: 0, coord: 0})
 		}
 	}
 
-	static randInt = (min: number, max: number): number =>
-		Math.floor(Math.random() * (max - min + 1)) + min;
 }

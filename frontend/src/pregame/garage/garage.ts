@@ -2,6 +2,8 @@ import { Ship, Orientation } from "../ship/ship.js";
 import { Grid } from "../grid/grid.js";
 import { ShipGrid } from "../utility/ship_grid.js";
 
+import "./garage.css";
+
 export class ShipGarage extends ShipGrid {
 	public ships: Map<Ship, number>;
 	readonly shipArray: (Ship | null)[];
@@ -28,11 +30,13 @@ export class ShipGarage extends ShipGrid {
 		);
 	}
 
-	reset() {
+	reset() { // !! only call this when removing all ships !!
 		this.ships.forEach((_, ship) => {
 			this.removeShip(ship);
 		});
 
+		if (document.getElementsByClassName("ship").length) {throw new Error("Ships still present in game outside the garage, cant reset the garage to initial ships");}
+		
 		const initialShips = JSON.parse(sessionStorage.getItem("initial-garage")!);
 
 		initialShips.forEach((length: number, index: number) => {
@@ -124,7 +128,7 @@ export class ShipGarage extends ShipGrid {
 		this.shipArray[row] = ship;
 		this.ships.set(ship, row);
 
-		this.prepareShipHTML(ship, row, 0);
+		this.prepareShipHTML(ship, row, 0, true);
 
 		this.html.appendChild(ship.html);
 	}
@@ -213,6 +217,10 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		suggestion.ship.html.classList.remove("suggestion");
 		this.garage.placeShip(suggestion.row, suggestion.ship);
 	};
+
+	rotateSuggestion = () => {}
+
+	equatorCrossHandler = (event: Event) => {}
 
 	static closestFreeRow(
 		garage: ShipGarage,
