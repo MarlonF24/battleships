@@ -1,0 +1,11 @@
+#createGameButton {
+  background: #1976d2;
+  border-radius: 6px;
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+#createGameButton:hover {
+  background: #1565c0;
+}

@@ -13,18 +13,21 @@ interface DragState {
 	};
 }
 
-const CELLSIZE = parseInt(
-	getComputedStyle(document.documentElement)
-		.getPropertyValue("--cell-size")
-		.trim()
-		.replace("px", "")
-);
+let CELLSIZE: number;
 
 // Class encapsulating ship drag logic
 export class Dragger {
 	private state!: DragState;
 
-	constructor(readonly originalShip: Ship, readonly source: ShipGrid) {}
+	constructor(readonly originalShip: Ship, readonly source: ShipGrid) {
+		CELLSIZE = CELLSIZE ?? parseInt( // here and not global cause vite doesnt load the styles before this module
+		getComputedStyle(document.documentElement)
+		.getPropertyValue("--cell-size")
+		.trim()
+		.replace("px", "")
+		);
+
+	}
 
 	public mouseDownHandler = (event: MouseEvent) => {
 		if (event.button !== 0) return; // only left click
@@ -99,7 +102,7 @@ export class Dragger {
 			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPos.y;
 			
 			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
-
+			console.log(`In-cell position updated to:`, this.state.currentCellInfo.inCellPos);
 			if (
 				newInCellX < 0 ||
 				newInCellX > 1 ||

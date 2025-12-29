@@ -5,11 +5,18 @@ import { Ship } from "./ship/ship.js";
 import { ResetButton, ReadyButton, RandomButton } from "./buttons/buttons.js";
 
 
-import "./main.css";
+import "./pregame.css";
 
 export function pregameView(
+	gameID: string,
 ) {
 	const container = document.createElement("div");
+
+	// Game ID display
+	const gameIdDiv = document.createElement("div");
+	gameIdDiv.className = "pregame-game-id";
+	gameIdDiv.textContent = `Game ID: ${gameID}`;
+	container.appendChild(gameIdDiv);
 	
 	const gameArea = document.createElement("section");
 	gameArea.id = "pregame-game-area";

@@ -1,3 +1,5 @@
+import "./component.css";
+
 export abstract class Component {
     html!: HTMLElement;
     
@@ -22,10 +24,34 @@ export abstract class Button extends Component {
     render(): HTMLButtonElement {
         const button = document.createElement("button");
         button.textContent = this.text;
-        let className = this.constructor.name;
-        className = className.charAt(0).toLowerCase() + className.slice(1);
-        button.className = className;
+        let id = this.constructor.name;
+        id = id.charAt(0).toLowerCase() + id.slice(1);
+        button.id = id;
         button.addEventListener("click", (e) => this.clickHandler(e));
         return button;
+    }
+}
+
+
+export enum TooltipPosition {
+    TOP,
+    BOTTOM,
+    LEFT,
+    RIGHT
+}
+
+export class Tooltip extends Component {
+    declare html: HTMLSpanElement;
+    constructor(private text: string, private position: TooltipPosition = TooltipPosition.TOP) {
+        super();
+        this.update_html();
+    }
+
+    render(): HTMLSpanElement {
+        const tooltip = document.createElement("span");
+        tooltip.className = "tooltip";
+        tooltip.textContent = this.text;
+        tooltip.dataset.position = TooltipPosition[this.position].toLowerCase();
+        return tooltip;
     }
 }

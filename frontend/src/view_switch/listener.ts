@@ -19,7 +19,7 @@ function viewSwitchHandler(event: Event) {
             view = welcomeView();
             break;
         case AppPhase.PREGAME:
-            view = pregameView(); // TODO: make pregameView gameID dependent 
+            view = pregameView(gameID!); // TODO: make pregameView gameID dependent 
             break;
         case AppPhase.GAME:
             view = gameView(gameID!);

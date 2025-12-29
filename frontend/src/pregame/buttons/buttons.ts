@@ -10,7 +10,7 @@
 import { ShipPosition } from "../utility/ship_grid.js";
 import { BattleGrid } from "../battle_grid/battle_grid.js";
 import { ShipGarage } from "../garage/garage.js";
-import { Button } from "../../utility/component.js";
+import { Button, Tooltip, TooltipPosition } from "../../utility/component.js";
 import { Orientation, Ship } from "../ship/ship.js";
 
 import "./buttons.css";
@@ -68,8 +68,6 @@ interface BattleGridInfo {
 }
 
 
- 
-
 
 export class RandomButton extends Button {
        constructor(
@@ -80,14 +78,17 @@ export class RandomButton extends Button {
 	       this.update_html();
        }
 
+	render(): HTMLButtonElement {
+		const button = super.render();
+		button.addEventListener("contextmenu", this.rightClickHandler);
 
-	       render(): HTMLButtonElement {
-		       const button = super.render();
+		// Tooltip setup
+		const tooltip = new Tooltip("Left Click: unplaced ships\nRight Click: all ships", TooltipPosition.TOP);
+		button.classList.add("has-tooltip");
+		button.appendChild(tooltip.html);
 
-		       button.addEventListener("contextmenu", this.rightClickHandler);
-		       button.title = "Left Click: unplaced ships\nRight Click: all ships";
-		       return button;
-	       }
+		return button;
+	}
 
 	clickHandler = () => {
 		this.generateRandomBoard();
