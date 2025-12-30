@@ -1,4 +1,5 @@
 import { Component } from "../../utility/component";
+import { switchToView, AppPhase } from "../../view_switch/types";
 
 import "./inputs.css";
 
@@ -87,12 +88,21 @@ export class JoinGameInput extends Component {
                         this.displayError("Game not found. Please type in a valid Game ID and try again.");
                         
                     } else {
-                        alert("Unexpected error occurred. Page will reload.");
+                        alert("An unexpected error occurred. Page will reload.");
                         window.location.reload();
                     }
-                } else if (response.status === 400) {
+                } else if (response.status === 422) {
+                    this.displayError("Please enter a valid Game ID.");
                 }
+            } else {
+                const data = await response.json();
+                const joinedGameId = data.id;
+                switchToView(AppPhase.PREGAME, joinedGameId, true);
+                console.log(`Successfully joined game with ID: ${joinedGameId}`);
             }
         }
     }
+
+    
+
 }

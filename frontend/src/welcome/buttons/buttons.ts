@@ -12,8 +12,15 @@ export class CreateGameButton extends Button {
     async clickHandler(e: MouseEvent): Promise<void> {
         const playerId = localStorage.getItem("playerId")!;
         const response = await fetch(`${window.BACKEND_HTTP_ADDRESS}/create-game?playerId=${playerId}`, { method: "POST" });
+        
+        if (!response.ok) {
+            alert("An unexpected error occurred. Page will reload.");
+            window.location.reload();
+            return;
+        }
+        
         const data = await response.json();
-        const gameId = data.gameId;
+        const gameId = data.id;
         
         console.log(`Game created with ID: ${gameId}`);
         switchToView(AppPhase.PREGAME, gameId, true);

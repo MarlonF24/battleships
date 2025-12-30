@@ -51,16 +51,14 @@ app.add_middleware(
 app.mount("/assets", staticfiles.StaticFiles(directory="frontend/dist/assets"), name="assets")
 
 
-@app.get("/")
-def welcome() -> responses.FileResponse:
-    return responses.FileResponse("frontend/dist/index.html")
 
 
 
 @app.post("/create-player", status_code=201)
 def create_player(session: SessionDependency, playerId: UUID = None) -> Player:
-    
+    print(playerId)
     if existing_player := session.exec(select(Player).where(Player.id == playerId)).first():
+        print(f" Returning already existing player with ID {playerId}.")
         return existing_player
     
     player_instance = Player(id=playerId) # default_factory will create new uuid if None
@@ -82,6 +80,7 @@ def create_player(session: SessionDependency, playerId: UUID = None) -> Player:
     if not player_instance.id: 
         raise HTTPException(status_code=500, detail="Failed to create player")
     
+    print(f" Returning new player with ID {player_instance.id}.")
     return player_instance
 
 
@@ -99,7 +98,7 @@ def create_game(playerId: UUID, session: SessionDependency) -> Game:
     session.add(game_player_link)
     
     session.commit()
-
+    print(f"Created game with ID: {game_instance.id} for player ID: {playerId}")
     return game_instance
 
 
@@ -117,6 +116,8 @@ def join_game(playerId: UUID, gameId: UUID, session: SessionDependency) -> Game:
     session.add(GamePlayerLink(game_id=gameId, player_id=playerId, player_slot=2))
 
     session.commit()
+    
+    session.refresh(game)
 
     return game
 
@@ -131,6 +132,9 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 
+@app.get("/{full_path:path}") # catch-all route
+def welcome(full_path: str) -> responses.FileResponse:
+    return responses.FileResponse("frontend/dist/index.html")
 
 
 

@@ -27,9 +27,17 @@ switchToView(AppPhase.WELCOME);
 createPlayer();
 
 async function createPlayer() {
-  let playerId = localStorage.getItem("playerId")  
+  let playerId = localStorage.getItem("playerId");
+  let url = `${window.BACKEND_HTTP_ADDRESS}/create-player`;
+  if (playerId) {
+    url += `?playerId=${playerId}`;
+  }
+  const response = await fetch(url, { method: "POST" });
 
-  const response = await fetch(`${window.BACKEND_HTTP_ADDRESS}/create-player?playerId=${playerId}`, { method: "POST" });
+  if (!response.ok) {
+    alert("An unexpected error occurred. Page will reload.");
+    window.location.reload();
+  }
   const data = await response.json();
   playerId = data.id;
   localStorage.setItem("playerId", playerId!);

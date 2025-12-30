@@ -1,12 +1,12 @@
 interface ViewSwitchDetail {
     newPhase: AppPhase;
-    gameID?: string;
+    gameId?: string;
 }
 
 
 export class ViewSwitchEvent extends CustomEvent<ViewSwitchDetail> {
-    constructor(newPhase: AppPhase, gameID?: string) {
-        super("view-switch", {detail: {newPhase, gameID}});
+    constructor(newPhase: AppPhase, gameId?: string) {
+        super("view-switch", {detail: {newPhase, gameId}});
     }
 }
 

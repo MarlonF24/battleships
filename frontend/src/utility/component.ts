@@ -16,9 +16,11 @@ export abstract class Button extends Component {
 
     abstract clickHandler(e: MouseEvent): void;
 
-    constructor(protected text: string) {
+    constructor(protected text: string, initialiseHTML: boolean = true) {
         super();
-        this.update_html();
+        if (initialiseHTML) {
+            this.update_html();
+        }
     }
 
     render(): HTMLButtonElement {
@@ -31,6 +33,36 @@ export abstract class Button extends Component {
         return button;
     }
 }
+
+
+export class CopyButton<T extends HTMLElement> extends Button {
+    constructor(private elementToCopy: T, private getTextFromElement: (el: T) => string) {
+        super("⧉", false);
+        this.elementToCopy = elementToCopy;
+        this.getTextFromElement = getTextFromElement;
+        this.update_html();
+    }
+
+    clickHandler = () => {
+        let text = this.getTextFromElement(this.elementToCopy);
+        navigator.clipboard.writeText(text);
+        
+        this.html.classList.add("copied");
+        setTimeout(() => {
+            this.html.classList.remove("copied");
+        }, 120);
+    }
+
+    render(): HTMLButtonElement {
+        const button = super.render();
+        button.classList.add("copy-button");
+        button.title = "Copy to clipboard";
+
+        return button;
+    }
+
+}
+
 
 
 export enum TooltipPosition {

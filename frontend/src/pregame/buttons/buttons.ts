@@ -34,8 +34,10 @@ export class ResetButton extends Button {
 
 
 export class ReadyButton extends Button {
-       constructor(readonly garage: ShipGarage) {
-	       super("Ready!");
+    private readyPlayersSpan!: HTMLSpanElement;
+	
+	constructor(readonly garage: ShipGarage) {
+	       super("Ready!", false);
 	       this.update_html();
        }
 
@@ -49,6 +51,20 @@ export class ReadyButton extends Button {
 		// Todo: Backend post to signal readiness
 		console.log("Player is ready!");
 	};
+
+	render(): HTMLButtonElement {
+		const button = super.render();
+		const readySpan = document.createElement("span");
+		
+		this.readyPlayersSpan = readySpan;
+		readySpan.className = "ready-players-count";
+		readySpan.textContent = "(0/2)"; // Placeholder text, to be updated with actual ready count
+		
+		button.appendChild(readySpan);
+		return button;
+	}
+
+	
 }
 
 interface Gap { // gapsize -> start coordinate of gap in the perp dimension

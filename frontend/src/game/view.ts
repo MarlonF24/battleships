@@ -1,4 +1,4 @@
-export function gameView(gameID: string) {
+export function gameView(gameId: string) {
     const container = document.createElement("div");
     return container;
 }

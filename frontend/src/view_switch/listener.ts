@@ -5,7 +5,7 @@ import { AppPhase, ViewSwitchEvent } from "./types.js";
 
 
 function viewSwitchHandler(event: Event) {
-    const { newPhase: phase, gameID } = (event as ViewSwitchEvent).detail;
+    const { newPhase: phase, gameId } = (event as ViewSwitchEvent).detail;
     
     
     const mainContainer = document.getElementById("main-container")!;
@@ -19,10 +19,10 @@ function viewSwitchHandler(event: Event) {
             view = welcomeView();
             break;
         case AppPhase.PREGAME:
-            view = pregameView(gameID!); // TODO: make pregameView gameID dependent 
+            view = pregameView(gameId!); // TODO: make pregameView gameId dependent 
             break;
         case AppPhase.GAME:
-            view = gameView(gameID!);
+            view = gameView(gameId!);
             break;
         default:
             throw new Error(`Unknown app phase: ${phase}`);

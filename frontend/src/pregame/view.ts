@@ -3,19 +3,27 @@ import { Grid } from "./grid/grid.js";
 import { ShipGarage } from "./garage/garage.js";
 import { Ship } from "./ship/ship.js";
 import { ResetButton, ReadyButton, RandomButton } from "./buttons/buttons.js";
+import { CopyButton } from "../utility/component.js";
 
 
 import "./pregame.css";
 
 export function pregameView(
-	gameID: string,
+	gameId: string,
 ) {
 	const container = document.createElement("div");
 
-	// Game ID display
+	
 	const gameIdDiv = document.createElement("div");
 	gameIdDiv.className = "pregame-game-id";
-	gameIdDiv.textContent = `Game ID: ${gameID}`;
+	const idSpan = document.createElement("span");
+	idSpan.textContent = `Game ID: ${gameId}`;
+	
+	const copyBtn = new CopyButton(idSpan, el => (el.textContent ?? "").split(":")[1].trim());
+
+	idSpan.appendChild(copyBtn.html); 
+	gameIdDiv.appendChild(idSpan);
+	gameIdDiv.appendChild(copyBtn.html);
 	container.appendChild(gameIdDiv);
 	
 	const gameArea = document.createElement("section");
