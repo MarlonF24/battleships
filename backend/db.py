@@ -1,7 +1,7 @@
 # dont use form __future__ import annotations cause it breaks sqlmodel relationships
 
 import uuid
-from sqlalchemy import Engine, CheckConstraint, UniqueConstraint
+from sqlalchemy import Engine, CheckConstraint, UniqueConstraint, Column, ARRAY, Integer
 from sqlmodel import SQLModel, Field, Relationship, create_engine
 
 
@@ -25,6 +25,9 @@ class Player(SQLModel, table=True):
 class Game(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
     players: list["Player"] = Relationship(back_populates="games", link_model=GamePlayerLink)
+    battle_grid_rows: int = Field()
+    battle_grid_cols: int = Field()
+    ship_lengths: list[int] = Field(sa_column=Column("ship_lengths", ARRAY(Integer)))  # e.g., [5, 4, 3, 3, 2]
   
 
 

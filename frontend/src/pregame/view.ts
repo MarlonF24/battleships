@@ -4,13 +4,20 @@ import { ShipGarage } from "./garage/garage.js";
 import { Ship } from "./ship/ship.js";
 import { ResetButton, ReadyButton, RandomButton } from "./buttons/buttons.js";
 import { CopyButton } from "../utility/component.js";
-
+import { GameParams } from "../api-client/index.js";
 
 import "./pregame.css";
 
+
+
+
+
 export function pregameView(
 	gameId: string,
+	params: GameParams
 ) {
+	const { battleGridRows, battleGridCols, shipLengths } = params;
+	
 	const container = document.createElement("div");
 
 	
@@ -34,19 +41,12 @@ export function pregameView(
 	buttonBar.id = "pregame-button-bar";
 	buttonBar.classList.add("button-bar");
 	
-	const gameGrid = new BattleGrid(new Grid(10, 10));
+	const gameGrid = new BattleGrid(new Grid(battleGridRows, battleGridCols));
 	gameArea.appendChild(gameGrid.html);
 	
-	const garage = new ShipGarage([
-		new Ship(9),
-		new Ship(6),
-		new Ship(5),
-		new Ship(4),
-		new Ship(4),
-		new Ship(3),
-		new Ship(3),
-		new Ship(2),
-	]);
+	const garage = new ShipGarage(
+		shipLengths.map(length => new Ship(length))
+	);
 
 	if (gameGrid.grid.cols < garage.maxLen && gameGrid.grid.cols < garage.maxLen) {
 		throw new Error("Some garage ships do not fit in the game grid");

@@ -1,2 +1,2 @@
-backend: python, fastAPI, REST + websockets, PostGreSQL
-frontend: TS (, later: REACT), vite
+backend: python, fastAPI(REST + websockets), PostGreSQL
+frontend: TS, vite, Navigo router, openapi client

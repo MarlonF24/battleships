@@ -1,4 +1,3 @@
-import { switchToView } from "../view_switch/types";
 import { CreateGameButton } from "./buttons/buttons";
 import { JoinGameInput } from "./inputs/inputs";
 

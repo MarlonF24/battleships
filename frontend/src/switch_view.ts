@@ -17,10 +17,6 @@ export enum AppPhase {
 }
 
 
-export function switchToView(phase: AppPhase, gameId?: string, changeHistory: boolean = false) {
+export function switchToView(phase: AppPhase, gameId?: string) {
     window.dispatchEvent(new ViewSwitchEvent(phase, gameId));
-
-    if (changeHistory) {
-        window.history.pushState({}, "", `/${phase}${gameId ? `?gameId=${gameId}` : ""}`);
-    }
 }

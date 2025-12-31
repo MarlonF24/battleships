@@ -1,5 +1,6 @@
 import { Component } from "../../utility/component";
-import { switchToView, AppPhase } from "../../view_switch/types";
+import { switchToView, AppPhase } from "../../switch_view";
+import { api, ResponseError} from "../../backend_api";
 
 import "./inputs.css";
 
@@ -42,9 +43,7 @@ export class JoinGameInput extends Component {
         submitButton.className = "join-game-btn";
         submitButton.textContent = "Join Game";
 
-        submitButton.addEventListener("click", () => {
-            this.dispatchJoin(new Event("submit", { bubbles: true, cancelable: true }));
-        });
+        submitButton.addEventListener("click", this.dispatchJoin);
 
     
         form.appendChild(errorMsg);
@@ -66,43 +65,44 @@ export class JoinGameInput extends Component {
         console.log("Error message cleared.");
     }
 
-    dispatchJoin = async (event: Event) => {
-        event.preventDefault();
+    dispatchJoin = async () => {
+        
         const formData = new FormData(this.html);
         const gameId = formData.get("gameId");
 
-        if (typeof gameId === "string" && gameId.trim() !== "") {
-            console.log("Attempting to join game with ID:", gameId);
+        if (!gameId || typeof gameId !== "string" || gameId.trim() === "") {
+            this.displayError("Invalid Game ID.");
+            return;
+        }
+        
+        
+        console.log("Attempting to join game with ID:", gameId);
 
+        const playerId = localStorage.getItem("playerId")!;
 
-            const playerId = localStorage.getItem("playerId")!;
+        try {
+            await api.joinGameGamesGameIdJoinPost({gameId, playerId});
+            switchToView(AppPhase.PREGAME, gameId);
+            console.log(`Successfully joined game with ID: ${gameId}`);
 
-            let response = await fetch(`${window.BACKEND_HTTP_ADDRESS}/${gameId}/join?playerId=${playerId}`, {method: "POST",});
-
-            if (!response.ok) {
-                if (response.status === 404) {
-                    const error = await response.json();
-                    const detail = error.detail as string;
-
-                    if (detail.includes("Game not found")) {
-                        this.displayError("Game not found. Please type in a valid Game ID and try again.");
-                        
-                    } else {
-                        alert("An unexpected error occurred. Page will reload.");
-                        window.location.reload();
-                    }
-                } else if (response.status === 422) {
-                    this.displayError("Please enter a valid Game ID.");
+        } catch (error) {
+            if (error instanceof ResponseError) {
+                switch (error.response.status) {
+                    case 404:
+                        if (error.message.includes("Game not found")) {
+                            this.displayError("Game not found. Please type in a valid Game ID and try again.");
+                        } else {
+                            alert("An unexpected error occurred. Page will reload.");
+                            window.location.reload();
+                        }
+                        break;
+                    case 422:
+                        this.displayError("Please enter a valid Game ID.");
+                        break;
                 }
-            } else {
-                const data = await response.json();
-                const joinedGameId = data.id;
-                switchToView(AppPhase.PREGAME, joinedGameId, true);
-                console.log(`Successfully joined game with ID: ${joinedGameId}`);
             }
         }
+
+        
     }
-
-    
-
 }

@@ -1,5 +1,7 @@
 import { Button } from "../../utility/component";
-import { switchToView, AppPhase } from "../../view_switch/types";
+import { switchToView, AppPhase } from "../../switch_view";
+import { api, ResponseError } from "../../backend_api";
+
 
 import "./buttons.css";
 
@@ -11,19 +13,28 @@ export class CreateGameButton extends Button {
 
     async clickHandler(e: MouseEvent): Promise<void> {
         const playerId = localStorage.getItem("playerId")!;
-        const response = await fetch(`${window.BACKEND_HTTP_ADDRESS}/create-game?playerId=${playerId}`, { method: "POST" });
-        
-        if (!response.ok) {
-            alert("An unexpected error occurred. Page will reload.");
-            window.location.reload();
-            return;
+
+        // TODO: Allow user to customize these settings before creating the game in some form where this is the submit button and have validation 
+        const battleGridRows: number = 10;
+        const battleGridCols: number = 10;
+        const shipLengths = [5, 4, 3, 3, 2];
+
+
+        try {
+            const gameId = await api.createGameCreateGamePost({
+                playerId,
+                gameParams: { battleGridRows, battleGridCols, shipLengths }
+            });
+
+            console.log(`Game created with ID: ${gameId}`);
+            switchToView(AppPhase.PREGAME, gameId);
+            
+        } catch (error) {
+            if (error instanceof ResponseError) {
+                console.error(`Failed to create game: ${error.response.status} - ${error.response.statusText}`);
+                alert(`Failed to create game: ${error.response.status} - ${error.response.statusText}`);
+            }
         }
-        
-        const data = await response.json();
-        const gameId = data.id;
-        
-        console.log(`Game created with ID: ${gameId}`);
-        switchToView(AppPhase.PREGAME, gameId, true);
     }
 }
 
