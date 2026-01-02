@@ -10,7 +10,12 @@
 *.userosscache
 *.sln.docstates
 *.env
+
 dist/
+
+
+# API Documentation (auto-generated)
+**/api-docs-html/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

@@ -62,12 +62,12 @@ export class Dragger {
 			lastY: event.pageY,
 		};
 
-		originalHTML.addEventListener("dragstart", (e) => e.preventDefault());
-		cloneHTML.addEventListener("dragstart", (e) => e.preventDefault());
-		document.addEventListener("mousemove", this.onMouseMove);
-		document.addEventListener("mouseup", this.onMouseUp);
+		originalHTML.ondragstart = (e) => e.preventDefault();
+		cloneHTML.ondragstart = (e) => e.preventDefault();
+		document.onmousemove = this.onMouseMove;
+		document.onmouseup = this.onMouseUp;
 		document.addEventListener("wheel", this.onWheel, { passive: false });
-		document.addEventListener("contextmenu", this.onContextMenu);
+		document.oncontextmenu = this.onContextMenu;
 
 		document.body.style.cursor = "grabbing";
 	
@@ -102,7 +102,7 @@ export class Dragger {
 			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPos.y;
 			
 			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
-			console.log(`In-cell position updated to:`, this.state.currentCellInfo.inCellPos);
+	
 			if (
 				newInCellX < 0 ||
 				newInCellX > 1 ||

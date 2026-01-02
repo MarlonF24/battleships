@@ -61,7 +61,7 @@ export function pregameView(
 
 	gameArea.appendChild(garage.html);
 	
-	const readyButton = new ReadyButton(garage);
+	const readyButton = new ReadyButton(garage, gameGrid);
 	buttonBar.appendChild(readyButton.html);
 	
 	
@@ -72,8 +72,13 @@ export function pregameView(
 	const randomButton = new RandomButton(gameGrid, garage);
 	buttonBar.appendChild(randomButton.html);
 
-	container.appendChild(buttonBar);
-	container.appendChild(gameArea);
+	const eventContainer = document.createElement("div");
+	eventContainer.id = "pregame-event-container";
+	eventContainer.classList.add("event-container");
+	
+	eventContainer.appendChild(buttonBar);
+	eventContainer.appendChild(gameArea);
+	container.appendChild(eventContainer);
 	
 	return container;
 }

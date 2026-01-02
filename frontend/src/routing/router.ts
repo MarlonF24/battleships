@@ -1,9 +1,11 @@
 import Navigo from "navigo";
+import { Match } from "navigo";
 import { AppPhase, ViewSwitchEvent } from "../switch_view.js";
 import { pregameView } from "../pregame/view.js";
 import { welcomeView } from "../welcome/view.js";
 import { gameView } from "../game/view.js";
-import { api, ResponseError } from "../backend_api.js";
+import { api, ResponseError, BackendWebSocket, unpackErrorMessage } from "../backend_api.js";
+
 
 function insertView(view: HTMLDivElement) {
     view.classList.add("view");
@@ -12,84 +14,130 @@ function insertView(view: HTMLDivElement) {
     mainContainer.appendChild(view);
 }
 
+interface PregameWSServerMessage {
+    num_players_ready: number;
+}
 
 export function setUpRouter() {
-    const router = new Navigo("/", { hash: false }); 
+    new Router();
+}
 
-    function viewSwitchHandler(event: Event) {
+class Router extends Navigo {
+    private gameId: string | null = null;
+
+    constructor() {
+        super("/", { hash: false });
+        
+        
+        this.on("/", () => {
+            this.navigate("/welcome");
+        });
+        
+        this.on("/welcome", () => {
+            insertView(welcomeView());
+            }
+        );
+        
+        this.on("/games/:gameId/pregame", this.navigatePregame);
+
+        this.on("/games/:gameId/game", this.navigateGame);
+
+        window.addEventListener("view-switch", this.viewSwitchHandler);
+        this.resolve();
+    }
+
+
+
+
+    navigate(path: string): void {
+        super.navigate(path);
+        console.log(`Navigated to ${path}`);
+    }
+    
+    
+    viewSwitchHandler = (event: Event) => {
         const { newPhase: phase, gameId } = (event as ViewSwitchEvent).detail;
         
         switch (phase) {
             case AppPhase.WELCOME:
-                router.navigate("/welcome");
+                this.navigate("/welcome");
                 return;
-            case AppPhase.PREGAME:
-                if (!gameId) {
-                    throw new Error("Game ID is required for pregame view");
-                }
-                router.navigate(`/pregame?gameId=${gameId}`);
-                return;
-            case AppPhase.GAME:
-                if (!gameId) {
-                    throw new Error("Game ID is required for game view");
-                }
-                router.navigate(`/game?gameId=${gameId}`);
-                return;
-            default: {
+                case AppPhase.PREGAME:
+                    if (!gameId) {
+                        throw new Error("Game ID is required for pregame view");
+                    }
+                    this.navigate(`/games/${gameId}/pregame`);
+                    return;
+                    case AppPhase.GAME:
+                        if (!gameId) {
+                            throw new Error("Game ID is required for game view");
+                        }
+                        this.navigate(`/games/${gameId}/game`);
+                        return;
+                        default: {
                 throw new Error(`Unknown AppPhase: ${phase}`);
             }
         }
-            
-    }
         
-    router.on("/", () => {
-        router.navigate("/welcome");
-    });
-
-    router.on("/welcome", () => {
-        insertView(welcomeView());
+    }
+    
+    pregameWSHandler = (event: MessageEvent) => {
+        const message: PregameWSServerMessage = JSON.parse(event.data);
+        
+        console.log(`Players ready: ${message.num_players_ready}/2`);
+        
+        const readyPlayerCountSpan = document.getElementsByClassName("ready-players-count")[0] as HTMLSpanElement;
+        
+        readyPlayerCountSpan.textContent = `(${message.num_players_ready}/2)`;
+    
+    
+        if (message.num_players_ready === 2) {
+            console.log("Both players ready! Starting game...");
+            // BackendWebSocket.disconnect();
+            // dispatchEvent(new ViewSwitchEvent(AppPhase.GAME, this.gameId!));
         }
-    );
+    }
 
-    router.on("/pregame", async (match) => {
-        const gameId = match!.params!.gameId;
+    navigatePregame = async (match: Match | undefined) => {
+        const gameId = match!.data!.gameId;
         const playerId = localStorage.getItem("playerId")!
         
         try {
-            const gameParams = await api.getGameParamsGamesGameIdParamsGet({gameId, playerId});
+            const gameParams = await api.getPregameParamsGamesGamesGameIdParamsGet({gameId, playerId});
             insertView(pregameView(gameId, gameParams));
+            console.log("Navigated to pregame view");
+            
+            BackendWebSocket.connect(`ws://${window.BACKEND_ORIGIN}/games/ws/${gameId}/pregame?playerId=${playerId}`);
+            
+            BackendWebSocket.socket.onmessage = this.pregameWSHandler;
+
+            this.gameId = gameId;
+            
         } catch (error) {
-        
-        if (error instanceof ResponseError) {
-            switch (error.response.status) {
-                case 404: 
-                    alert("Game not found. Redirecting to welcome page.");
-                    router.navigate("/welcome");
-                    return;
-                case 403: 
-                    alert("You are not a participant of this game. Redirecting to welcome page.");
-                    router.navigate("/welcome");
-                    return;
-                case 422:
-                    // wrong gameId or playerId format, but 
-                    alert("An invalid ID format was provided. Redirecting to welcome page.");
-                    router.navigate("/welcome");
-                    return;
-                default: 
-                    alert("An unexpected error occurred. Page will reload.");
-                    window.location.reload();
-                    return;
+            if (error instanceof ResponseError) {
+                const message = await unpackErrorMessage(error);
+                switch (error.response.status) {
+                    case 404:   
+                    case 403:   
+                    case 422:
+                        alert(`${message} Redirecting to welcome page.`);
+                        this.navigate("/welcome");
+                        return;
+                    default: 
+                        alert(`Unexpected error: ${message} Page will reload.`);
+                        window.location.reload();
+                        return;
                 }
             } 
         }
-    }
-    );
-    
-    
+    } 
 
-        router.resolve();
-    
-        window.addEventListener("view-switch", viewSwitchHandler);
-        
-        return router;
+    navigateGame = (match: Match | undefined) => {
+        const gameId = match!.data!.gameId;
+        const playerId = localStorage.getItem("playerId")!
+        //DB query to verify player is part of game could be added here and get board
+        insertView(gameView(gameId));
+        console.log("Navigated to game view");
     }
+}
+

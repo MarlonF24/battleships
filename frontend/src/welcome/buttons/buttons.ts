@@ -1,6 +1,6 @@
 import { Button } from "../../utility/component";
 import { switchToView, AppPhase } from "../../switch_view";
-import { api, ResponseError } from "../../backend_api";
+import { api, ResponseError, unpackErrorMessage } from "../../backend_api";
 
 
 import "./buttons.css";
@@ -11,7 +11,7 @@ export class CreateGameButton extends Button {
         super("Create Game");
     }
 
-    async clickHandler(e: MouseEvent): Promise<void> {
+    clickHandler = async(e: MouseEvent) => {
         const playerId = localStorage.getItem("playerId")!;
 
         // TODO: Allow user to customize these settings before creating the game in some form where this is the submit button and have validation 
@@ -21,7 +21,7 @@ export class CreateGameButton extends Button {
 
 
         try {
-            const gameId = await api.createGameCreateGamePost({
+            const gameId = await api.createGameGamesCreatePost({
                 playerId,
                 gameParams: { battleGridRows, battleGridCols, shipLengths }
             });
@@ -31,8 +31,9 @@ export class CreateGameButton extends Button {
             
         } catch (error) {
             if (error instanceof ResponseError) {
-                console.error(`Failed to create game: ${error.response.status} - ${error.response.statusText}`);
-                alert(`Failed to create game: ${error.response.status} - ${error.response.statusText}`);
+                const message = await unpackErrorMessage(error);
+                alert(`Failed to create game: ${message}`);
+                console.error(`Failed to create game: ${message}`);
             }
         }
     }

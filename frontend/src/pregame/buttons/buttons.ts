@@ -12,6 +12,7 @@ import { BattleGrid } from "../battle_grid/battle_grid.js";
 import { ShipGarage } from "../garage/garage.js";
 import { Button, Tooltip, TooltipPosition } from "../../utility/component.js";
 import { Orientation, Ship } from "../ship/ship.js";
+import { BackendWebSocket } from "../../backend_api.js";
 
 import "./buttons.css";
 
@@ -33,10 +34,16 @@ export class ResetButton extends Button {
 }
 
 
+interface PregameWSPlayerReadyMessage {
+	shipPositions: {[key: number]: [number, number]}; // ship length -> [row, col] positions
+}
+
+
+
 export class ReadyButton extends Button {
     private readyPlayersSpan!: HTMLSpanElement;
 	
-	constructor(readonly garage: ShipGarage) {
+	constructor(readonly garage: ShipGarage, readonly battleGrid: BattleGrid) {
 	       super("Ready!", false);
 	       this.update_html();
        }
@@ -48,7 +55,29 @@ export class ReadyButton extends Button {
 			alert("Please place all ships on the board before readying up.");
 			return;
 		}
-		// Todo: Backend post to signal readiness
+		
+		// Final confirmation before readying up
+		const confirmed = confirm("Ready to start the game?\n\nOnce ready, you cannot change your ship placement.");
+		
+		if (!confirmed) {
+			return;
+		}
+
+		let shipPositions = new Map<number, [number, number]>();
+		for (let [ship, position] of this.battleGrid.ships) {
+			shipPositions.set(ship.length, [position.startRow, position.startCol]);
+		}
+
+		let WSMessage: PregameWSPlayerReadyMessage = {
+			shipPositions: Object.fromEntries(shipPositions)
+		};
+
+		let message = JSON.stringify(WSMessage);
+		console.log("Sending ready message to backend:", message);
+		BackendWebSocket.socket.send(message);
+		
+		document.getElementById("pregame-event-container")!.style.pointerEvents = "none"; // disable further interaction
+
 		console.log("Player is ready!");
 	};
 
@@ -96,7 +125,7 @@ export class RandomButton extends Button {
 
 	render(): HTMLButtonElement {
 		const button = super.render();
-		button.addEventListener("contextmenu", this.rightClickHandler);
+		button.oncontextmenu = this.rightClickHandler;
 
 		// Tooltip setup
 		const tooltip = new Tooltip("Left Click: unplaced ships\nRight Click: all ships", TooltipPosition.TOP);

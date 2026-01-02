@@ -1,0 +1,15 @@
+.openapi-generator-ignore
+apis/DefaultApi.ts
+apis/index.ts
+docs/DefaultApi.md
+docs/GameParams.md
+docs/HTTPValidationError.md
+docs/ValidationError.md
+docs/ValidationErrorLocInner.md
+index.ts
+models/GameParams.ts
+models/HTTPValidationError.ts
+models/ValidationError.ts
+models/ValidationErrorLocInner.ts
+models/index.ts
+runtime.ts

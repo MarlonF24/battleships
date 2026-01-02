@@ -1,6 +1,6 @@
 import { Component } from "../../utility/component";
 import { switchToView, AppPhase } from "../../switch_view";
-import { api, ResponseError} from "../../backend_api";
+import { api, ResponseError, unpackErrorMessage } from "../../backend_api";
 
 import "./inputs.css";
 
@@ -24,14 +24,14 @@ export class JoinGameInput extends Component {
         errorMsg.className = "join-game-error";
         errorMsg.style.display = "none";
 
-        form.addEventListener("submit", this.dispatchJoin);
+        form.onsubmit = this.dispatchJoin;
 
         const input = document.createElement("input");
         input.type = "text";
         input.id = "game-id-input";
         input.name = "gameId";
         input.placeholder = "Enter Game ID";
-        input.addEventListener("input", this.resetError);
+        input.oninput = this.resetError;
 
 
         const label = document.createElement("label");
@@ -43,7 +43,7 @@ export class JoinGameInput extends Component {
         submitButton.className = "join-game-btn";
         submitButton.textContent = "Join Game";
 
-        submitButton.addEventListener("click", this.dispatchJoin);
+        submitButton.onclick = this.dispatchJoin;
 
     
         form.appendChild(errorMsg);
@@ -81,25 +81,17 @@ export class JoinGameInput extends Component {
         const playerId = localStorage.getItem("playerId")!;
 
         try {
-            await api.joinGameGamesGameIdJoinPost({gameId, playerId});
+            await api.joinGameGamesGamesGameIdJoinPost({gameId, playerId});
             switchToView(AppPhase.PREGAME, gameId);
             console.log(`Successfully joined game with ID: ${gameId}`);
 
         } catch (error) {
             if (error instanceof ResponseError) {
-                switch (error.response.status) {
-                    case 404:
-                        if (error.message.includes("Game not found")) {
-                            this.displayError("Game not found. Please type in a valid Game ID and try again.");
-                        } else {
-                            alert("An unexpected error occurred. Page will reload.");
-                            window.location.reload();
-                        }
-                        break;
-                    case 422:
-                        this.displayError("Please enter a valid Game ID.");
-                        break;
-                }
+                const message = await unpackErrorMessage(error);
+    
+                this.displayError(`Error: ${message}`);
+                console.error("Error joining game:", message);
+                
             }
         }
 

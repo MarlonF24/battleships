@@ -1,7 +1,5 @@
-import { switchToView, AppPhase } from "./switch_view.js";
 import { setUpRouter } from "./routing/router.js";
-import { api } from "./backend_api.js";
-
+import { api, unpackErrorMessage } from "./backend_api.js";
 
 
 import "./main.css";
@@ -15,15 +13,16 @@ async function createPlayer() {
   let playerId = localStorage.getItem("playerId");
 
   try {
-    let player = await api.createPlayerCreatePlayerPost(playerId ? {playerId: playerId} : undefined);
-    localStorage.setItem("playerId", player.id!);
-    console.log(`Player in the DB with ID: ${player.id}`);
+    let responsePlayerId = await api.createPlayerPlayersCreatePost(playerId ? {playerId: playerId} : undefined);
+    localStorage.setItem("playerId", responsePlayerId);
+    console.log(`Player in the DB with ID: ${responsePlayerId}`);
 
   } catch (error) {
     if (error instanceof ResponseError) {
-      
-      if (error.response.status === 500 && error.message.toLocaleLowerCase().includes("player")) {
-        alert("Internal server error. Page will reload.");
+      const message = await unpackErrorMessage(error);
+
+      if (error.response.status === 500 && message.toLocaleLowerCase().includes("player")) {
+        alert("Error creating player. The page will reload to try again.");
         window.location.reload();
         
         console.error("Error creating player:", error);

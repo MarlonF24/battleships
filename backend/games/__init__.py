@@ -1,0 +1,1 @@
+from .controller import router as games_router # type: ignore
