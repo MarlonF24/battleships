@@ -7,6 +7,7 @@ class PregameWSPlayerReadyMessage(BaseModel):
 
 class PregameWSServerMessage(BaseModel):
     num_players_ready: int
+    self_ready: bool
     
 
 

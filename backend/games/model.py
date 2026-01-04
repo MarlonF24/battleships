@@ -9,3 +9,8 @@ class GameParams(BaseModel):
     class Config:
         from_attributes = True
 
+class GameState(BaseModel):
+    ...
+
+    class Config:
+        from_attributes = True

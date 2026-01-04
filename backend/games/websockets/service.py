@@ -72,18 +72,20 @@ async def pregame_websocket(websocket: WebSocket, player: Player, game: Game, se
 
     try:
         # initial send of current ready count
-        num_players_ready = conn_manager.get_game_connections(game.id).num_ready_players()
-        await websocket.send_json(PregameWSServerMessage(num_players_ready=num_players_ready).model_dump())
+        game_connection   = conn_manager.get_game_connections(game.id)
+        num_players_ready = game_connection.num_ready_players()
+        self_ready        = game_connection.players[player.id].ready
+        await websocket.send_json(PregameWSServerMessage(num_players_ready=num_players_ready, self_ready=self_ready).model_dump())
 
         async for message in websocket.iter_json():
             logger.info(f"Received WebSocket message: {message}")
             message = PregameWSPlayerReadyMessage.model_validate(message)  
             
-            if not (conn := conn_manager.get_player_connection(game.id, player.id)):
+            if not (player_conn := conn_manager.get_player_connection(game.id, player.id)):
                 raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player not connected")
             
             # update readiness state
-            conn.ready = True
+            player_conn.ready = True
             
             # update ship placements in DB (after a server crash this will just overwrite with last known placements, wanted!)
             await session.execute(
@@ -96,7 +98,7 @@ async def pregame_websocket(websocket: WebSocket, player: Player, game: Game, se
             num_players_ready = conn_manager.get_game_connections(game.id).num_ready_players()
             
             # broadcast updated ready count to both players
-            await conn_manager.broadcast(game.id, PregameWSServerMessage(num_players_ready=num_players_ready))
+            await conn_manager.broadcast(game.id, PregameWSServerMessage(num_players_ready=num_players_ready, self_ready=player_conn.ready))
 
     finally:
         await conn_manager.disconnect(game.id, player.id)

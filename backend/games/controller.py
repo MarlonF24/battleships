@@ -34,3 +34,7 @@ async def join_game(player: Player = Depends(dependencies.validate_player), game
 def get_pregame_params(player_game: tuple[Player, Game] = Depends(dependencies.validate_player_in_game)) -> GameParams:
     
     return GameParams.model_validate(player_game[1])
+
+# @router.get("/games/{gameId}/state", status_code=status.HTTP_200_OK)
+# async def get_game_state(player_game: tuple[Player, Game] = Depends(dependencies.validate_player_in_game), session: AsyncSession = Depends(dependencies.get_sb_session)):
+#     return await service.get_game_state(player_game[0], player_game[1], session)

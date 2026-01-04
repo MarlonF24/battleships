@@ -1,15 +1,18 @@
-import { Ship, Orientation } from "../ship/ship.js";
+import React from "react";
+
+import { Ship, Orientation, ShipDragClone } from "../ship/ship.js";
 import { ShipGrid } from "./ship_grid.js";
 import { ShipInEvent, ShipOutEvent, ShipPlacedEvent, ShipRotatedEvent, EquatorCrossEvent } from "./suggestion_handler.js";
 
+
 // Interface for drag state
 interface DragState {
-	clone: Ship;
+	clone: ShipDragClone;
 	lastX: number;
 	lastY: number;
 	currentCellInfo?: {
-		currentCell: HTMLTableCellElement;
-		inCellPos: { x: number; y: number };
+		element: HTMLTableCellElement;
+		inCellPosition: { x: number; y: number };
 	};
 }
 
@@ -29,64 +32,38 @@ export class Dragger {
 
 	}
 
-	public mouseDownHandler = (event: MouseEvent) => {
+	public mouseDownHandler = (event: React.MouseEvent<HTMLDivElement>) => {
 		if (event.button !== 0) return; // only left click
 
-		const originalHTML = this.originalShip.html;
+		const originalHTML = event.currentTarget;
 
-		const clone = new Ship(
-			this.originalShip.length,
-			this.originalShip.getOrientation()
-		);
-		const cloneHTML = clone.html;
-		cloneHTML.classList.add("clone");
-
-		// Set initial orientation angle to 0
-		cloneHTML.style.setProperty("--rotation-angle", "0deg");
-
-		originalHTML.parentElement!.appendChild(cloneHTML);
-
-		const original_styles = getComputedStyle(originalHTML);
-		cloneHTML.style.left = original_styles.left;
-		cloneHTML.style.top = original_styles.top;
-		cloneHTML.style.width = original_styles.getPropertyValue("width");
-		cloneHTML.style.height = original_styles.getPropertyValue("height");
-
-		// Add class to body to disable pointer events for all ships except the dragged one
-		document.body.classList.add("ships-no-pointer");
-		originalHTML.classList.add("dragged");
+		const clone = new ShipDragClone(originalHTML);
 
 		this.state = {
 			clone: clone,
 			lastX: event.pageX,
 			lastY: event.pageY,
 		};
-
-		originalHTML.ondragstart = (e) => e.preventDefault();
-		cloneHTML.ondragstart = (e) => e.preventDefault();
+	
 		document.onmousemove = this.onMouseMove;
 		document.onmouseup = this.onMouseUp;
 		document.addEventListener("wheel", this.onWheel, { passive: false });
 		document.oncontextmenu = this.onContextMenu;
+
+		// Add class to body to disable pointer events for all ships except the dragged one
+		document.body.classList.add("ships-no-pointer");
 
 		document.body.style.cursor = "grabbing";
 	
 	};
 
 	private onMouseMove = (e: MouseEvent) => {
-		const clone = this.state.clone;
-
+	
 		// Calculate the shift
 		const shiftX = e.pageX - this.state.lastX;
 		const shiftY = e.pageY - this.state.lastY;
 
-		// Get current position
-		const currentLeft = parseInt(clone.html.style.left, 10);
-		const currentTop = parseInt(clone.html.style.top, 10);
-
-		// Update the position of the clone
-		clone.html.style.left = currentLeft + shiftX + "px";
-		clone.html.style.top = currentTop + shiftY + "px";
+		this.state.clone.move(shiftX, shiftY);
 
 		// Update last positions
 		this.state.lastX = e.pageX;
@@ -95,13 +72,12 @@ export class Dragger {
 		// Check if we've moved out of the current cell
 		if (this.state.currentCellInfo) {
 			
-			const oldInCellX = this.state.currentCellInfo.inCellPos.x;
-			const oldInCellY = this.state.currentCellInfo.inCellPos.y;
+			const { x: oldInCellX, y: oldInCellY } = this.state.currentCellInfo.inCellPosition;
 			
-			const newInCellX = shiftX / CELLSIZE + this.state.currentCellInfo.inCellPos.x;
-			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPos.y;
+			const newInCellX = shiftX / CELLSIZE + this.state.currentCellInfo.inCellPosition.x;
+			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPosition.y;
 			
-			this.state.currentCellInfo.inCellPos = { x: newInCellX, y: newInCellY };
+			this.state.currentCellInfo.inCellPosition = { x: newInCellX, y: newInCellY };
 	
 			if (
 				newInCellX < 0 ||
@@ -111,14 +87,13 @@ export class Dragger {
 			) {
 				this.dispatchMouseOver();
 			} else if (this.state.clone.length % 2 === 0) {
-				const oldCoordToCheck = this.state.clone.getOrientation() == Orientation.HORIZONTAL ? oldInCellX : oldInCellY;
-				const newCoordToCheck = this.state.clone.getOrientation() == Orientation.HORIZONTAL ? newInCellX : newInCellY;
+				const [oldCoordToCheck, newCoordToCheck] = this.state.clone.orientation == Orientation.HORIZONTAL ? [oldInCellX, newInCellX] : [oldInCellY, newInCellY];
 				
 				if (oldCoordToCheck >= 0.5  !==  newCoordToCheck >= 0.5) {
 				
-					this.state.currentCellInfo!.currentCell.dispatchEvent(
+					this.state.currentCellInfo!.element.dispatchEvent(
 						new EquatorCrossEvent({
-								inCellPosition: this.state.currentCellInfo.inCellPos
+								inCellPosition: this.state.currentCellInfo.inCellPosition
 							},
 							true // let bubble so that row handlers can catch it
 						)
@@ -135,41 +110,31 @@ export class Dragger {
 
 	private dispatchMouseOver = (centerCross: boolean = false) => {
 	
-		
-		let boundingRect = this.state.clone.html.getBoundingClientRect();
-
-		
-		var cloneCenter = {
-			x: boundingRect.left + boundingRect.width / 2,
-			y: boundingRect.top + boundingRect.height / 2,
-		};
+		const cloneCenter = this.state.clone.centerCoords;
 		
 
 		// Determine the element under the cursor
-		const elementsBelow = document.elementsFromPoint(
-			cloneCenter.x,
-			cloneCenter.y
-		);
+		const elementsBelow = document.elementsFromPoint(cloneCenter.x, cloneCenter.y);
 
 		const cell = elementsBelow.find((el) =>
 			el.classList.contains("cell")
 		) as HTMLTableCellElement | undefined;
 
 		if (!cell) {
-			this.state.currentCellInfo?.currentCell.dispatchEvent(
+			this.state.currentCellInfo?.element.dispatchEvent(
 				new ShipOutEvent(true)
 			);
 			this.state.currentCellInfo = undefined;
 		} else  {
 			const cellRect = cell.getBoundingClientRect(); // could also use modulo computations instead of getting rect again
 			
-			this.state.currentCellInfo?.currentCell.dispatchEvent(
+			this.state.currentCellInfo?.element.dispatchEvent(
 				new ShipOutEvent(true)
 			);
 
 			this.state.currentCellInfo = {
-				currentCell: cell,
-				inCellPos: {
+				element: cell,
+				inCellPosition: {
 					x: (cloneCenter.x - cellRect.left) / CELLSIZE,
 					y: (cloneCenter.y - cellRect.top) / CELLSIZE,
 				},
@@ -178,10 +143,10 @@ export class Dragger {
 			cell.dispatchEvent(
 				new ShipInEvent(
 					{
-						shipClone: this.state.clone,
+						clone: this.state.clone,
 						originalShip: this.originalShip,
 						source: this.source,
-						inCellPosition: this.state.currentCellInfo.inCellPos
+						currentTargetCell: this.state.currentCellInfo
 					},
 					true // let bubble so that row handlers can catch it
 				)
@@ -200,18 +165,15 @@ export class Dragger {
 		document.removeEventListener("wheel", this.onWheel);
 		document.removeEventListener("contextmenu", this.onContextMenu);
 
-		this.state.clone.html.remove();
+		this.state.clone.remove();
 
 		if (this.state.currentCellInfo) {
-			this.state.currentCellInfo.currentCell.dispatchEvent(
+			this.state.currentCellInfo.element.dispatchEvent(
 				new ShipPlacedEvent(true)
-			);
+			); 
 		} 
-		
-		this.originalShip.html.classList.remove("dragged");
-		this.originalShip.html.style.pointerEvents = "auto";
-		
-
+		// General TODO: put keys on objects like ships so react can update way more efficiently
+	
 		document.body.classList.remove("ships-no-pointer");
 		
 		document.body.style.cursor = "default";
@@ -220,17 +182,10 @@ export class Dragger {
 	private onWheel = (e: WheelEvent) => {
 		e.preventDefault(); // prevent page scrolling
 		const clone = this.state!.clone;
-		let angle = parseInt(
-			clone.html.style.getPropertyValue("--rotation-angle"),
-			10
-		);
 
-		e.deltaY > 0 ? (angle += 90) : (angle -= 90);
+		e.deltaY > 0 ? clone.rotate("clockwise") : clone.rotate("counterclockwise");
 
-		clone.rotate();
-
-		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
-		this.state.currentCellInfo?.currentCell.dispatchEvent(
+		this.state.currentCellInfo?.element.dispatchEvent(
 			new ShipRotatedEvent(true)
 		);
 	};
@@ -239,27 +194,19 @@ export class Dragger {
 		e.preventDefault(); // prevent context menu
 		const clone = this.state!.clone;
 
-		let angle = parseInt(
-			clone.html.style.getPropertyValue("--rotation-angle"),
-			10
-		);
+		clone.rotate("clockwise");
 
-		angle += 90;
-
-		clone.rotate();
-
-		clone.html.style.setProperty("--rotation-angle", `${angle}deg`);
-		this.state.currentCellInfo?.currentCell.dispatchEvent(
+		this.state.currentCellInfo?.element.dispatchEvent(
 			new ShipRotatedEvent(true)
 		);
 	};
 }
 
-// function reset_rotation(clone: HTMLElement, angle: number) {
+// function reset_rotation(cloneHTML: HTMLElement, angle: number) {
 //   if (!(angle % 360 == 0)) return;
 
-//   let transition_style = getComputedStyle(clone).transition;
-//   console.log(clone.style.transition);
+//   let transition_style = getComputedStyle(cloneHTML).transition;
+//   console.log(cloneHTML.style.transition);
 
 //   let match = transition_style.match(/transform ([0-9]+(\.[0-9]+)?)s/);
 //   if (!match) throw new Error("No transform transition found.");
@@ -270,13 +217,13 @@ export class Dragger {
 
 //   }, 1 + duration * 1000);
 
-//   clone.style.setProperty("transition", transition_style.replace(/transform [0-9]+(\.[0-9]+)?s/, 'transform 0s'));
+//   cloneHTML.style.setProperty("transition", transition_style.replace(/transform [0-9]+(\.[0-9]+)?s/, 'transform 0s'));
 
-//   void clone.offsetWidth; // force reflow
+//   void cloneHTML.offsetWidth; // force reflow
 
-//   clone.style.setProperty("--rotation-angle", `0deg`);
+//   cloneHTML.style.setProperty("--rotation-angle", `0deg`);
 
 //   setTimeout(() => {
-//     clone.style.setProperty("transition", transition_style);
+//     cloneHTML.style.setProperty("transition", transition_style);
 //   }, 0);
 // }

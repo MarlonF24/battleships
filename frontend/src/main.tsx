@@ -1,11 +1,13 @@
-import { setUpRouter } from "./routing/router.js";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+
 import { api, unpackErrorMessage } from "./backend_api.js";
 
 
 import "./main.css";
 import { ResponseError } from "./api-client/index.js";
+import App from "./App.js";
 
-setUpRouter();
 
 createPlayer();
 
@@ -33,3 +35,10 @@ async function createPlayer() {
     throw error;
   }
 }
+
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);

@@ -7,10 +7,8 @@
 
 "use strict";
 
-import { Ship } from "../ship/ship.js";
+import { Ship, ShipDragClone } from "../ship/ship.js";
 import { ShipGrid } from "./ship_grid.js";
-
-
 
 
 
@@ -25,10 +23,14 @@ export class EquatorCrossEvent extends CustomEvent<EquatorCrossEventDetail> {
 }
 
 
-export interface ShipInEventDetail extends EquatorCrossEventDetail {
+export interface ShipInEventDetail {
 	originalShip: Ship;
-	shipClone: Ship;
+	clone: ShipDragClone;
 	source: ShipGrid;
+	currentTargetCell: {
+		readonly element: HTMLTableCellElement;
+		readonly inCellPosition: { x: number; y: number };
+	}
 }
 
 
@@ -56,31 +58,39 @@ export class ShipRotatedEvent extends Event {
 	}
 }
 
-export interface SuggestionState {
-	sourceShipGrid: ShipGrid;
+export interface BaseSuggestionState {
+	source: ShipGrid;
+	clone: ShipDragClone;
 	originalShip: Ship;
-	shipClone: Ship;
-	current_suggestion: {
+	currentSuggestion: {
 		ship: Ship;
 		row: number;
 		col: number;
 	};
-	inCellPosition: { x: number; y: number };
 }
 
 export abstract class BaseSuggestionHandler {
-	protected state: Partial<SuggestionState> = {};
+	protected state: Partial<BaseSuggestionState> = {};
+
+	constructor(readonly targetShipGrid: ShipGrid) {}
 
 	clearSuggestion = () => {
-		this.state.current_suggestion?.ship.html.remove();
-		this.state.current_suggestion = undefined;
+		this.targetShipGrid.removeShip(this.state.currentSuggestion!.ship);
+		this.state.currentSuggestion = undefined;
 	};
 
 	abstract suggestShip: (event: Event) => void;
 
 	abstract removeSuggestion: () => void;
 
-	abstract placeSuggestion: () => void;
+	placeSuggestion = () => {
+		// case 1: no suggestion to place
+		if (!this.state.currentSuggestion) return;
+		
+		// case 2: place the suggestion
+		this.state.source!.removeShip(this.state.originalShip!);
+		this.state.currentSuggestion.ship.isSuggestion = false;
+	}
 
 	abstract rotateSuggestion: () => void;
 	

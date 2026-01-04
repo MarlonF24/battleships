@@ -35,7 +35,7 @@
   width: 180px;
 }
 
-.join-game-btn {
+#joinGameButton {
   background: #388e3c;
   border-radius: 4px;
   padding: 0.5rem 1.5rem;
@@ -47,7 +47,7 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.join-game-btn:hover {
+#joinGameButton:hover {
   background: #2e7d32;
 }
 

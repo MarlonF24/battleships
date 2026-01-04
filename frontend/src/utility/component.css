@@ -17,7 +17,7 @@ color: #fff;
   font-size: 1rem;
 }
 
-.has-tooltip {
+:has(.tooltip) {
 	position: relative;
 }
 
@@ -38,8 +38,8 @@ color: #fff;
 	white-space: pre-line;
 }
 
-.has-tooltip:hover .tooltip,
-.has-tooltip:focus .tooltip {
+:has(.tooltip):hover .tooltip,
+:has(.tooltip):focus .tooltip {
 	visibility: visible;
 	opacity: var(--tooltip-opacity);
 }
