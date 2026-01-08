@@ -1,15 +1,10 @@
-import { AppPhase, useSwitchView } from "./switch_view.js";
-import { ResponseError, unpackErrorMessage } from "../backend_api.js";
-import { useApi } from "../utility/component.js";
+
 import { createBrowserRouter, LoaderFunction, Navigate, redirect } from "react-router-dom";
-import { api } from "../backend_api.js";
+import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base";
 import PreGameView, { PreGameViewLoaderData } from "../pregame/view.js";
 import  WelcomeView  from "../welcome/view.js";
 // import { GameView } from "../game/view.js";
 
-const PregameLoaderResponseErrorHandler = async (error: ResponseError, message: string) => {
-  
-}
 
 
 const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) => {
@@ -17,8 +12,9 @@ const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) 
   const playerId = localStorage.getItem("playerId")!;
   
   try {
-    const gameParams = await api.getPregameParamsGamesGamesGameIdParamsGet({ gameId, playerId });
-    return { gameParams, gameId };
+    const gameParams = await api.getPregameParamsGamesGameIdParamsGet({ gameId, playerId });
+    return {gameParams, gameId};
+
   } catch (error) {
       if (error instanceof ResponseError) {
         const message = await unpackErrorMessage(error);
@@ -26,16 +22,15 @@ const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) 
         case 404:
         case 403:
         case 422:
-          alert(`${message} Redirecting to welcome page.`);
+          console.error(`${message} Redirecting to welcome page.`);
           return redirect("/welcome");
         default:
-          alert(`Unexpected error: ${message} Page will reload.`);
-          window.location.reload();
-          return null;
+          console.error(`Unexpected error: ${message}`);
+          throw new Error(message); 
       }
     }
-    throw error;
-  }
+      throw error;
+  } 
 }
 
 const gameLoader: LoaderFunction = async ({ params }) => {
@@ -58,10 +53,12 @@ const router = createBrowserRouter([
   {
     path: "/games/:gameId/pregame",
     element: <PreGameView />,
-    loader: pregameLoader  
+    loader: pregameLoader,
+    hydrateFallbackElement: <div className="loading-container"><span className="loading-indicator">Loading Game Data...</span></div>,
+    errorElement: <ErrorPage />
   },
   // {
-  //   path: "/games/:gameId/game",
+    //   path: "/games/:gameId/game",
   //   element: <GameView />,
   //   loader: gameLoader,
   //   errorElement: <div>Error loading game!</div>  

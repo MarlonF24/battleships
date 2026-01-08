@@ -1,8 +1,7 @@
+import { Ship, CopyButton } from "../base/index.js";
+
 import { BattleGrid } from "./battle_grid/battle_grid.js";
-import { Grid } from "./grid/grid.js";
 import { ShipGarage } from "./garage/garage.js";
-import { Ship } from "./ship/ship.js";
-import { CopyButton } from "../utility/component.js";
 import { GameParams } from "../api-client/index.js";
 import { ButtonBar } from "./buttons/button_bar.js";
 import { ReadyContextProvider} from "./context.js";
@@ -21,7 +20,7 @@ const PreGameView: React.FC = () => {
 	const { gameParams, gameId } = useLoaderData<PreGameViewLoaderData>();
 
 
-	const battleGrid = new BattleGrid(new Grid(gameParams.battleGridRows, gameParams.battleGridCols));
+	const battleGrid = new BattleGrid({rows: gameParams.battleGridRows, cols: gameParams.battleGridCols});
 	const shipGarage = new ShipGarage(
 		gameParams.shipLengths.map(length => new Ship(length))
 	);
@@ -46,8 +45,10 @@ const PreGameView: React.FC = () => {
 			</section>
 			<ReadyContextProvider gameId={gameId}>	
 				<ButtonBar battleGrid={battleGrid} shipGarage={shipGarage}/>
-				<battleGrid.Renderer/>
-				<shipGarage.Renderer/>
+				<section className="game-area">
+					<battleGrid.Renderer/>
+					<shipGarage.Renderer/>
+				</section>
 			</ReadyContextProvider>
 		</>
 	);

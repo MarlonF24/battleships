@@ -1,15 +1,14 @@
 import { useSwitchView, AppPhase } from "../../routing/switch_view";
-import { api } from "../../backend_api";
-import { useApi } from "../../utility/component";
+import { useApi, api } from "../../base";
 import "./inputs.css";
 
 
 export const JoinGameInput: React.FC = () => {
-    const {error, executeApi} = useApi(); 
+    const {loading, error, executeApi} = useApi(); 
     const switchView = useSwitchView();
     
     const dispatchJoin = (event: React.FormEvent) => executeApi(async () => {
-        
+        event.preventDefault();
         const formData = new FormData(event.target as HTMLFormElement);
         const gameId = formData.get("gameId")!.toString();
 
@@ -18,19 +17,21 @@ export const JoinGameInput: React.FC = () => {
 
         const playerId = localStorage.getItem("playerId")!;
 
-        await api.joinGameGamesGamesGameIdJoinPost({gameId, playerId});
+        await api.joinGameGamesGameIdJoinPost({gameId, playerId});
         switchView(AppPhase.PREGAME, gameId);
         console.log(`Successfully joined game with ID: ${gameId}`);  
     });
 
     return (
-        <form onSubmit={dispatchJoin} id="join-game-form">
+        <form onSubmit={dispatchJoin} className="join-game-form">
             {error && <span className="error-message">Error: {error}</span>}
             <label htmlFor="game-id-input">Join an existing game:</label>
             
-            <input type="text" name="gameId" id="game-id-input" placeholder="Enter Game ID" required/>
+            <input type="text" name="gameId" id="game-id-input" className="game-id-input" placeholder="Enter Game ID" required/>
             
-            <input type="submit" value="Join Game" id="joinGameButton"/>
+            <button type="submit" className="btn-success" disabled={loading}>
+                {loading ? "Joining..." : "Join Game"}
+            </button>
         </form>
     )
 }

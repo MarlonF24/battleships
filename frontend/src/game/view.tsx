@@ -1,4 +1,10 @@
-export function GameView(gameId: string) {
-    const container = document.createElement("div");
-    return container;
+import React from "react";
+
+const GameView: React.FC = () => {
+    return (
+        
+    );
+
 }
+
+export default GameView;

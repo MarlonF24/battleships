@@ -12,7 +12,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "useDefineForClassFields": true,
+
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

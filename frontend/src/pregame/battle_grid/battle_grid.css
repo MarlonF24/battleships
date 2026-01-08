@@ -1,14 +1,14 @@
-#battle-grid {
+.BattleGrid {
   position: relative;
 }
 
-#battle-grid .grid {
-  background: #e3f2fd;
-  border: 2px solid #1976d2;
+.BattleGrid .grid {
+  background: var(--grid-bg);
+  border: 2px solid var(--grid-border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-#battle-grid .grid .cell {
-  background: #bbdefb;
-  border: 1px solid #1976d2;
+.BattleGrid .grid .cell {
+  background: var(--grid-cell-bg);
+  border: 1px solid var(--grid-border-color);
 }

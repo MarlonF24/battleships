@@ -7,9 +7,9 @@
 
 "use strict";
 
-import { Ship, ShipDragClone } from "../ship/ship.js";
-import { ShipGrid } from "./ship_grid.js";
-
+import { Ship, ShipPosition } from "../../base";
+import { ShipDragClone, ShipSuggestion } from "./dynamic_ship";
+import { PregameShipGrid } from "../utility/ship_grid.js";
 
 
 export interface EquatorCrossEventDetail {
@@ -26,7 +26,7 @@ export class EquatorCrossEvent extends CustomEvent<EquatorCrossEventDetail> {
 export interface ShipInEventDetail {
 	originalShip: Ship;
 	clone: ShipDragClone;
-	source: ShipGrid;
+	source: PregameShipGrid;
 	currentTargetCell: {
 		readonly element: HTMLTableCellElement;
 		readonly inCellPosition: { x: number; y: number };
@@ -59,23 +59,23 @@ export class ShipRotatedEvent extends Event {
 }
 
 export interface BaseSuggestionState {
-	source: ShipGrid;
+	source: PregameShipGrid;
+	targetShipGridHTML: HTMLElement;
 	clone: ShipDragClone;
 	originalShip: Ship;
 	currentSuggestion: {
-		ship: Ship;
-		row: number;
-		col: number;
+		ship: ShipSuggestion;
+		positon: ShipPosition;
 	};
 }
 
 export abstract class BaseSuggestionHandler {
 	protected state: Partial<BaseSuggestionState> = {};
 
-	constructor(readonly targetShipGrid: ShipGrid) {}
+	constructor(readonly targetShipGrid: PregameShipGrid) {}
 
 	clearSuggestion = () => {
-		this.targetShipGrid.removeShip(this.state.currentSuggestion!.ship);
+		this.state.currentSuggestion?.ship.remove();
 		this.state.currentSuggestion = undefined;
 	};
 
@@ -89,7 +89,12 @@ export abstract class BaseSuggestionHandler {
 		
 		// case 2: place the suggestion
 		this.state.source!.removeShip(this.state.originalShip!);
-		this.state.currentSuggestion.ship.isSuggestion = false;
+		this.state.currentSuggestion.ship.remove();
+		this.targetShipGrid.placeShip(
+			this.state.currentSuggestion.ship.instantiate(),
+			this.state.currentSuggestion.positon
+		);
+		this.state.currentSuggestion = undefined;
 	}
 
 	abstract rotateSuggestion: () => void;

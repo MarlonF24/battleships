@@ -34,12 +34,12 @@ export interface CreatePlayerPlayersCreatePostRequest {
     playerId?: string | null;
 }
 
-export interface GetPregameParamsGamesGamesGameIdParamsGetRequest {
+export interface GetPregameParamsGamesGameIdParamsGetRequest {
     gameId: string;
     playerId: string;
 }
 
-export interface JoinGameGamesGamesGameIdJoinPostRequest {
+export interface JoinGameGamesGameIdJoinPostRequest {
     gameId: string;
     playerId: string;
 }
@@ -147,18 +147,18 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Get Pregame Params
      */
-    async getPregameParamsGamesGamesGameIdParamsGetRaw(requestParameters: GetPregameParamsGamesGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GameParams>> {
+    async getPregameParamsGamesGameIdParamsGetRaw(requestParameters: GetPregameParamsGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GameParams>> {
         if (requestParameters['gameId'] == null) {
             throw new runtime.RequiredError(
                 'gameId',
-                'Required parameter "gameId" was null or undefined when calling getPregameParamsGamesGamesGameIdParamsGet().'
+                'Required parameter "gameId" was null or undefined when calling getPregameParamsGamesGameIdParamsGet().'
             );
         }
 
         if (requestParameters['playerId'] == null) {
             throw new runtime.RequiredError(
                 'playerId',
-                'Required parameter "playerId" was null or undefined when calling getPregameParamsGamesGamesGameIdParamsGet().'
+                'Required parameter "playerId" was null or undefined when calling getPregameParamsGamesGameIdParamsGet().'
             );
         }
 
@@ -171,7 +171,7 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
 
-        let urlPath = `/games/games/{gameId}/params`;
+        let urlPath = `/games/{gameId}/params`;
         urlPath = urlPath.replace(`{${"gameId"}}`, encodeURIComponent(String(requestParameters['gameId'])));
 
         const response = await this.request({
@@ -187,26 +187,26 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Get Pregame Params
      */
-    async getPregameParamsGamesGamesGameIdParamsGet(requestParameters: GetPregameParamsGamesGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GameParams> {
-        const response = await this.getPregameParamsGamesGamesGameIdParamsGetRaw(requestParameters, initOverrides);
+    async getPregameParamsGamesGameIdParamsGet(requestParameters: GetPregameParamsGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GameParams> {
+        const response = await this.getPregameParamsGamesGameIdParamsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      * Join Game
      */
-    async joinGameGamesGamesGameIdJoinPostRaw(requestParameters: JoinGameGamesGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async joinGameGamesGameIdJoinPostRaw(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         if (requestParameters['gameId'] == null) {
             throw new runtime.RequiredError(
                 'gameId',
-                'Required parameter "gameId" was null or undefined when calling joinGameGamesGamesGameIdJoinPost().'
+                'Required parameter "gameId" was null or undefined when calling joinGameGamesGameIdJoinPost().'
             );
         }
 
         if (requestParameters['playerId'] == null) {
             throw new runtime.RequiredError(
                 'playerId',
-                'Required parameter "playerId" was null or undefined when calling joinGameGamesGamesGameIdJoinPost().'
+                'Required parameter "playerId" was null or undefined when calling joinGameGamesGameIdJoinPost().'
             );
         }
 
@@ -219,7 +219,7 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
 
-        let urlPath = `/games/games/{gameId}/join`;
+        let urlPath = `/games/{gameId}/join`;
         urlPath = urlPath.replace(`{${"gameId"}}`, encodeURIComponent(String(requestParameters['gameId'])));
 
         const response = await this.request({
@@ -235,8 +235,8 @@ export class DefaultApi extends runtime.BaseAPI {
     /**
      * Join Game
      */
-    async joinGameGamesGamesGameIdJoinPost(requestParameters: JoinGameGamesGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.joinGameGamesGamesGameIdJoinPostRaw(requestParameters, initOverrides);
+    async joinGameGamesGameIdJoinPost(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.joinGameGamesGameIdJoinPostRaw(requestParameters, initOverrides);
     }
 
     /**

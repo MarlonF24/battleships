@@ -1,24 +1,35 @@
-import { Ship, Orientation } from "../ship/ship.js";
-import { Grid } from "../grid/grid.js";
-import { ShipGrid } from "../utility/ship_grid.js";
+import { observable, action, override, makeObservable } from "mobx";
+
+import { Ship, Grid, Orientation } from "../../base";
+import { ShipLike, ShipSuggestion } from "../drag_drop/dynamic_ship.js";
+import { PregameShipGrid } from "../utility/ship_grid.js";
 
 import "./garage.css";
 
-export class ShipGarage extends ShipGrid {
-	public readonly shipInHandler: EventListener = new SuggestionHandler(this).suggestShip;
+export class ShipGarage extends PregameShipGrid {
+	public readonly shipInHandler: EventListener = new GarageSuggestionHandler(this).suggestShip;
 	
 	readonly shipArray: (Ship | null)[];
 	readonly maxLen: number;
 
-	constructor(ships: Ship[]) {
+	constructor(ships: Ship[], sort: boolean = true) {
 		super(
 			new Grid(
 				ships.length,
 				Math.max(...ships.map((s) => (typeof s === 'number' ? s : s.length)), 1)
 			)
 		);
-		
-		this.ships = new Map(ships.map((ship, index) => [ship, { headRow: index, headCol: 0 }]));
+
+		makeObservable(this, {
+			shipArray: observable.shallow,
+			reset: override,
+			removeShip: override,
+			placeShip: override,
+		});
+
+		if (sort) ships.sort((a, b) => b.length - a.length);
+
+		this.shipGrid.ships = new Map(ships.map((ship, index) => [ship, { headRow: index, headCol: 0 }]));
 		
 		this.shipArray = Array.from(ships);
 
@@ -34,8 +45,6 @@ export class ShipGarage extends ShipGrid {
 		this.ships.forEach((_, ship) => {
 			this.removeShip(ship);
 		});
-
-		if (document.getElementsByClassName("ship").length) {throw new Error("Ships still present in game outside the garage, cant reset the garage to initial ships");}
 		
 		const initialShips = JSON.parse(sessionStorage.getItem("initial-garage")!);
 
@@ -44,10 +53,6 @@ export class ShipGarage extends ShipGrid {
 		});
 	}
 
-	clear() {
-		this.ships.forEach((_, ship) => {this.removeShip(ship);})
-	}
-	
 
 	rowInBounds(row: number, err_msg?: string): boolean {
 		if (row >= this.shipArray.length || row < 0) {
@@ -57,7 +62,7 @@ export class ShipGarage extends ShipGrid {
 		return true;
 	}
 
-	shipFits(ship: Ship, err_msg?: string): boolean {
+	shipFits(ship: ShipLike, err_msg?: string): boolean {
 		if (ship.length > this.maxLen) {
 			if (err_msg) throw new RangeError(err_msg);
 			else return false;
@@ -70,7 +75,7 @@ export class ShipGarage extends ShipGrid {
 		return this.shipArray[row] == null || this.shipArray[row] === disregard;
 	}
 
-	canPlaceShip(row: number, ship: Ship): boolean {
+	canPlaceShip(row: number, ship: ShipLike): boolean {
 		if (!this.shipFits(ship)) return false;
 		return this.rowEmpty(row);
 	}
@@ -103,7 +108,8 @@ import {
 	BaseSuggestionHandler,
 	BaseSuggestionState,
 	ShipInEventDetail,
-} from "../utility/suggestion_handler.js";
+} from "../drag_drop/suggestion_handler.js";
+
 
 interface GarageSuggestionState extends BaseSuggestionState {
 	currentRow: {
@@ -112,7 +118,7 @@ interface GarageSuggestionState extends BaseSuggestionState {
 	};
 }
 
-class SuggestionHandler extends BaseSuggestionHandler {
+class GarageSuggestionHandler extends BaseSuggestionHandler {
 	public state: Partial<GarageSuggestionState> = {};
 
 
@@ -127,13 +133,13 @@ class SuggestionHandler extends BaseSuggestionHandler {
 		const detail = (event as CustomEvent<ShipInEventDetail>).detail;
 		const targetCell = detail.currentTargetCell.element;
 		const targetRow = targetCell.parentElement! as HTMLTableRowElement;
+		this.state.targetShipGridHTML ??= event.currentTarget as HTMLElement;
 		const rowIdx = targetRow.rowIndex;
 
-		const clone = detail.clone;
 
 		this.garage.shipFits(detail.originalShip, "Ship doesnt fit in garage");
 
-		var freeRow = SuggestionHandler.closestFreeRow(
+		var freeRow = GarageSuggestionHandler.closestFreeRow(
 			this.garage,
 			rowIdx,
 			detail.originalShip
@@ -141,17 +147,10 @@ class SuggestionHandler extends BaseSuggestionHandler {
 
 		if (freeRow !== null) {
 			// clone the clone to be the suggestion ship
-			let suggestionShip = new Ship(
-				clone.length,
-				Orientation.HORIZONTAL,
-				true
-			);
+			let suggestionShip = new ShipSuggestion(detail.clone);
 
 			
-			this.garage.placeShip(suggestionShip, {headRow: freeRow});
-
-			this.state.currentRow!.element.addEventListener("ship-out", this.removeSuggestion);
-			this.state.currentRow!.element.addEventListener("ship-placed", this.placeSuggestion);
+			suggestionShip.suggest(this.state.targetShipGridHTML!, { headRow: freeRow, headCol: 0 }, Orientation.HORIZONTAL);
 
 			this.state = {
 				originalShip: detail.originalShip,
@@ -159,10 +158,16 @@ class SuggestionHandler extends BaseSuggestionHandler {
 				source: detail.source,
 				currentSuggestion: {
 					ship: suggestionShip,
-					row: freeRow,
-					col: 0,
+					positon: { headRow: freeRow, headCol: 0}
 				},
+				currentRow: {
+					rowIdx: freeRow,
+					element: targetRow
+				}
 			};
+
+			this.state.currentRow!.element.addEventListener("ship-out", this.removeSuggestion);
+			this.state.currentRow!.element.addEventListener("ship-placed", this.placeSuggestion);
 		}
 	};
 

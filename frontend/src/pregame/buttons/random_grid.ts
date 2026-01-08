@@ -1,4 +1,4 @@
-import { Ship, Orientation, ShipPosition } from "../ship/ship.js"
+import { Orientation, Ship, ShipPosition } from "../../base";
 
 
 interface Gap { // gapsize -> start coordinate of gap in the perp dimension

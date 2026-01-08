@@ -1,16 +1,16 @@
 /* Garage grid-specific styles extracted from main.css */
-#ship-garage {
+.ShipGarage {
   position: relative;
 }
 
 
-#ship-garage .grid {
-  background: #e3f2fd;
-  border: 2px solid #1976d2;
+.ShipGarage .grid {
+  background: var(--grid-bg);
+  border: 2px solid var(--grid-border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-#ship-garage .grid .cell {
-  background: #b3bec7;
-  border: 1px solid #1976d2;
+.ShipGarage .grid .cell {
+  background: var(--garage-cell-bg);
+  border: 1px solid var(--grid-border-color);
 }

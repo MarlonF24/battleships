@@ -1,21 +1,8 @@
-
-/* Minimal, elegant tooltip system */
 :root {
-	--tooltip-bg: #222;
+	--tooltip-bg: var(--text-color);
 	--tooltip-opacity: 0.92;
 }
 
-
-button {
-color: #fff;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-  font-size: 1rem;
-}
 
 :has(.tooltip) {
 	position: relative;
@@ -38,8 +25,9 @@ color: #fff;
 	white-space: pre-line;
 }
 
-:has(.tooltip):hover .tooltip,
-:has(.tooltip):focus .tooltip {
+
+:has(> .tooltip):hover .tooltip,
+:has(> .tooltip):focus .tooltip {
 	visibility: visible;
 	opacity: var(--tooltip-opacity);
 }
@@ -106,31 +94,3 @@ color: #fff;
 }
 	
 
-
-
-.copy-button {
-	background: none;
-	border: none;
-	color: #1976d2;
-	font-size: 1.2em;
-	cursor: pointer;
-	padding: 0.25em 0.6em;
-	border-radius: 4px;
-	transition: background 0.12s, color 0.12s;
-	position: relative;
-	overflow: hidden;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	line-height: 1;
-	vertical-align: middle;
-}
-.copy-button:hover {
-	background: #e3eaf6;
-}
-
-.copy-button.copied {
-	background: #1976d2 !important;
-	color: #fff !important;
-	transition: background 0.07s, color 0.07s !important;
-}

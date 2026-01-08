@@ -1,12 +1,37 @@
+:root {
+	--primary-color: #1976d2;
+	--primary-color-hover: #1565c0;
+	--danger-color: #f44336;
+	--danger-color-hover: #d32f2f;
+	--success-color: #388e3c;
+    --success-color-hover: #2e7d32;
+	
+    --bg-color: #f6f8fa;
+    --header-bg: #1a2634;
+    --text-color: #222;
+    --surface-color: #fff;
+    
+    --grid-bg: #e3f2fd;
+    --grid-cell-bg: #bbdefb;
+    --garage-cell-bg: #b3bec7;
+    --grid-border-color: #1976d2;
+    
+    --ship-bg: #2e7d32; /* The darker green used for ships */
+    --ship-border: #145a23;
+    --ship-highlight-bg: #388e3c; /* e.g. on hover */
+
+    --cell-size: 30px;
+}
+
 body {
 	margin: 0;
 	font-family: system-ui, sans-serif;
-	background: #f6f8fa;
-	color: #222;
+	background: var(--bg-color);
+	color: var(--text-color);
 }
 
-#header-div {
-	background: #1a2634;
+.app-header {
+	background: var(--header-bg);
 	color: #fff;
 	padding: 1.5rem 0 1rem 0;
 	text-align: center;
@@ -21,6 +46,58 @@ body {
 	margin: 0 auto;
 	padding: 2rem 1rem;
 }
+
+/* Accessibility & Interaction Improvements */
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Common Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.error-message {
+    color: var(--danger-color);
+    background: #ffebee;
+    border: 1px solid var(--danger-color);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+}
+
+.loading-indicator {
+    color: var(--primary-color);
+    font-style: italic;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.loading-container, .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    font-size: 1.2rem;
+    color: var(--text-color);
+    flex-direction: column;
+    gap: 1rem;
+}
+
 
 .button-bar {
 	display: flex;
@@ -38,6 +115,37 @@ body {
 	justify-content: center;
 }
 
+button {
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+}
+.btn-primary:hover {
+  background: var(--primary-color-hover);
+}
+
+.btn-danger {
+  background: var(--danger-color);
+}
+.btn-danger:hover {
+  background: var(--danger-color-hover);
+}
+
+.btn-success {
+  background: var(--success-color);
+}
+.btn-success:hover {
+  background: var(--success-color-hover);
+}
 
 
 @media (max-width: 900px) {

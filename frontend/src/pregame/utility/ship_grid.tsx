@@ -1,21 +1,34 @@
-import { makeAutoObservable } from "mobx";
+import { useRef, useEffect } from "react";
+
+import { action, makeObservable } from "mobx";
 
 
-import { Grid } from "../grid/grid.js";
-import { Ship, ShipPosition } from "../ship/ship.js";
-import { Dragger } from "./drag.js";
+import { Ship, ShipPosition, ShipGrid, Grid } from "../../base/index.js";
+import { Dragger } from "../drag_drop/drag.js";
 import { observer } from "mobx-react-lite";
 
 
-
-
-export abstract class ShipGrid {
+export abstract class PregameShipGrid  {
 	abstract readonly shipInHandler: EventListener;
+	readonly shipGrid: ShipGrid;
 
-	public ships: Map<Ship, ShipPosition> = new Map(); 
+	constructor(size: {rows: number; cols: number}) {
+		this.shipGrid = new ShipGrid(size);
+		makeObservable(this, {
+			removeShip: action,
+			containsShip: action,
+			placeShip: action,
+			reset: action,
+			clear: action
+		});
+	}
 
-	constructor(readonly grid: Grid) {
-		makeAutoObservable(this);
+	get ships(): Map<Ship, ShipPosition> {
+		return this.shipGrid.ships;
+	}
+
+	get grid(): Grid {
+		return this.shipGrid.grid;
 	}
 
 	abstract removeShip(ship: Ship): void;
@@ -24,15 +37,28 @@ export abstract class ShipGrid {
 
 	abstract placeShip(ship: Ship, position: ShipPosition): void;
 
+	abstract reset(): void;
+
+	clear() {
+		this.ships.forEach((_, ship) => {this.removeShip(ship);})
+	}
 
 	public readonly Renderer = observer(() => {
+		const divRef = useRef<HTMLDivElement>(null);
+		
+		useEffect(() => {
+			const tbody = divRef.current!;
+			
+			tbody.addEventListener("ship-in", this.shipInHandler);
+			return () => {
+				tbody.removeEventListener("ship-in", this.shipInHandler);
+			}
+		}, [this.shipInHandler]);
+		
 		return (
-			<section>
-				<this.grid.Renderer shipInHandler={this.shipInHandler} />
-				{Array.from(this.ships.entries()).map(([ship, position]) => (
-					<ship.Renderer position={position} onMouseDown={new Dragger(ship, this).mouseDownHandler} />
-				))} 
-			</section>
+			<div ref={divRef} className={this.constructor.name} style={{position: "relative"}}>
+				<this.shipGrid.Renderer mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
+			</div>
 		);
 	});
 }

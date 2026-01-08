@@ -6,8 +6,8 @@ All URIs are relative to *http://localhost*
 |------------- | ------------- | -------------|
 | [**createGameGamesCreatePost**](DefaultApi.md#creategamegamescreatepost) | **POST** /games/create | Create Game |
 | [**createPlayerPlayersCreatePost**](DefaultApi.md#createplayerplayerscreatepost) | **POST** /players/create | Create Player |
-| [**getPregameParamsGamesGamesGameIdParamsGet**](DefaultApi.md#getpregameparamsgamesgamesgameidparamsget) | **GET** /games/games/{gameId}/params | Get Pregame Params |
-| [**joinGameGamesGamesGameIdJoinPost**](DefaultApi.md#joingamegamesgamesgameidjoinpost) | **POST** /games/games/{gameId}/join | Join Game |
+| [**getPregameParamsGamesGameIdParamsGet**](DefaultApi.md#getpregameparamsgamesgameidparamsget) | **GET** /games/{gameId}/params | Get Pregame Params |
+| [**joinGameGamesGameIdJoinPost**](DefaultApi.md#joingamegamesgameidjoinpost) | **POST** /games/{gameId}/join | Join Game |
 | [**welcomeFullPathGet**](DefaultApi.md#welcomefullpathget) | **GET** /{full_path} | Welcome |
 
 
@@ -147,9 +147,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## getPregameParamsGamesGamesGameIdParamsGet
+## getPregameParamsGamesGameIdParamsGet
 
-> GameParams getPregameParamsGamesGamesGameIdParamsGet(gameId, playerId)
+> GameParams getPregameParamsGamesGameIdParamsGet(gameId, playerId)
 
 Get Pregame Params
 
@@ -160,7 +160,7 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { GetPregameParamsGamesGamesGameIdParamsGetRequest } from '';
+import type { GetPregameParamsGamesGameIdParamsGetRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
@@ -171,10 +171,10 @@ async function example() {
     gameId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
     // string
     playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies GetPregameParamsGamesGamesGameIdParamsGetRequest;
+  } satisfies GetPregameParamsGamesGameIdParamsGetRequest;
 
   try {
-    const data = await api.getPregameParamsGamesGamesGameIdParamsGet(body);
+    const data = await api.getPregameParamsGamesGameIdParamsGet(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -216,9 +216,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## joinGameGamesGamesGameIdJoinPost
+## joinGameGamesGameIdJoinPost
 
-> joinGameGamesGamesGameIdJoinPost(gameId, playerId)
+> joinGameGamesGameIdJoinPost(gameId, playerId)
 
 Join Game
 
@@ -229,7 +229,7 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { JoinGameGamesGamesGameIdJoinPostRequest } from '';
+import type { JoinGameGamesGameIdJoinPostRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
@@ -240,10 +240,10 @@ async function example() {
     gameId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
     // string
     playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies JoinGameGamesGamesGameIdJoinPostRequest;
+  } satisfies JoinGameGamesGameIdJoinPostRequest;
 
   try {
-    const data = await api.joinGameGamesGamesGameIdJoinPost(body);
+    const data = await api.joinGameGamesGameIdJoinPost(body);
     console.log(data);
   } catch (error) {
     console.error(error);

@@ -3,10 +3,9 @@ import React, { useCallback} from "react";
 import { useReadyContext, PregameWSPlayerReadyMessage } from "../context.js";
 import { BattleGrid } from "../battle_grid/battle_grid.js";
 import { ShipGarage } from "../garage/garage.js";
-import { Tooltip, TooltipPosition } from "../../utility/component.js";
-import { Ship } from "../ship/ship.js";
+import { Tooltip, TooltipPosition, Ship } from "../../base/index.js";
 
-import "./buttons.css";
+
 
 
 export interface PregameButtonProps {
@@ -18,11 +17,11 @@ export interface PregameButtonProps {
 export const ResetButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
 	const clickHandler = (): void => {
 			console.log("Resetting the board....");
-			battleGrid.reset();
+			battleGrid.clear();
 			shipGarage.reset();
 	}
 
-	return <button id="resetButton" onClick={clickHandler}> Reset Board </button>;
+	return <button className="btn-danger" onClick={clickHandler}> Reset </button>;
 }
 
 
@@ -34,7 +33,7 @@ interface ReadyButtonProps extends PregameButtonProps {
 
 export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}) => {
 	
-	const { numReadyPlayers, pregameWS } = useReadyContext();
+	const { numReadyPlayers } = useReadyContext();
 	
 	const clickHandler = useCallback(() => {
 		if (shipGarage.ships.size > 0) {
@@ -60,7 +59,7 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 
 		let message = JSON.stringify(WSMessage);
 		console.log("Sending ready message to backend:", message);
-		pregameWS.send(message);
+		BackendWebSocket.socket.send(message);
 		
 		console.log("Player is ready!");
 	}, [battleGrid, shipGarage]);
@@ -68,8 +67,8 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 
 
 	return (
-		<button id="readyButton" onClick={clickHandler}> 
-		Ready! <span id="numReadyPlayers">{`(${numReadyPlayers}/2)`}</span> 
+		<button className="btn-success" onClick={clickHandler}> 
+		Ready! <span className="num-ready-players">{`(${numReadyPlayers}/2)`}</span> 
 		</button>
 	);
 
@@ -77,6 +76,7 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 }
 
 import { BattleGridInfo, RandomBattleGridGenerator } from "./random_grid.js";
+import { BackendWebSocket } from "../../base/backend_api.js";
 
 export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
 
@@ -136,7 +136,7 @@ export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGara
 	}
 
 	return (
-		<button id="randomButton" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships
+		<button className="btn-primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships
 			<Tooltip position={TooltipPosition.TOP} text="Left Click: unplaced ships&#10;Right Click: all ships" />
 		</button>
 	);

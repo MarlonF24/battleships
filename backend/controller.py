@@ -51,6 +51,7 @@ app.mount("/assets", staticfiles.StaticFiles(directory=FROTENTDIR / "assets"), n
 
 @app.get("/{full_path:path}") # catch all route
 def welcome(full_path: str) -> responses.FileResponse:
+    print(f"Redirecting {full_path} to welcome")
     return responses.FileResponse(FROTENTDIR / "index.html")
 
 

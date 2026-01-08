@@ -1,7 +1,11 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { configure } from "mobx";
 
-import { api, unpackErrorMessage } from "./backend_api.js";
+configure({
+    enforceActions: "observed" 
+});
+
+import { api, unpackErrorMessage } from "./base/backend_api.js";
 
 
 import "./main.css";
@@ -38,7 +42,5 @@ async function createPlayer() {
 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
     <App />
-  </StrictMode>
 );

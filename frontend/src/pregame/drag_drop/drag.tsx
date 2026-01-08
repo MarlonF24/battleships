@@ -1,9 +1,9 @@
 import React from "react";
 
-import { Ship, Orientation, ShipDragClone } from "../ship/ship.js";
-import { ShipGrid } from "./ship_grid.js";
+import { Ship, Orientation } from "../../base";
+import { ShipDragClone } from "./dynamic_ship.js";
 import { ShipInEvent, ShipOutEvent, ShipPlacedEvent, ShipRotatedEvent, EquatorCrossEvent } from "./suggestion_handler.js";
-
+import { PregameShipGrid } from "../utility/ship_grid.js";
 
 // Interface for drag state
 interface DragState {
@@ -22,7 +22,7 @@ let CELLSIZE: number;
 export class Dragger {
 	private state!: DragState;
 
-	constructor(readonly originalShip: Ship, readonly source: ShipGrid) {
+	constructor(readonly originalShip: Ship, readonly source: PregameShipGrid) {
 		CELLSIZE = CELLSIZE ?? parseInt( // here and not global cause vite doesnt load the styles before this module
 		getComputedStyle(document.documentElement)
 		.getPropertyValue("--cell-size")
@@ -78,7 +78,7 @@ export class Dragger {
 			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPosition.y;
 			
 			this.state.currentCellInfo.inCellPosition = { x: newInCellX, y: newInCellY };
-	
+			// console.log(newInCellX, newInCellY);
 			if (
 				newInCellX < 0 ||
 				newInCellX > 1 ||
@@ -108,7 +108,7 @@ export class Dragger {
 
 	};
 
-	private dispatchMouseOver = (centerCross: boolean = false) => {
+	private dispatchMouseOver = () => {
 	
 		const cloneCenter = this.state.clone.centerCoords;
 		
@@ -172,8 +172,7 @@ export class Dragger {
 				new ShipPlacedEvent(true)
 			); 
 		} 
-		// General TODO: put keys on objects like ships so react can update way more efficiently
-	
+
 		document.body.classList.remove("ships-no-pointer");
 		
 		document.body.style.cursor = "default";

@@ -21,7 +21,7 @@ db_engine = create_async_engine(PG_DB_URL)
 session_mkr: async_sessionmaker[AsyncSession] = async_sessionmaker(bind=db_engine, class_=AsyncSession, expire_on_commit=False)
 
 
-async def get_sb_session():
+async def get_db_session():
     async with session_mkr() as session:
         yield session
 
@@ -47,6 +47,7 @@ class Game(Base):
     battle_grid_rows: Mapped[int] = mapped_column()
     battle_grid_cols: Mapped[int] = mapped_column()
     ship_lengths: Mapped[list[int]] = mapped_column(ARRAY(Integer))  # e.g., [5, 4, 3, 3, 2]
+  
   
 class GamePlayerLink(Base):
     __tablename__ = "game_player_link"
