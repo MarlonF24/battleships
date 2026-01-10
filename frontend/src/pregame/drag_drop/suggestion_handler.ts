@@ -8,7 +8,7 @@
 "use strict";
 
 import { Ship, ShipPosition } from "../../base";
-import { ShipDragClone, ShipSuggestion } from "./dynamic_ship";
+import { ShipDragClone, ShipSuggestion } from "./dynamic_ship.js";
 import { PregameShipGrid } from "../utility/ship_grid.js";
 
 

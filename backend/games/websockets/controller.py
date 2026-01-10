@@ -1,10 +1,10 @@
 
-from fastapi import APIRouter, Depends, WebSocket
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, WebSocket
 
-from ..dependencies import validate_player_in_game
-from ...db import Player, Game, get_db_session
-from . import service
+from ..dependencies import PlayerGameDep
+from ...db import SessionDep
+from .game import conn_manager as game_conn_manager
+from .pregame import conn_manager as pregame_service
 
 router = APIRouter(
     prefix="/ws",
@@ -12,10 +12,18 @@ router = APIRouter(
 
 
 @router.websocket("/{gameId}/pregame")
-async def pregame_websocket(websocket: WebSocket, player_game: tuple[Player, Game] = Depends(validate_player_in_game), session: AsyncSession = Depends(get_db_session)):
+async def pregame_websocket(websocket: WebSocket, player_game: PlayerGameDep, session: SessionDep):
     player, game = player_game
-    await service.pregame_websocket(websocket, player, game, session)
+    await pregame_service.handle_websocket(game, player, websocket, session)
 
+
+@router.websocket("/{gameId}/game")
+async def game_websocket(websocket: WebSocket, player_game: PlayerGameDep, session: SessionDep):
+    player, game = player_game
+    await game_conn_manager.handle_websocket(game, player, websocket, session)
+
+
+    
 
 
     

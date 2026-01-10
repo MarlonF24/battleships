@@ -1,5 +1,5 @@
 
-# GameParams
+# PregameParams
 
 
 ## Properties
@@ -9,20 +9,18 @@ Name | Type
 `battleGridRows` | number
 `battleGridCols` | number
 `shipLengths` | Array&lt;number&gt;
-`ownShips` | [Array&lt;Ship&gt;](Ship.md)
 
 ## Example
 
 ```typescript
-import type { GameParams } from ''
+import type { PregameParams } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "battleGridRows": null,
   "battleGridCols": null,
   "shipLengths": null,
-  "ownShips": null,
-} satisfies GameParams
+} satisfies PregameParams
 
 console.log(example)
 
@@ -31,7 +29,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as GameParams
+const exampleParsed = JSON.parse(exampleJSON) as PregameParams
 console.log(exampleParsed)
 ```
 

@@ -273,16 +273,16 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 		if (ship.orientation === Orientation.HORIZONTAL) {
 			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
 			let headRow = centerPosition.row;
-			let cloneHead = centerPosition.col - lengthOffset;
+			let cloneHeadCol = centerPosition.col - lengthOffset;
 			let headCol = Math.max(
 				0,
-				Math.min(cloneHead, battleGrid.grid.cols - ship.length)
+				Math.min(cloneHeadCol, battleGrid.grid.cols - ship.length)
 			);
 
 			if (ship.length % 2 === 0 && inCellPosition) {
 				// adjust for even-length ships based on in-cell position
 				if (inCellPosition.x >= 0.5 
-					&& cloneHead >= 0
+					&& cloneHeadCol >= 0
 					&& headCol + ship.length < battleGrid.grid.cols) {
 					headCol += 1;
 				}
@@ -291,15 +291,18 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 
 		} else {
 			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
+			let cloneHeadRow = centerPosition.row - lengthOffset;
 			let headRow = Math.max(
 				0,
-				Math.min(centerPosition.row - lengthOffset, battleGrid.grid.rows - ship.length)
+				Math.min(cloneHeadRow, battleGrid.grid.rows - ship.length)
 			);
 			let headCol = centerPosition.col;
 
 			if (ship.length % 2 === 0 && inCellPosition) {
 				// adjust for even-length ships based on in-cell position
-				if (inCellPosition.y >= 0.5 && headRow + ship.length < battleGrid.grid.rows) {
+				if (inCellPosition.y >= 0.5 
+					&& cloneHeadRow >= 0
+					&& headRow + ship.length < battleGrid.grid.rows) {
 					headRow += 1;
 				}
 			}

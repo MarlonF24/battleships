@@ -158,7 +158,7 @@ src/
 
 ### Game Development Concepts
 
-- **State machines** for game phases
+- **State machines** for game pages
 - **Collision detection** for ship placement
 - **Turn management** in multiplayer games
 - **Data synchronization** across clients

@@ -1,22 +1,46 @@
-import React from 'react';
-import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useRouteError, isRouteErrorResponse, useLocation } from 'react-router-dom';
+import { Page, useSwitchView } from '../../routing/switch_view';
+import { ResponseError, unpackErrorMessage } from '../backend_api';
+
 
 
 export const ErrorPage: React.FC = () => {
+    const switchView = useSwitchView();
+    const location = useLocation();
     const error = useRouteError();
-    console.error("Route Error:", error);
 
-    let errorMessage: string;
-
-    if (isRouteErrorResponse(error)) {
-        errorMessage = error.statusText || error.data?.message || "Unknown error";
-    } else if (error instanceof Error) {
-        errorMessage = error.message;
-    } else if (typeof error === 'string') {
-        errorMessage = error;
-    } else {
-        errorMessage = 'An unexpected error has occurred.';
+    let routeErrorMessage: string | null = null;
+    if (error) {
+        if (isRouteErrorResponse(error)) {
+            routeErrorMessage = error.statusText || error.data?.message || "Unknown error";
+        } else if (error instanceof Error) {
+            routeErrorMessage = error.message;
+        } else if (typeof error === 'string') {
+            routeErrorMessage = error;
+        } else {
+            routeErrorMessage = 'An unexpected error has occurred.';
+        }
     }
+
+    const stateMessage = (location.state as { message?: string } | null)?.message;
+
+    const errorMessage = stateMessage || routeErrorMessage || "An unexpected error has occurred.";
+    
+    const shouldRedirect = location.pathname !== '/error';
+    
+    useEffect(() => {
+        if (shouldRedirect) {
+            switchView(Page.ERROR, undefined, errorMessage);
+        }
+    }, []);
+
+    
+    if (shouldRedirect) {
+        return null;
+    }
+    
+    
 
     return (
         <div className="error-container">
@@ -26,12 +50,14 @@ export const ErrorPage: React.FC = () => {
                 <i>{errorMessage}</i>
             </div>
             <div className="button-bar">
-                <button onClick={() => window.location.reload()} className="btn-danger">
-                    Reload Page
+                <button onClick={() => switchView(Page.BACK)} className="btn-danger">
+                    Reload Previous Page
                 </button>
-                <Link to="/welcome">
-                     <button className="btn-primary">Go to Welcome</button>
-                </Link>
+                
+                 <button onClick={() => switchView(Page.WELCOME)} className="btn-primary">
+                    Go to Welcome
+                </button>
+                
             </div>
         </div>
     );

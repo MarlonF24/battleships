@@ -1,43 +1,33 @@
 
-import { createBrowserRouter, LoaderFunction, Navigate, redirect } from "react-router-dom";
-import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base";
+import { createBrowserRouter, LoaderFunction, Navigate, redirect, useRouteError } from "react-router-dom";
+import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base/index.js";
 import PreGameView, { PreGameViewLoaderData } from "../pregame/view.js";
 import  WelcomeView  from "../welcome/view.js";
-// import { GameView } from "../game/view.js";
+import GameView, {GameViewLoaderData} from "../game/view.js";
 
 
 
 const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
-  const playerId = localStorage.getItem("playerId")!;
-  
+  const playerId = sessionStorage.getItem("playerId")!;
   try {
-    const gameParams = await api.getPregameParamsGamesGameIdParamsGet({ gameId, playerId });
-    return {gameParams, gameId};
-
-  } catch (error) {
-      if (error instanceof ResponseError) {
-        const message = await unpackErrorMessage(error);
-        switch (error.response.status) {
-        case 404:
-        case 403:
-        case 422:
-          console.error(`${message} Redirecting to welcome page.`);
-          return redirect("/welcome");
-        default:
-          console.error(`Unexpected error: ${message}`);
-          throw new Error(message); 
-      }
+    const preGameParams = await api.getPregameParamsGamesGameIdPregameParamsGet({ gameId, playerId });
+    return {preGameParams, gameId};
+  } catch (err) {
+    if (err instanceof ResponseError) {
+      const errorMessage = await unpackErrorMessage(err);
+      throw new Error(errorMessage);
     }
-      throw error;
-  } 
+    throw err;
+  }
 }
 
-const gameLoader: LoaderFunction = async ({ params }) => {
+const gameLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   const gameId  = params.gameId!;
-  const playerId = localStorage.getItem("playerId")!;
+  const playerId = sessionStorage.getItem("playerId")!;
   
-  // return await api.getGameStateGamesGamesGameIdStateGet({ gameId, playerId });
+  const gameState = await api.getGameParamsGamesGamesGameIdGameParamsGet({ gameId, playerId });
+  return { ...gameState, gameId };
 };
 
 
@@ -57,12 +47,19 @@ const router = createBrowserRouter([
     hydrateFallbackElement: <div className="loading-container"><span className="loading-indicator">Loading Game Data...</span></div>,
     errorElement: <ErrorPage />
   },
-  // {
-    //   path: "/games/:gameId/game",
-  //   element: <GameView />,
-  //   loader: gameLoader,
-  //   errorElement: <div>Error loading game!</div>  
-  // }
+  {
+      path: "/games/:gameId/game",
+    element: <GameView />,
+    loader: gameLoader,
+    errorElement: <ErrorPage />
+  },
+  { path: "/error",
+    element: <ErrorPage />
+  },
+  {
+    path: "*",
+    element: <Navigate to="/welcome" replace />
+  }
 ]);
 
 export default router;

@@ -7,12 +7,13 @@ declare global {
 
 import { DefaultApi, Configuration, ResponseError } from "../api-client/index";
 export { ResponseError } from "../api-client/index";
-import { AppPhase } from "../routing/switch_view";
+import { Page } from "../routing/switch_view";
 
 export async function unpackErrorMessage(error: ResponseError): Promise<string> {
     const response = await error.response.json();
     const detail = response.detail instanceof Array ? response.detail[0] : response.detail;
-    return typeof detail === "string" ? detail : detail.msg;
+    const message = typeof detail === "string" ? detail : detail.msg;
+    return error.response.status + ": " + message;
 }
 
 const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN ?? window.location.origin;
@@ -25,7 +26,14 @@ export const api = new DefaultApi(new Configuration({ basePath: `http://${BACKEN
 
 interface CurrentSocket {
     readonly socket: WebSocket;
-    readonly phase: AppPhase;
+    readonly page: Page;
+}
+
+interface WebSocketHandlers {
+    onMessage?: (event: MessageEvent) => void;
+    onOpen?: (e: Event) => void;
+    onClose?: (e: CloseEvent) => void;
+    onError?: (event: Event) => void;
 }
 
 export class BackendWebSocket {
@@ -33,7 +41,7 @@ export class BackendWebSocket {
 
     static get socket(): WebSocket {
         if (!this.currentSocket) {
-            throw new Error("WebSocket not connected. Call BackendWebSocket.connect(phase, gameId, playerId) first.");
+            throw new Error("WebSocket not connected. Call BackendWebSocket.connect(page, gameId, playerId) first.");
         }
         return this.currentSocket.socket;
     }
@@ -47,38 +55,49 @@ export class BackendWebSocket {
     }
 
     static defaultOnClose = (e: CloseEvent) => {
-        console.log("WebSocket connection closed");
+        this.currentSocket = null;
+        console.log("WebSocket connection closed and cleared");
     }
 
     static defaultOnError = (event: Event) => {
         console.error("WebSocket error:", event);
     }
 
-    static connect(phase: AppPhase, gameId: string, playerId: string, 
-        onMessage: (event: MessageEvent) => void = BackendWebSocket.defaultOnMessage, 
-        onOpen: (e: Event) => void = BackendWebSocket.defaultOnOpen, 
-        onClose: (e: CloseEvent) => void = BackendWebSocket.defaultOnClose, 
-        onError: (event: Event) => void = BackendWebSocket.defaultOnError): WebSocket {
+    static connect(page: Page, gameId: string, playerId: string, 
+        {onMessage = undefined, 
+        onOpen = undefined, 
+        onClose = undefined, 
+        onError = undefined}: Partial<WebSocketHandlers> = {}): WebSocket {
         
         if (this.currentSocket) {
             this.currentSocket.socket.close();
             this.currentSocket = null;
         }
 
-        const newSocket = new WebSocket(`ws://${BACKEND_ORIGIN}/games/ws/${gameId}/${phase}?playerId=${playerId}`);
+        const newSocket = new WebSocket(`ws://${BACKEND_ORIGIN}/games/ws/${gameId}/${page}?playerId=${playerId}`);
         
-        newSocket.onopen = onOpen;
+        newSocket.onopen = (e) => {
+            onOpen?.(e);
+            this.defaultOnOpen(e);
+        };
 
-        newSocket.onerror = onError;
+        newSocket.onerror = (e) => {
+            onError?.(e);
+            this.defaultOnError(e);
+        };
+
         newSocket.onclose = (e) => {
-            onClose(e);
-            this.currentSocket = null;
+            onClose?.(e);
+            this.defaultOnClose(e);
         }
 
-        if (onMessage) newSocket.onmessage = onMessage;
+        newSocket.onmessage = (event) => {
+            onMessage?.(event);
+            this.defaultOnMessage(event);
+        };
 
         this.currentSocket = {
-            phase,
+            page,
             socket: newSocket
         };
 

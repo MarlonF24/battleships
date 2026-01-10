@@ -1,7 +1,7 @@
 import React from "react";
 
 import { useApi, api } from "../../base";
-import { useSwitchView, AppPhase } from "../../routing/switch_view";
+import { useSwitchView, Page } from "../../routing/switch_view";
 
 
 
@@ -11,20 +11,20 @@ export const CreateGameButton: React.FC = () => {
     const switchView = useSwitchView();
 
     const clickHandler = () => executeApi(async () => {
-        const playerId = localStorage.getItem("playerId")!;
+        const playerId = sessionStorage.getItem("playerId")!;
 
         // TODO: Allow user to customize these settings before creating the game in some form where this is the submit button and have validation 
         const battleGridRows: number = 10;
         const battleGridCols: number = 10;
-        const shipLengths = [6, 5, 4, 5, 4, 3, 3, 2];
+        const shipLengths: number[] = [6, 5, 4, 5, 4, 3, 3, 2];
 
         const gameId = await api.createGameGamesCreatePost({
             playerId,
-            gameParams: { battleGridRows, battleGridCols, shipLengths }
+            pregameParams: { battleGridRows, battleGridCols, shipLengths }
         });
 
         console.log(`Game created with ID: ${gameId}`);
-        switchView(AppPhase.PREGAME, gameId);
+        switchView(Page.PREGAME, gameId);
             
     })
     

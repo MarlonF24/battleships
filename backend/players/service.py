@@ -1,16 +1,15 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 
 from backend.logging import logger
-from ..db import Player
+from .relations import Player
 
 async def create_player(session: AsyncSession, playerId: UUID | None = None) -> UUID:
     if playerId:
-        if existing_player := (await session.execute(select(Player).where(Player.id == playerId))).scalars().first():
+        if existing_player := await session.get(Player, playerId):
             logger.info(f"Returning already existing player with ID {existing_player.id}.")
             return existing_player.id
     

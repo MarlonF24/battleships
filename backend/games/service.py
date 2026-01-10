@@ -3,12 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
-from ..logging import logger
-from ..db import Game, GamePlayerLink, Player
-from .model import GameParams
+from backend.logging import logger
+from backend.players import Player
+
+from .relations import Game, GamePlayerLink
+from .model import PregameParams
 
 
-async def create_game(request: GameParams, session: AsyncSession, player: Player) -> UUID:
+async def create_game(request: PregameParams, session: AsyncSession, player: Player) -> UUID:
     game_instance = Game(**request.model_dump())
     
     session.add(game_instance)

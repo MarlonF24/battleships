@@ -48,14 +48,12 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 			return;
 		}
 
-		let shipPositions = new Map<number, [number, number]>();
+		let ships: PregameWSPlayerReadyMessage["ships"] = [];
 		for (let [ship, position] of battleGrid.ships) {
-			shipPositions.set(ship.length, [position.headRow, position.headCol]);
+			ships.push({length: ship.length, orientation: ship.orientation, head_row: position.headRow, head_col: position.headCol});
 		}
 
-		let WSMessage: PregameWSPlayerReadyMessage = {
-			shipPositions: Object.fromEntries(shipPositions)
-		};
+		let WSMessage: PregameWSPlayerReadyMessage = {ships};
 
 		let message = JSON.stringify(WSMessage);
 		console.log("Sending ready message to backend:", message);

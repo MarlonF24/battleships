@@ -16,11 +16,11 @@ import App from "./App.js";
 createPlayer();
 
 async function createPlayer() {
-  let playerId = localStorage.getItem("playerId");
+  let playerId = sessionStorage.getItem("playerId");
 
   try {
     let responsePlayerId = await api.createPlayerPlayersCreatePost(playerId ? {playerId: playerId} : undefined);
-    localStorage.setItem("playerId", responsePlayerId);
+    sessionStorage.setItem("playerId", responsePlayerId);
     console.log(`Player in the DB with ID: ${responsePlayerId}`);
 
   } catch (error) {

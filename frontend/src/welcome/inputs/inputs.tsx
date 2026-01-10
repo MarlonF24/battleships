@@ -1,4 +1,4 @@
-import { useSwitchView, AppPhase } from "../../routing/switch_view";
+import { useSwitchView, Page } from "../../routing/switch_view";
 import { useApi, api } from "../../base";
 import "./inputs.css";
 
@@ -15,10 +15,10 @@ export const JoinGameInput: React.FC = () => {
         
         console.log("Attempting to join game with ID:", gameId);
 
-        const playerId = localStorage.getItem("playerId")!;
+        const playerId = sessionStorage.getItem("playerId")!;
 
         await api.joinGameGamesGameIdJoinPost({gameId, playerId});
-        switchView(AppPhase.PREGAME, gameId);
+        switchView(Page.PREGAME, gameId);
         console.log(`Successfully joined game with ID: ${gameId}`);  
     });
 

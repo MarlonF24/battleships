@@ -3,11 +3,17 @@ apis/index.ts
 docs/DefaultApi.md
 docs/GameParams.md
 docs/HTTPValidationError.md
+docs/Orientation.md
+docs/PregameParams.md
+docs/Ship.md
 docs/ValidationError.md
 docs/ValidationErrorLocInner.md
 index.ts
 models/GameParams.ts
 models/HTTPValidationError.ts
+models/Orientation.ts
+models/PregameParams.ts
+models/Ship.ts
 models/ValidationError.ts
 models/ValidationErrorLocInner.ts
 models/index.ts

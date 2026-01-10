@@ -1,7 +1,7 @@
 import React, { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
-import { BackendWebSocket } from "../base/backend_api.js";
-import { useSwitchView, AppPhase } from "../routing/switch_view.js";
+import { BackendWebSocket, Orientation } from "../base/index.js";
+import { useSwitchView, Page } from "../routing/switch_view.js";
 
 interface ReadyContextType {
     numReadyPlayers: number;
@@ -10,10 +10,10 @@ interface ReadyContextType {
 const ReadyContext = createContext<ReadyContextType>(null!);
 
 export interface PregameWSPlayerReadyMessage {
-  shipPositions: {[key: number]: [number, number]}; // ship length -> [row, col] positions
+  ships: {length: number, orientation: Orientation, head_row: number, head_col: number}[];
 }
 
-interface PregameWSServerMessage {
+interface PregameWSServerStateMessage {
   num_players_ready: number;
   self_ready: boolean;
 }
@@ -22,11 +22,10 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   const [numReadyPlayers, setNumReadyPlayers] = useState(0);
   const [inert, setInert] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const switchView = useSwitchView();
 
-
-  const pregameWSHandler = useCallback((event: MessageEvent) => {
-    const message: PregameWSServerMessage = JSON.parse(event.data);
-    
+  const pregameWSOnMessage = useCallback((event: MessageEvent) => {
+    const message: PregameWSServerStateMessage = JSON.parse(event.data);
     console.log(`Received backend message. num_players_ready: ${message.num_players_ready}, self_ready: ${message.self_ready}`);
     
     setNumReadyPlayers(message.num_players_ready);
@@ -40,7 +39,10 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
 
     if (message.num_players_ready === 2) {
       console.log("Both players ready! Starting game...");
-      // useSwitchView()(AppPhase.GAME, gameId);
+      BackendWebSocket.socket.onclose = () => console.log("Pregame WebSocket closed after both players ready"); // server is expected to close the WS
+      setTimeout(() => {
+        // switchView(Page.GAME, gameId);
+      }, 1000); // slight delay to allow players to see both are ready
     }			
   }, []);
 
@@ -48,14 +50,21 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   
     setIsConnected(false);
     const ws = BackendWebSocket.connect(
-      AppPhase.PREGAME,
+      Page.PREGAME,
       gameId,
-      localStorage.getItem("playerId")!,
-      pregameWSHandler,
-      () => {setIsConnected(true); console.log("Pregame WebSocket connected.");},
+      sessionStorage.getItem("playerId")!,
+      {onMessage: pregameWSOnMessage,
+      onOpen: () => {setIsConnected(true)},
+      onClose: () => {switchView(Page.ERROR, undefined, "Connection to server lost during pregame phase."); } // closed from server side
+    }
     );
 
-    return () => ws.close();
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) { // close the WS if still open at unmount
+        ws.onclose = () => console.log("Pregame WebSocket closed"); 
+        ws.close();
+      }
+    }; // closed due to component unmounting
   }, [])
 
   if (!isConnected) {

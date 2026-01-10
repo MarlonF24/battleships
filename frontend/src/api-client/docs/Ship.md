@@ -1,28 +1,28 @@
 
-# GameParams
+# Ship
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`battleGridRows` | number
-`battleGridCols` | number
-`shipLengths` | Array&lt;number&gt;
-`ownShips` | [Array&lt;Ship&gt;](Ship.md)
+`length` | number
+`orientation` | [Orientation](Orientation.md)
+`headRow` | number
+`headCol` | number
 
 ## Example
 
 ```typescript
-import type { GameParams } from ''
+import type { Ship } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "battleGridRows": null,
-  "battleGridCols": null,
-  "shipLengths": null,
-  "ownShips": null,
-} satisfies GameParams
+  "length": null,
+  "orientation": null,
+  "headRow": null,
+  "headCol": null,
+} satisfies Ship
 
 console.log(example)
 
@@ -31,7 +31,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as GameParams
+const exampleParsed = JSON.parse(exampleJSON) as Ship
 console.log(exampleParsed)
 ```
 

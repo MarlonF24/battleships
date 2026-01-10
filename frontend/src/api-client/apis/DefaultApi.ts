@@ -17,24 +17,32 @@ import * as runtime from '../runtime';
 import type {
   GameParams,
   HTTPValidationError,
+  PregameParams,
 } from '../models/index';
 import {
     GameParamsFromJSON,
     GameParamsToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
+    PregameParamsFromJSON,
+    PregameParamsToJSON,
 } from '../models/index';
 
 export interface CreateGameGamesCreatePostRequest {
     playerId: string;
-    gameParams: GameParams;
+    pregameParams: PregameParams;
 }
 
 export interface CreatePlayerPlayersCreatePostRequest {
     playerId?: string | null;
 }
 
-export interface GetPregameParamsGamesGameIdParamsGetRequest {
+export interface GetGameParamsGamesGamesGameIdGameParamsGetRequest {
+    gameId: string;
+    playerId: string;
+}
+
+export interface GetPregameParamsGamesGameIdPregameParamsGetRequest {
     gameId: string;
     playerId: string;
 }
@@ -64,10 +72,10 @@ export class DefaultApi extends runtime.BaseAPI {
             );
         }
 
-        if (requestParameters['gameParams'] == null) {
+        if (requestParameters['pregameParams'] == null) {
             throw new runtime.RequiredError(
-                'gameParams',
-                'Required parameter "gameParams" was null or undefined when calling createGameGamesCreatePost().'
+                'pregameParams',
+                'Required parameter "pregameParams" was null or undefined when calling createGameGamesCreatePost().'
             );
         }
 
@@ -89,7 +97,7 @@ export class DefaultApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: GameParamsToJSON(requestParameters['gameParams']),
+            body: PregameParamsToJSON(requestParameters['pregameParams']),
         }, initOverrides);
 
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -145,20 +153,20 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get Pregame Params
+     * Get Game Params
      */
-    async getPregameParamsGamesGameIdParamsGetRaw(requestParameters: GetPregameParamsGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GameParams>> {
+    async getGameParamsGamesGamesGameIdGameParamsGetRaw(requestParameters: GetGameParamsGamesGamesGameIdGameParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GameParams>> {
         if (requestParameters['gameId'] == null) {
             throw new runtime.RequiredError(
                 'gameId',
-                'Required parameter "gameId" was null or undefined when calling getPregameParamsGamesGameIdParamsGet().'
+                'Required parameter "gameId" was null or undefined when calling getGameParamsGamesGamesGameIdGameParamsGet().'
             );
         }
 
         if (requestParameters['playerId'] == null) {
             throw new runtime.RequiredError(
                 'playerId',
-                'Required parameter "playerId" was null or undefined when calling getPregameParamsGamesGameIdParamsGet().'
+                'Required parameter "playerId" was null or undefined when calling getGameParamsGamesGamesGameIdGameParamsGet().'
             );
         }
 
@@ -171,7 +179,7 @@ export class DefaultApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
 
-        let urlPath = `/games/{gameId}/params`;
+        let urlPath = `/games/games/{gameId}/game/params`;
         urlPath = urlPath.replace(`{${"gameId"}}`, encodeURIComponent(String(requestParameters['gameId'])));
 
         const response = await this.request({
@@ -185,10 +193,58 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get Game Params
+     */
+    async getGameParamsGamesGamesGameIdGameParamsGet(requestParameters: GetGameParamsGamesGamesGameIdGameParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GameParams> {
+        const response = await this.getGameParamsGamesGamesGameIdGameParamsGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Get Pregame Params
      */
-    async getPregameParamsGamesGameIdParamsGet(requestParameters: GetPregameParamsGamesGameIdParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GameParams> {
-        const response = await this.getPregameParamsGamesGameIdParamsGetRaw(requestParameters, initOverrides);
+    async getPregameParamsGamesGameIdPregameParamsGetRaw(requestParameters: GetPregameParamsGamesGameIdPregameParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PregameParams>> {
+        if (requestParameters['gameId'] == null) {
+            throw new runtime.RequiredError(
+                'gameId',
+                'Required parameter "gameId" was null or undefined when calling getPregameParamsGamesGameIdPregameParamsGet().'
+            );
+        }
+
+        if (requestParameters['playerId'] == null) {
+            throw new runtime.RequiredError(
+                'playerId',
+                'Required parameter "playerId" was null or undefined when calling getPregameParamsGamesGameIdPregameParamsGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['playerId'] != null) {
+            queryParameters['playerId'] = requestParameters['playerId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/games/{gameId}/pregame/params`;
+        urlPath = urlPath.replace(`{${"gameId"}}`, encodeURIComponent(String(requestParameters['gameId'])));
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => PregameParamsFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Pregame Params
+     */
+    async getPregameParamsGamesGameIdPregameParamsGet(requestParameters: GetPregameParamsGamesGameIdPregameParamsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PregameParams> {
+        const response = await this.getPregameParamsGamesGameIdPregameParamsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

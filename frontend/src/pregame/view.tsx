@@ -2,7 +2,7 @@ import { Ship, CopyButton } from "../base/index.js";
 
 import { BattleGrid } from "./battle_grid/battle_grid.js";
 import { ShipGarage } from "./garage/garage.js";
-import { GameParams } from "../api-client/index.js";
+import { PregameParams } from "../api-client/index.js";
 import { ButtonBar } from "./buttons/button_bar.js";
 import { ReadyContextProvider} from "./context.js";
 
@@ -11,18 +11,18 @@ import { useLoaderData } from "react-router-dom";
 
 
 export interface PreGameViewLoaderData {
-	gameParams: GameParams;
+	preGameParams: PregameParams;
 	gameId: string;
 }
 
 const PreGameView: React.FC = () => {
 	
-	const { gameParams, gameId } = useLoaderData<PreGameViewLoaderData>();
+	const { preGameParams, gameId } = useLoaderData<PreGameViewLoaderData>();
 
 
-	const battleGrid = new BattleGrid({rows: gameParams.battleGridRows, cols: gameParams.battleGridCols});
+	const battleGrid = new BattleGrid({rows: preGameParams.battleGridRows, cols: preGameParams.battleGridCols});
 	const shipGarage = new ShipGarage(
-		gameParams.shipLengths.map(length => new Ship(length))
+		preGameParams.shipLengths.map(length => new Ship(length))
 	);
 
 	

@@ -13,62 +13,47 @@
  */
 
 import { mapValues } from '../runtime';
-import type { Ship } from './Ship';
-import {
-    ShipFromJSON,
-    ShipFromJSONTyped,
-    ShipToJSON,
-    ShipToJSONTyped,
-} from './Ship';
-
 /**
  * 
  * @export
- * @interface GameParams
+ * @interface PregameParams
  */
-export interface GameParams {
+export interface PregameParams {
     /**
      * 
      * @type {number}
-     * @memberof GameParams
+     * @memberof PregameParams
      */
     battleGridRows: number;
     /**
      * 
      * @type {number}
-     * @memberof GameParams
+     * @memberof PregameParams
      */
     battleGridCols: number;
     /**
      * 
      * @type {Array<number>}
-     * @memberof GameParams
+     * @memberof PregameParams
      */
     shipLengths: Array<number>;
-    /**
-     * 
-     * @type {Array<Ship>}
-     * @memberof GameParams
-     */
-    ownShips: Array<Ship>;
 }
 
 /**
- * Check if a given object implements the GameParams interface.
+ * Check if a given object implements the PregameParams interface.
  */
-export function instanceOfGameParams(value: object): value is GameParams {
+export function instanceOfPregameParams(value: object): value is PregameParams {
     if (!('battleGridRows' in value) || value['battleGridRows'] === undefined) return false;
     if (!('battleGridCols' in value) || value['battleGridCols'] === undefined) return false;
     if (!('shipLengths' in value) || value['shipLengths'] === undefined) return false;
-    if (!('ownShips' in value) || value['ownShips'] === undefined) return false;
     return true;
 }
 
-export function GameParamsFromJSON(json: any): GameParams {
-    return GameParamsFromJSONTyped(json, false);
+export function PregameParamsFromJSON(json: any): PregameParams {
+    return PregameParamsFromJSONTyped(json, false);
 }
 
-export function GameParamsFromJSONTyped(json: any, ignoreDiscriminator: boolean): GameParams {
+export function PregameParamsFromJSONTyped(json: any, ignoreDiscriminator: boolean): PregameParams {
     if (json == null) {
         return json;
     }
@@ -77,15 +62,14 @@ export function GameParamsFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'battleGridRows': json['battle_grid_rows'],
         'battleGridCols': json['battle_grid_cols'],
         'shipLengths': json['ship_lengths'],
-        'ownShips': ((json['own_ships'] as Array<any>).map(ShipFromJSON)),
     };
 }
 
-export function GameParamsToJSON(json: any): GameParams {
-    return GameParamsToJSONTyped(json, false);
+export function PregameParamsToJSON(json: any): PregameParams {
+    return PregameParamsToJSONTyped(json, false);
 }
 
-export function GameParamsToJSONTyped(value?: GameParams | null, ignoreDiscriminator: boolean = false): any {
+export function PregameParamsToJSONTyped(value?: PregameParams | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
@@ -95,7 +79,6 @@ export function GameParamsToJSONTyped(value?: GameParams | null, ignoreDiscrimin
         'battle_grid_rows': value['battleGridRows'],
         'battle_grid_cols': value['battleGridCols'],
         'ship_lengths': value['shipLengths'],
-        'own_ships': ((value['ownShips'] as Array<any>).map(ShipToJSON)),
     };
 }
 

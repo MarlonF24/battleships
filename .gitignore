@@ -12,6 +12,7 @@
 *.env
 
 dist/
+pyrightconfig.json
 
 
 # API Documentation (auto-generated)

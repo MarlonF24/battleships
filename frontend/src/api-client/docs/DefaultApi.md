@@ -6,7 +6,8 @@ All URIs are relative to *http://localhost*
 |------------- | ------------- | -------------|
 | [**createGameGamesCreatePost**](DefaultApi.md#creategamegamescreatepost) | **POST** /games/create | Create Game |
 | [**createPlayerPlayersCreatePost**](DefaultApi.md#createplayerplayerscreatepost) | **POST** /players/create | Create Player |
-| [**getPregameParamsGamesGameIdParamsGet**](DefaultApi.md#getpregameparamsgamesgameidparamsget) | **GET** /games/{gameId}/params | Get Pregame Params |
+| [**getGameParamsGamesGamesGameIdGameParamsGet**](DefaultApi.md#getgameparamsgamesgamesgameidgameparamsget) | **GET** /games/games/{gameId}/game/params | Get Game Params |
+| [**getPregameParamsGamesGameIdPregameParamsGet**](DefaultApi.md#getpregameparamsgamesgameidpregameparamsget) | **GET** /games/{gameId}/pregame/params | Get Pregame Params |
 | [**joinGameGamesGameIdJoinPost**](DefaultApi.md#joingamegamesgameidjoinpost) | **POST** /games/{gameId}/join | Join Game |
 | [**welcomeFullPathGet**](DefaultApi.md#welcomefullpathget) | **GET** /{full_path} | Welcome |
 
@@ -14,7 +15,7 @@ All URIs are relative to *http://localhost*
 
 ## createGameGamesCreatePost
 
-> string createGameGamesCreatePost(playerId, gameParams)
+> string createGameGamesCreatePost(playerId, pregameParams)
 
 Create Game
 
@@ -34,8 +35,8 @@ async function example() {
   const body = {
     // string
     playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-    // GameParams
-    gameParams: ...,
+    // PregameParams
+    pregameParams: ...,
   } satisfies CreateGameGamesCreatePostRequest;
 
   try {
@@ -56,7 +57,7 @@ example().catch(console.error);
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
 | **playerId** | `string` |  | [Defaults to `undefined`] |
-| **gameParams** | [GameParams](GameParams.md) |  | |
+| **pregameParams** | [PregameParams](PregameParams.md) |  | |
 
 ### Return type
 
@@ -147,11 +148,11 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## getPregameParamsGamesGameIdParamsGet
+## getGameParamsGamesGamesGameIdGameParamsGet
 
-> GameParams getPregameParamsGamesGameIdParamsGet(gameId, playerId)
+> GameParams getGameParamsGamesGamesGameIdGameParamsGet(gameId, playerId)
 
-Get Pregame Params
+Get Game Params
 
 ### Example
 
@@ -160,7 +161,7 @@ import {
   Configuration,
   DefaultApi,
 } from '';
-import type { GetPregameParamsGamesGameIdParamsGetRequest } from '';
+import type { GetGameParamsGamesGamesGameIdGameParamsGetRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
@@ -171,10 +172,10 @@ async function example() {
     gameId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
     // string
     playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
-  } satisfies GetPregameParamsGamesGameIdParamsGetRequest;
+  } satisfies GetGameParamsGamesGamesGameIdGameParamsGetRequest;
 
   try {
-    const data = await api.getPregameParamsGamesGameIdParamsGet(body);
+    const data = await api.getGameParamsGamesGamesGameIdGameParamsGet(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -196,6 +197,75 @@ example().catch(console.error);
 ### Return type
 
 [**GameParams**](GameParams.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Successful Response |  -  |
+| **422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## getPregameParamsGamesGameIdPregameParamsGet
+
+> PregameParams getPregameParamsGamesGameIdPregameParamsGet(gameId, playerId)
+
+Get Pregame Params
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { GetPregameParamsGamesGameIdPregameParamsGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // string
+    gameId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+  } satisfies GetPregameParamsGamesGameIdPregameParamsGetRequest;
+
+  try {
+    const data = await api.getPregameParamsGamesGameIdPregameParamsGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **gameId** | `string` |  | [Defaults to `undefined`] |
+| **playerId** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+[**PregameParams**](PregameParams.md)
 
 ### Authorization
 
