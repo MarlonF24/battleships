@@ -4,7 +4,7 @@ import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base/index
 import PreGameView, { PreGameViewLoaderData } from "../pregame/view.js";
 import  WelcomeView  from "../welcome/view.js";
 import GameView, {GameViewLoaderData} from "../game/view.js";
-
+import { BackendWebSocket } from "../base/index.js";
 
 
 const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) => {
@@ -12,7 +12,11 @@ const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) 
   const playerId = sessionStorage.getItem("playerId")!;
   try {
     const preGameParams = await api.getPregameParamsGamesGameIdPregameParamsGet({ gameId, playerId });
+    
+    
     return {preGameParams, gameId};
+
+
   } catch (err) {
     if (err instanceof ResponseError) {
       const errorMessage = await unpackErrorMessage(err);

@@ -15,11 +15,14 @@
 
 import * as runtime from '../runtime';
 import type {
+  Data,
   GameParams,
   HTTPValidationError,
   PregameParams,
 } from '../models/index';
 import {
+    DataFromJSON,
+    DataToJSON,
     GameParamsFromJSON,
     GameParamsToJSON,
     HTTPValidationErrorFromJSON,
@@ -50,6 +53,10 @@ export interface GetPregameParamsGamesGameIdPregameParamsGetRequest {
 export interface JoinGameGamesGameIdJoinPostRequest {
     gameId: string;
     playerId: string;
+}
+
+export interface SchemaDummyGamesWsSchemaDummyGetRequest {
+    data: Data;
 }
 
 export interface WelcomeFullPathGetRequest {
@@ -293,6 +300,49 @@ export class DefaultApi extends runtime.BaseAPI {
      */
     async joinGameGamesGameIdJoinPost(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.joinGameGamesGameIdJoinPostRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Schema Dummy
+     */
+    async schemaDummyGamesWsSchemaDummyGetRaw(requestParameters: SchemaDummyGamesWsSchemaDummyGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<any>> {
+        if (requestParameters['data'] == null) {
+            throw new runtime.RequiredError(
+                'data',
+                'Required parameter "data" was null or undefined when calling schemaDummyGamesWsSchemaDummyGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+
+        let urlPath = `/games/ws/_schema_dummy`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+            body: DataToJSON(requestParameters['data']),
+        }, initOverrides);
+
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<any>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
+    }
+
+    /**
+     * Schema Dummy
+     */
+    async schemaDummyGamesWsSchemaDummyGet(requestParameters: SchemaDummyGamesWsSchemaDummyGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<any> {
+        const response = await this.schemaDummyGamesWsSchemaDummyGetRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

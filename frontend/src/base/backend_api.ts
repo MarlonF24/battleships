@@ -7,6 +7,7 @@ declare global {
 
 import { DefaultApi, Configuration, ResponseError } from "../api-client/index";
 export { ResponseError } from "../api-client/index";
+export * as apiModels from "../api-client/models";
 import { Page } from "../routing/switch_view";
 
 export async function unpackErrorMessage(error: ResponseError): Promise<string> {

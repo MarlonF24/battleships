@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 
-from backend.logging import logger
+from backend.logger import logger
 from .relations import Player
 
 async def create_player(session: AsyncSession, playerId: UUID | None = None) -> UUID:

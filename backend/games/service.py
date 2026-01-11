@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
-from backend.logging import logger
+from backend.logger import logger
 from backend.players import Player
 
 from .relations import Game, GamePlayerLink

@@ -1,1 +1,1 @@
-from .logging import logger # type: ignore
+from .logger import logger # type: ignore

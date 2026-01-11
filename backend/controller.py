@@ -7,7 +7,7 @@ from sqlalchemy import text
 from pathlib import Path
  
 from .db import *
-from .logging import logger
+from .logger import logger
 
 from .games import games_router
 from .players import players_router

@@ -9,7 +9,6 @@ class PregameWSPlayerReadyMessage(PregameWSPlayerMessage):
     ships: list[Ship]
 
 
-
 class PregameWSServerMessage(WSServerMessage):
     ...
 

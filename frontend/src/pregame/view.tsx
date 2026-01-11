@@ -1,4 +1,4 @@
-import { Ship, CopyButton } from "../base/index.js";
+import { Ship, GameId } from "../base/index.js";
 
 import { BattleGrid } from "./battle_grid/battle_grid.js";
 import { ShipGarage } from "./garage/garage.js";
@@ -39,10 +39,7 @@ const PreGameView: React.FC = () => {
 	
 	return (
 		<>
-			<section className="pregame-game-id">
-				<span>{`Game ID: ${gameId}`}</span>
-				<CopyButton text={gameId}/>
-			</section>
+			<GameId gameId={gameId} />
 			<ReadyContextProvider gameId={gameId}>	
 				<ButtonBar battleGrid={battleGrid} shipGarage={shipGarage}/>
 				<section className="game-area">

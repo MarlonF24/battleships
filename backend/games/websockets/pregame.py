@@ -3,9 +3,8 @@ from dataclasses import dataclass, field
 from uuid import UUID
 from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import ValidationError
 
-from backend.logging import logger
+from backend.logger import logger
 
 from .conn_manager import *
 
@@ -89,28 +88,28 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
             # initial send of current ready count
             game_connection = self.get_game_connections(game)
             await websocket.send_json(game_connection.get_pregame_state(player.id).model_dump())
+            
+            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=True), only_opponent=True)
+            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has connected.")
 
             async for message in websocket.iter_json():
                 logger.info(f"Received WebSocket message: {message}")
                 
-                try:
-                    message = PregameWSPlayerReadyMessage.model_validate(message)  
                 
-                    await self.handle_player_ready_message(game, player, message, session)
+                message = PregameWSPlayerReadyMessage.model_validate(message)  
+            
+                await self.handle_player_ready_message(game, player, message, session)
 
-                    if game_connection.num_ready_players() == 2:
-                        logger.info(f"Both players ready in game {game.id}.")
-                        await self.end_pregame(game, session)
-                        break 
+                if game_connection.num_ready_players() == 2:
+                    logger.info(f"Both players ready in game {game.id}.")
+                    await self.end_pregame(game, session)
+                    break 
                     
-
-                except ValidationError:
-                    message = WSServerOpponentConnectionMessage.model_validate(message)
-                    
-                    await self.handle_opponent_connected_message(game, player, message)
-                
 
         finally:
+            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=False), only_opponent=True)
+            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has disconnected.")
+
             await self.disconnect(game, player)
             logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
 
@@ -133,11 +132,6 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         # broadcast updated ready count to both players
         await self.broadcast_game_state(game)
 
-        
-    async def handle_opponent_connected_message(self, game: Game, player: Player, message: WSServerOpponentConnectionMessage):
-        await self.broadcast(game, player, message, only_opponent=True)
-
-        logger.info(f"Informed opponend that Player {player.id} in game {game.id} has connected/disconnected.")
 
     
 

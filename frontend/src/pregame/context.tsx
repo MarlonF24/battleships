@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useState } from "react";
 import { useEffect } from "react";
-import { BackendWebSocket, Orientation } from "../base/index.js";
+import { BackendWebSocket, Orientation, apiModels } from "../base";
 import { useSwitchView, Page } from "../routing/switch_view.js";
 
 interface ReadyContextType {
@@ -13,10 +13,6 @@ export interface PregameWSPlayerReadyMessage {
   ships: {length: number, orientation: Orientation, head_row: number, head_col: number}[];
 }
 
-interface PregameWSServerStateMessage {
-  num_players_ready: number;
-  self_ready: boolean;
-}
 
 export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNode }> = ({ gameId, children }) => {
   const [numReadyPlayers, setNumReadyPlayers] = useState(0);
@@ -25,19 +21,19 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   const switchView = useSwitchView();
 
   const pregameWSOnMessage = useCallback((event: MessageEvent) => {
-    const message: PregameWSServerStateMessage = JSON.parse(event.data);
-    console.log(`Received backend message. num_players_ready: ${message.num_players_ready}, self_ready: ${message.self_ready}`);
+    const message: apiModels.PregameWSServerStateMessage = JSON.parse(event.data);
+    console.log(`Received backend message. numPlayersReady: ${message.numPlayersReady}, selfReady: ${message.selfReady}`);
     
-    setNumReadyPlayers(message.num_players_ready);
+    setNumReadyPlayers(message.numPlayersReady);
     
-    if (!message.self_ready) { // catch the first backend message after connecting
+    if (!message.selfReady) { // catch the first backend message after connecting
       setInert(false); 
     } else {
       console.log("You are marked as ready.");
       setInert(true); 
     }
 
-    if (message.num_players_ready === 2) {
+    if (message.numPlayersReady === 2) {
       console.log("Both players ready! Starting game...");
       BackendWebSocket.socket.onclose = () => console.log("Pregame WebSocket closed after both players ready"); // server is expected to close the WS
       setTimeout(() => {

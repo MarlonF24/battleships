@@ -79,13 +79,25 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
 
     async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        num_connected_before= len(self.get_game_connections(game).players)  
+        
+        
         await self.connect(game, player, websocket, session)
+
+        both_connected = (num_connected_before == 1) # if, before adding this player, there was one player connected, this is the FIRST time both are connected -> start the game. (As we dont remove the players from the gameconnections on disconnect, a reconnect will not trigger this)
 
         try:
             game_connections = self.get_game_connections(game)
             await websocket.send_json(game_connections.get_game_state(player.id).model_dump())
-            
+
+
             await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=True), only_opponent=True)
+            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has connected.")
+
+
+            if both_connected:
+                
+                logger.info(f"Both players connected in game {game.id}.")
 
             await self.wait_for_both_players_connected(websocket)
 
@@ -101,6 +113,9 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
                 # player_conn.ship_grid.shoot_at()
 
         finally: # includes WebsocketDisconnection
+            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=False), only_opponent=True)
+            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has disconnected.")
+
             await conn_manager.disconnect(game, player)
             logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
 

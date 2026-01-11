@@ -21,7 +21,7 @@ class GameWSServerShotResultMessage(GameWSServerMessage):
     row: int
     col: int
     hit: bool
-    sunk_length: Ship | None
+    sunk_ship: Ship | None
 
 class GameWSServerStateMessage(GameWSServerMessage):
     own_ship_grid: ShipGrid.View

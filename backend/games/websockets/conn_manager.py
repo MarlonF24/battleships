@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import WebSocket, WebSocketException, status
 
 
-from backend.logging import logger
+from backend.logger import logger
 from ..model import WSServerMessage
 from ..relations import Game, Player
 
