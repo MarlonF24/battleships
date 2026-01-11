@@ -28,6 +28,7 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
 
         if player_id not in self.players:
             self.players[player_id] = PregamePlayerConnection(websocket=connection.websocket)
+   
         else:
             self.players[player_id].websocket = connection.websocket
 
@@ -61,15 +62,17 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         del self.active_connections[game.id]
 
         logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
+        
+        await self.broadcast_ready_state(game)  # Notify players that pregame has ended
+        logger.info(f"Broadcasted that both players are ready in game {game.id}")
 
 
 
-    async def broadcast_ready_state(self, game: Game, sender: Player):
+    async def broadcast_ready_state(self, game: Game):
         game_conns = self.get_game_connections(game)    
         
-        await self.broadcast(game, sender, message=lambda pid: game_conns.get_ready_state(pid))
+        await self.broadcast(game, sender=None, message=lambda pid: game_conns.get_ready_state(pid))
         
-
 
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         
@@ -78,18 +81,23 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         
         await self.send_personal_message(game, player, game_connection.get_ready_state(player.id))
 
+        both_ready = False
 
         async for message in websocket.iter_json():
             logger.info(f"Received WebSocket message: {message}")
             
             message = PregameWSPlayerReadyMessage.model_validate(message)  
-        
+
+            if both_ready:
+                logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring.")
+                continue
+            
             await self.handle_player_ready_message(game, player, message, session)
 
             if game_connection.num_ready_players() == 2:
                 logger.info(f"Both players ready in game {game.id}.")
                 await self.end_pregame(game, session)
-                break 
+                
                     
 
 
@@ -109,7 +117,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await session.commit()
 
         # broadcast updated ready count to both players
-        await self.broadcast_ready_state(game, sender=player)
+        await self.broadcast_ready_state(game)
 
 
     

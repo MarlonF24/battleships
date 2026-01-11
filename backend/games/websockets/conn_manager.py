@@ -99,12 +99,16 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         
             logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
         except Exception:
-            pass
+            logger.info(f"WebSocket connection for game {game.id}, player {player.id} was already closed.")
     
 
-    async def broadcast(self, game: Game, sender: Player, message: ServerMessageType | MessageFactory, only_opponent: bool = False):
+    async def broadcast(self, game: Game, sender: Player | None, message: ServerMessageType | MessageFactory, only_opponent: bool = False):
+        #TODO: make more elegant, maybe remove player arg and pass sender as part in only_opponent arg
+        if not sender and only_opponent:
+            raise ValueError("Cannot broadcast only to opponent when sender is None.")
+
         for player_id, connection in self.get_game_connections(game).players.items():        
-            if only_opponent and player_id == sender.id:
+            if only_opponent and sender is not None and player_id == sender.id:
                 continue
 
             if callable(message):

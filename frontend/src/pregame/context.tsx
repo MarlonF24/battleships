@@ -40,6 +40,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
       
       setTimeout(() => {
         // switchView(Page.GAME, gameId);
+        BackendWebSocket.socket.close(); 
       }, 1000); // slight delay to allow players to see both are ready
     }			
   }, []);
