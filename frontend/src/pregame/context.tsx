@@ -18,12 +18,11 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   const [numReadyPlayers, setNumReadyPlayers] = useState(0);
   const [inert, setInert] = useState(true);
   const [websocketConnected, setWebsocketConnected] = useState(false);
-  const [opponentConnected, setOpponentConnected] = useState(false);
+  const [opponentConnected, setOpponentConnected] = useState<apiModels.WSServerOpponentConnectionMessage>({opponentConnected: false, initiallyConnected: false});
   const switchView = useSwitchView();
 
 
   const handleServerStateMessage = useCallback((message: apiModels.PregameWSServerStateMessage) => {
-    console.log(`Received backend message. numPlayersReady: ${message.numPlayersReady}, selfReady: ${message.selfReady}`);
     
     setNumReadyPlayers(message.numPlayersReady);
     
@@ -36,7 +35,9 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
 
     if (message.numPlayersReady === 2) {
       console.log("Both players ready! Starting game...");
+      
       BackendWebSocket.socket.onclose = () => console.log("Pregame WebSocket closed after both players ready"); // server is expected to close the WS
+      
       setTimeout(() => {
         // switchView(Page.GAME, gameId);
       }, 1000); // slight delay to allow players to see both are ready
@@ -53,7 +54,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
     
     } else if (apiModels.instanceOfWSServerOpponentConnectionMessage(message)) {
       console.log(`Opponent connection status changed: connected=${message.opponentConnected}`);
-      setOpponentConnected(message.opponentConnected);
+      setOpponentConnected(message);
     }
     
   }, []);
@@ -85,7 +86,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
 
   return (
     <ReadyContext.Provider value={{ numReadyPlayers}}>
-      <OpponentConnection connected={opponentConnected}/>
+      <OpponentConnection connectionInfo={opponentConnected}/>
       <div inert={inert}>
         {children}
       </div>

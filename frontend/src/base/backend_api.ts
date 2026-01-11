@@ -93,8 +93,8 @@ export class BackendWebSocket {
         }
 
         newSocket.onmessage = (event) => {
-            onMessage?.(event);
             this.defaultOnMessage(event);
+            onMessage?.(event);
         };
 
         this.currentSocket = {

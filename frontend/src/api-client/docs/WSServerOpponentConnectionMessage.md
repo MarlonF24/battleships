@@ -7,6 +7,7 @@
 Name | Type
 ------------ | -------------
 `opponentConnected` | boolean
+`initiallyConnected` | boolean
 
 ## Example
 
@@ -16,6 +17,7 @@ import type { WSServerOpponentConnectionMessage } from ''
 // TODO: Update the object below with actual values
 const example = {
   "opponentConnected": null,
+  "initiallyConnected": null,
 } satisfies WSServerOpponentConnectionMessage
 
 console.log(example)

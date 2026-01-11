@@ -6,16 +6,17 @@
 
 Name | Type
 ------------ | -------------
+`ships` | [Array&lt;Ship&gt;](Ship.md)
 `opponentConnected` | boolean
+`initiallyConnected` | boolean
 `ownShipGrid` | [View](View.md)
 `opponentShipGrid` | [View](View.md)
 `row` | number
 `col` | number
-`hit` | boolean
-`sunkShip` | [Ship](Ship.md)
 `numPlayersReady` | number
 `selfReady` | boolean
-`ships` | [Array&lt;Ship&gt;](Ship.md)
+`hit` | boolean
+`sunkShip` | [Ship](Ship.md)
 
 ## Example
 
@@ -24,16 +25,17 @@ import type { Data } from ''
 
 // TODO: Update the object below with actual values
 const example = {
+  "ships": null,
   "opponentConnected": null,
+  "initiallyConnected": null,
   "ownShipGrid": null,
   "opponentShipGrid": null,
   "row": null,
   "col": null,
-  "hit": null,
-  "sunkShip": null,
   "numPlayersReady": null,
   "selfReady": null,
-  "ships": null,
+  "hit": null,
+  "sunkShip": null,
 } satisfies Data
 
 console.log(example)

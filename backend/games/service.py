@@ -28,6 +28,9 @@ async def create_game(request: PregameParams, session: AsyncSession, player: Pla
 
 
 async def join_game(player: Player, game: Game, session: AsyncSession):
+    if player in await game.awaitable_attrs.players:
+        return  # Player already in the game, let him go ahead
+    
     try:
         session.add(GamePlayerLink(game_id=game.id, player_id=player.id, player_slot=2))
         await session.commit()

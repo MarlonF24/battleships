@@ -25,6 +25,12 @@ export interface WSServerOpponentConnectionMessage {
      * @memberof WSServerOpponentConnectionMessage
      */
     opponentConnected: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof WSServerOpponentConnectionMessage
+     */
+    initiallyConnected: boolean;
 }
 
 /**
@@ -32,6 +38,7 @@ export interface WSServerOpponentConnectionMessage {
  */
 export function instanceOfWSServerOpponentConnectionMessage(value: object): value is WSServerOpponentConnectionMessage {
     if (!('opponentConnected' in value) || value['opponentConnected'] === undefined) return false;
+    if (!('initiallyConnected' in value) || value['initiallyConnected'] === undefined) return false;
     return true;
 }
 
@@ -46,6 +53,7 @@ export function WSServerOpponentConnectionMessageFromJSONTyped(json: any, ignore
     return {
         
         'opponentConnected': json['opponentConnected'],
+        'initiallyConnected': json['initiallyConnected'],
     };
 }
 
@@ -61,6 +69,7 @@ export function WSServerOpponentConnectionMessageToJSONTyped(value?: WSServerOpp
     return {
         
         'opponentConnected': value['opponentConnected'],
+        'initiallyConnected': value['initiallyConnected'],
     };
 }
 
