@@ -30,3 +30,4 @@ class GameWSServerStateMessage(GameWSServerMessage):
 
 class WSServerOpponentConnectionMessage(GameWSServerMessage, PregameWSServerMessage):
     opponent_connected: bool
+    initially_connected: bool

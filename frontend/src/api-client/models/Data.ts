@@ -78,22 +78,22 @@ import {
 export interface Data {
     /**
      * 
-     * @type {number}
-     * @memberof Data
-     */
-    numPlayersReady: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof Data
-     */
-    selfReady: boolean;
-    /**
-     * 
      * @type {boolean}
      * @memberof Data
      */
     opponentConnected: boolean;
+    /**
+     * 
+     * @type {View}
+     * @memberof Data
+     */
+    ownShipGrid: View;
+    /**
+     * 
+     * @type {View}
+     * @memberof Data
+     */
+    opponentShipGrid: View;
     /**
      * 
      * @type {number}
@@ -117,41 +117,41 @@ export interface Data {
      * @type {Ship}
      * @memberof Data
      */
-    sunkLength: Ship;
+    sunkShip: Ship;
+    /**
+     * 
+     * @type {number}
+     * @memberof Data
+     */
+    numPlayersReady: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Data
+     */
+    selfReady: boolean;
     /**
      * 
      * @type {Array<Ship>}
      * @memberof Data
      */
     ships: Array<Ship>;
-    /**
-     * 
-     * @type {View}
-     * @memberof Data
-     */
-    ownShipGrid: View;
-    /**
-     * 
-     * @type {View}
-     * @memberof Data
-     */
-    opponentShipGrid: View;
 }
 
 /**
  * Check if a given object implements the Data interface.
  */
 export function instanceOfData(value: object): value is Data {
-    if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
-    if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
     if (!('opponentConnected' in value) || value['opponentConnected'] === undefined) return false;
+    if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
+    if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
     if (!('hit' in value) || value['hit'] === undefined) return false;
-    if (!('sunkLength' in value) || value['sunkLength'] === undefined) return false;
+    if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
+    if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
+    if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
     if (!('ships' in value) || value['ships'] === undefined) return false;
-    if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
-    if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
     return true;
 }
 
@@ -165,16 +165,16 @@ export function DataFromJSONTyped(json: any, ignoreDiscriminator: boolean): Data
     }
     return {
         
-        'numPlayersReady': json['num_players_ready'],
-        'selfReady': json['self_ready'],
-        'opponentConnected': json['opponent_connected'],
+        'opponentConnected': json['opponentConnected'],
+        'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
+        'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
         'row': json['row'],
         'col': json['col'],
         'hit': json['hit'],
-        'sunkLength': ShipFromJSON(json['sunk_ship']),
+        'sunkShip': ShipFromJSON(json['sunkShip']),
+        'numPlayersReady': json['numPlayersReady'],
+        'selfReady': json['selfReady'],
         'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
-        'ownShipGrid': ViewFromJSON(json['own_ship_grid']),
-        'opponentShipGrid': ViewFromJSON(json['opponent_ship_grid']),
     };
 }
 
@@ -189,16 +189,16 @@ export function DataToJSONTyped(value?: Data | null, ignoreDiscriminator: boolea
 
     return {
         
-        'num_players_ready': value['numPlayersReady'],
-        'self_ready': value['selfReady'],
-        'opponent_connected': value['opponentConnected'],
+        'opponentConnected': value['opponentConnected'],
+        'ownShipGrid': ViewToJSON(value['ownShipGrid']),
+        'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
         'row': value['row'],
         'col': value['col'],
         'hit': value['hit'],
-        'sunk_ship': ShipToJSON(value['sunkLength']),
+        'sunkShip': ShipToJSON(value['sunkShip']),
+        'numPlayersReady': value['numPlayersReady'],
+        'selfReady': value['selfReady'],
         'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
-        'own_ship_grid': ViewToJSON(value['ownShipGrid']),
-        'opponent_ship_grid': ViewToJSON(value['opponentShipGrid']),
     };
 }
 

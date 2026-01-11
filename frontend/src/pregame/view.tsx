@@ -1,14 +1,13 @@
-import { Ship, GameId } from "../base/index.js";
+import { Ship, GameId, OpponentConnection } from "../base";
 
 import { BattleGrid } from "./battle_grid/battle_grid.js";
 import { ShipGarage } from "./garage/garage.js";
 import { PregameParams } from "../api-client/index.js";
 import { ButtonBar } from "./buttons/button_bar.js";
 import { ReadyContextProvider} from "./context.js";
-
-import "./pregame.css";
 import { useLoaderData } from "react-router-dom";
 
+import "./pregame.css";
 
 export interface PreGameViewLoaderData {
 	preGameParams: PregameParams;

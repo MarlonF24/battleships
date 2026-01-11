@@ -45,7 +45,7 @@ export function WSServerOpponentConnectionMessageFromJSONTyped(json: any, ignore
     }
     return {
         
-        'opponentConnected': json['opponent_connected'],
+        'opponentConnected': json['opponentConnected'],
     };
 }
 
@@ -60,7 +60,7 @@ export function WSServerOpponentConnectionMessageToJSONTyped(value?: WSServerOpp
 
     return {
         
-        'opponent_connected': value['opponentConnected'],
+        'opponentConnected': value['opponentConnected'],
     };
 }
 

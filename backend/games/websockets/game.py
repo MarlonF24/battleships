@@ -20,6 +20,7 @@ class GamePlayerConnection(PlayerConnection):
 class GameGameConnections(GameConnections[GamePlayerConnection]):
     players: dict[UUID, GamePlayerConnection] = field(default_factory=dict) # type: ignore
     first_to_shoot: UUID | None = None
+    started: bool = False
 
     def add_player(self, player_id: UUID, connection: GamePlayerConnection):
         super().add_player(player_id, connection)
@@ -70,54 +71,38 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         
         self.active_connections[game.id].add_player(player.id, player_connection)
         
-        await websocket.accept()
-
-        logger.info(f"WebSocket connection accepted for game {game.id}, player {player.id}")
-
         await super().connect(game, player, websocket, session)
 
 
 
-    async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        num_connected_before= len(self.get_game_connections(game).players)  
+    async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        game_connections = self.get_game_connections(game)
         
-        
-        await self.connect(game, player, websocket, session)
+        if not game_connections.started:
+            both_curr_connected = False
+            
+            if opponent := game_connections.get_opponent_id(player.id):
+                both_curr_connected = game_connections.currently_connected(opponent)
 
-        both_connected = (num_connected_before == 1) # if, before adding this player, there was one player connected, this is the FIRST time both are connected -> start the game. (As we dont remove the players from the gameconnections on disconnect, a reconnect will not trigger this)
-
-        try:
-            game_connections = self.get_game_connections(game)
-            await websocket.send_json(game_connections.get_game_state(player.id).model_dump())
-
-
-            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=True), only_opponent=True)
-            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has connected.")
+                if both_curr_connected:
+                    logger.info(f"Both players already connected in game {game.id}.")
+                    game_connections.started = True
 
 
-            if both_connected:
-                
-                logger.info(f"Both players connected in game {game.id}.")
+        await self.send_personal_message(game, player, game_connections.get_game_state(player.id))
 
-            await self.wait_for_both_players_connected(websocket)
 
-            async for message in websocket.iter_json():
-                logger.info(f"Received WebSocket message: {message}")
-        
-                message = GameWSPlayerShotMessage.model_validate(message)
 
-                if not (player_conn := conn_manager.get_player_connection(game, player)): # type: ignore
-                    logger.error(f"Player connection not found for game {game.id}, player {player.id}")
-                    raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player not connected")
-                
-                # player_conn.ship_grid.shoot_at()
+        async for message in websocket.iter_json():
+            logger.info(f"Received WebSocket message: {message}")
+    
+            message = GameWSPlayerShotMessage.model_validate(message)
 
-        finally: # includes WebsocketDisconnection
-            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=False), only_opponent=True)
-            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has disconnected.")
-
-            await conn_manager.disconnect(game, player)
-            logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
+            if not (player_conn := conn_manager.get_player_connection(game, player)): # type: ignore
+                logger.error(f"Player connection not found for game {game.id}, player {player.id}")
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player not connected")
+            
+            # player_conn.ship_grid.shoot_at()
 
 
 

@@ -9,7 +9,7 @@ Name | Type
 `row` | number
 `col` | number
 `hit` | boolean
-`sunkLength` | [Ship](Ship.md)
+`sunkShip` | [Ship](Ship.md)
 
 ## Example
 
@@ -21,7 +21,7 @@ const example = {
   "row": null,
   "col": null,
   "hit": null,
-  "sunkLength": null,
+  "sunkShip": null,
 } satisfies GameWSServerShotResultMessage
 
 console.log(example)

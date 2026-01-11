@@ -8,7 +8,7 @@ from backend.logger import logger
 
 from .conn_manager import *
 
-from ..model import PregameWSServerStateMessage, PregameWSServerMessage, PregameWSPlayerReadyMessage, WSServerOpponentConnectionMessage
+from ..model import PregameWSServerStateMessage, PregameWSServerMessage, PregameWSPlayerReadyMessage
 
 from ..relations import Game, GamePhase, Player, Ship as DBShip
 
@@ -16,6 +16,7 @@ from ..relations import Game, GamePhase, Player, Ship as DBShip
 class PregamePlayerConnection(PlayerConnection):
     websocket: WebSocket
     ready: bool = False
+
 
 @dataclass
 class PregameGameConnections(GameConnections[PregamePlayerConnection]):
@@ -34,11 +35,12 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
     def num_ready_players(self) -> int:
         return sum(1 for conn in self.players.values() if conn.ready)
 
-    def get_pregame_state(self, player_id: UUID) -> PregameWSServerStateMessage:
+    def get_ready_state(self, player_id: UUID) -> PregameWSServerStateMessage:
         return PregameWSServerStateMessage(
             num_players_ready=self.num_ready_players(),
             self_ready=self.players[player_id].ready
         )
+
 
 class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameWSServerMessage]):
     def __init__(self):
@@ -50,68 +52,45 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         
         await super().connect(game, player, websocket, session=session)  # session is not used in this context
 
-    async def disconnect(self, game: Game, player: Player):
-        if socket := self.get_player_connection(game, player): 
-            await socket.websocket.close() # probably redundant as fastapi should do this automatically
-            logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
-    
 
     async def end_pregame(self, game: Game, session: AsyncSession):
-        if self.active_connections.get(game.id, None):
-            # for player_id in game_conns.players.keys():
-            #     await self.disconnect(game, Player(id=player_id))
+        game.phase = GamePhase.GAME
+        session.add(game)
+        await session.commit()
+        
+        del self.active_connections[game.id]
 
-            game.phase = GamePhase.GAME
-            session.add(game)
-            await session.commit()
-            
-            del self.active_connections[game.id]
+        logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
 
-            logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
 
-    async def broadcast_game_state(self, game: Game):
+
+    async def broadcast_ready_state(self, game: Game, sender: Player):
         game_conns = self.get_game_connections(game)    
-        for player_id, connection in self.get_game_connections(game).players.items():        
-            message = game_conns.get_pregame_state(player_id)
-            await connection.websocket.send_json(message.model_dump())
+        
+        await self.broadcast(game, sender, message=lambda pid: game_conns.get_ready_state(pid))
+        
 
-    async def broadcast(self, game: Game, sender: Player, message: PregameWSServerMessage, only_opponent: bool = False):
-        for player_id, connection in self.get_game_connections(game).players.items():        
-            if only_opponent and player_id == sender.id:
-                continue
-            await connection.websocket.send_json(message.model_dump())
 
-    async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await self.connect(game, player, websocket, session)
+    async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        
+        # initial send of current ready count
+        game_connection = self.get_game_connections(game)
+        
+        await self.send_personal_message(game, player, game_connection.get_ready_state(player.id))
 
-        try:
-            # initial send of current ready count
-            game_connection = self.get_game_connections(game)
-            await websocket.send_json(game_connection.get_pregame_state(player.id).model_dump())
+
+        async for message in websocket.iter_json():
+            logger.info(f"Received WebSocket message: {message}")
             
-            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=True), only_opponent=True)
-            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has connected.")
+            message = PregameWSPlayerReadyMessage.model_validate(message)  
+        
+            await self.handle_player_ready_message(game, player, message, session)
 
-            async for message in websocket.iter_json():
-                logger.info(f"Received WebSocket message: {message}")
-                
-                
-                message = PregameWSPlayerReadyMessage.model_validate(message)  
-            
-                await self.handle_player_ready_message(game, player, message, session)
-
-                if game_connection.num_ready_players() == 2:
-                    logger.info(f"Both players ready in game {game.id}.")
-                    await self.end_pregame(game, session)
-                    break 
+            if game_connection.num_ready_players() == 2:
+                logger.info(f"Both players ready in game {game.id}.")
+                await self.end_pregame(game, session)
+                break 
                     
-
-        finally:
-            await self.broadcast(game, player, WSServerOpponentConnectionMessage(opponent_connected=False), only_opponent=True)
-            logger.info(f"Informed opponend that Player {player.id} in game {game.id} has disconnected.")
-
-            await self.disconnect(game, player)
-            logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
 
 
 
@@ -130,7 +109,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await session.commit()
 
         # broadcast updated ready count to both players
-        await self.broadcast_game_state(game)
+        await self.broadcast_ready_state(game, sender=player)
 
 
     

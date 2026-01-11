@@ -50,7 +50,7 @@ export interface GameWSServerShotResultMessage {
      * @type {Ship}
      * @memberof GameWSServerShotResultMessage
      */
-    sunkLength: Ship | null;
+    sunkShip: Ship | null;
 }
 
 /**
@@ -60,7 +60,7 @@ export function instanceOfGameWSServerShotResultMessage(value: object): value is
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
     if (!('hit' in value) || value['hit'] === undefined) return false;
-    if (!('sunkLength' in value) || value['sunkLength'] === undefined) return false;
+    if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
     return true;
 }
 
@@ -77,7 +77,7 @@ export function GameWSServerShotResultMessageFromJSONTyped(json: any, ignoreDisc
         'row': json['row'],
         'col': json['col'],
         'hit': json['hit'],
-        'sunkLength': ShipFromJSON(json['sunk_ship']),
+        'sunkShip': ShipFromJSON(json['sunkShip']),
     };
 }
 
@@ -95,7 +95,7 @@ export function GameWSServerShotResultMessageToJSONTyped(value?: GameWSServerSho
         'row': value['row'],
         'col': value['col'],
         'hit': value['hit'],
-        'sunk_ship': ShipToJSON(value['sunkLength']),
+        'sunkShip': ShipToJSON(value['sunkShip']),
     };
 }
 

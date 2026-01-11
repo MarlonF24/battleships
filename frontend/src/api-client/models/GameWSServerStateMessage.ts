@@ -60,8 +60,8 @@ export function GameWSServerStateMessageFromJSONTyped(json: any, ignoreDiscrimin
     }
     return {
         
-        'ownShipGrid': ViewFromJSON(json['own_ship_grid']),
-        'opponentShipGrid': ViewFromJSON(json['opponent_ship_grid']),
+        'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
+        'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
     };
 }
 
@@ -76,8 +76,8 @@ export function GameWSServerStateMessageToJSONTyped(value?: GameWSServerStateMes
 
     return {
         
-        'own_ship_grid': ViewToJSON(value['ownShipGrid']),
-        'opponent_ship_grid': ViewToJSON(value['opponentShipGrid']),
+        'ownShipGrid': ViewToJSON(value['ownShipGrid']),
+        'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
     };
 }
 

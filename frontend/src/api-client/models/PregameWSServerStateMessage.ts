@@ -52,8 +52,8 @@ export function PregameWSServerStateMessageFromJSONTyped(json: any, ignoreDiscri
     }
     return {
         
-        'numPlayersReady': json['num_players_ready'],
-        'selfReady': json['self_ready'],
+        'numPlayersReady': json['numPlayersReady'],
+        'selfReady': json['selfReady'],
     };
 }
 
@@ -68,8 +68,8 @@ export function PregameWSServerStateMessageToJSONTyped(value?: PregameWSServerSt
 
     return {
         
-        'num_players_ready': value['numPlayersReady'],
-        'self_ready': value['selfReady'],
+        'numPlayersReady': value['numPlayersReady'],
+        'selfReady': value['selfReady'],
     };
 }
 
