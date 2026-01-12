@@ -1,8 +1,7 @@
-import { Ship, GameId, OpponentConnection } from "../base";
+import { Ship, GameId, apiModels, Orientation } from "../base";
 
 import { BattleGrid } from "./battle_grid/battle_grid.js";
 import { ShipGarage } from "./garage/garage.js";
-import { PregameParams } from "../api-client/index.js";
 import { ButtonBar } from "./buttons/button_bar.js";
 import { ReadyContextProvider} from "./context.js";
 import { useLoaderData } from "react-router-dom";
@@ -10,19 +9,20 @@ import { useLoaderData } from "react-router-dom";
 import "./pregame.css";
 
 export interface PreGameViewLoaderData {
-	preGameParams: PregameParams;
+	gameParams: apiModels.GameParams;
 	gameId: string;
 }
 
 const PreGameView: React.FC = () => {
+	const { gameParams, gameId } = useLoaderData<PreGameViewLoaderData>();
+
+	const submittedShips = new Map(gameParams.ownShips?.map(ship => [new Ship(ship.length, ship.orientation as Orientation), {headRow: ship.headRow, headCol: ship.headCol}]));
+
+	const battleGrid = new BattleGrid({rows: gameParams.battleGridRows, cols: gameParams.battleGridCols}, submittedShips);
 	
-	const { preGameParams, gameId } = useLoaderData<PreGameViewLoaderData>();
-
-
-	const battleGrid = new BattleGrid({rows: preGameParams.battleGridRows, cols: preGameParams.battleGridCols});
-	const shipGarage = new ShipGarage(
-		preGameParams.shipLengths.map(length => new Ship(length))
-	);
+	const garageShips = gameParams.ownShips.length ? [] : gameParams.shipLengths.map(length => new Ship(length))
+	
+	const shipGarage = new ShipGarage( garageShips );
 
 	
 	if (battleGrid.grid.cols < shipGarage.maxLen && battleGrid.grid.cols < shipGarage.maxLen) {

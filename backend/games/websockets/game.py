@@ -98,10 +98,6 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
     
             message = GameWSPlayerShotMessage.model_validate(message)
 
-            if not (player_conn := conn_manager.get_player_connection(game, player)): # type: ignore
-                logger.error(f"Player connection not found for game {game.id}, player {player.id}")
-                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player not connected")
-            
             # player_conn.ship_grid.shoot_at()
 
 

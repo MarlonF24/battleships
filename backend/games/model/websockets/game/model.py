@@ -1,8 +1,7 @@
 from typing import Collection
-from pydantic import BaseModel
 
 from ....relations import Orientation, Ship as DBShip
-from ...model import Ship
+from ...model import BaseModel, Ship, Base
 
 
 class ActiveShip(Ship):
@@ -44,7 +43,7 @@ class ShipGrid(BaseModel):
             return False, None
     
 
-    class View(BaseModel):
+    class View(Base):
         cells: list[list[bool]]  # was shot?
         ships: list[ActiveShip]
 

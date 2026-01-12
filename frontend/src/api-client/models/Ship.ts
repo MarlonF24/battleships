@@ -78,8 +78,8 @@ export function ShipFromJSONTyped(json: any, ignoreDiscriminator: boolean): Ship
         
         'length': json['length'],
         'orientation': OrientationFromJSON(json['orientation']),
-        'headRow': json['head_row'],
-        'headCol': json['head_col'],
+        'headRow': json['headRow'],
+        'headCol': json['headCol'],
     };
 }
 
@@ -96,8 +96,8 @@ export function ShipToJSONTyped(value?: Ship | null, ignoreDiscriminator: boolea
         
         'length': value['length'],
         'orientation': OrientationToJSON(value['orientation']),
-        'head_row': value['headRow'],
-        'head_col': value['headCol'],
+        'headRow': value['headRow'],
+        'headCol': value['headCol'],
     };
 }
 

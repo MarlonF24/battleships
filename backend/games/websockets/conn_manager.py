@@ -115,8 +115,9 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 message_instance = message(player_id)
             else:
                 message_instance = message
-
-            await connection.websocket.send_json(message_instance.model_dump())
+            
+            if connection.websocket.client_state == websockets.WebSocketState.CONNECTED:
+                await connection.websocket.send_json(message_instance.model_dump())
 
     async def send_personal_message(self, game: Game, player: Player, message: ServerMessageType):        
         player_connection = self.get_player_connection(game, player)
@@ -128,6 +129,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         """Notify the opponent about the sender's connection status. If connected is True"""
         message = self.get_game_connections(game).get_connection_message(sender.id)
         await self.broadcast(game, sender, message, only_opponent=True) # type: ignore
+        logger.info(f"Informed opponent of player {sender.id} in game {game.id} about connection status.")
 
 
     async def inform_self_about_opponent_connection(self, game: Game, player: Player, websocket: WebSocket):
@@ -137,6 +139,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         if opponent := game_conns.get_opponent_id(player.id):
             message = game_conns.get_connection_message(opponent)
             await self.send_personal_message(game, player, message) # type: ignore
+            logger.info(f"Informed player {player.id} in game {game.id} about opponent's connection status.")
 
 
     async def initial_inform_connections(self, game: Game, player: Player, websocket: WebSocket):
@@ -148,10 +151,8 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
     async def clean_up(self, game: Game, player: Player):
         await self.inform_opponent_about_own_connection(game, player)
-        logger.info(f"Informed opponent that Player {player.id} in game {game.id} has disconnected.")
         
         await self.disconnect(game, player)
-        logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
         
 
 

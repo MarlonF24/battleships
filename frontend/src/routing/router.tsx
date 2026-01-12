@@ -1,22 +1,21 @@
 
-import { createBrowserRouter, LoaderFunction, Navigate, redirect, useRouteError } from "react-router-dom";
+import { createBrowserRouter, LoaderFunction, Navigate } from "react-router-dom";
 import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base/index.js";
 import PreGameView, { PreGameViewLoaderData } from "../pregame/view.js";
 import  WelcomeView  from "../welcome/view.js";
-import GameView, {GameViewLoaderData} from "../game/view.js";
-import { BackendWebSocket } from "../base/index.js";
+import GameView from "../game/view.js";
 
 
 const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
   const playerId = sessionStorage.getItem("playerId")!;
   try {
-    const preGameParams = await api.getPregameParamsGamesGameIdPregameParamsGet({ gameId, playerId });
+    const gameParams = await api.getGameParamsGamesGameIdParamsGet({ gameId, playerId });
     
     
-    return {preGameParams, gameId};
+    return {gameParams, gameId};
 
-
+    
   } catch (err) {
     if (err instanceof ResponseError) {
       const errorMessage = await unpackErrorMessage(err);
@@ -26,11 +25,11 @@ const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) 
   }
 }
 
-const gameLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
+const gameLoader: LoaderFunction = async ({ params }) => {
   const gameId  = params.gameId!;
   const playerId = sessionStorage.getItem("playerId")!;
   
-  const gameState = await api.getGameParamsGamesGamesGameIdGameParamsGet({ gameId, playerId });
+  const gameState = await api.getGameParamsGamesGameIdParamsGet({ gameId, playerId });
   return { ...gameState, gameId };
 };
 

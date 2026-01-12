@@ -1,4 +1,4 @@
-from fastapi import WebSocket, WebSocketException, status
+from fastapi import WebSocket
 from dataclasses import dataclass, field
 from uuid import UUID
 from collections import defaultdict
@@ -86,12 +86,13 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         async for message in websocket.iter_json():
             logger.info(f"Received WebSocket message: {message}")
             
-            message = PregameWSPlayerReadyMessage.model_validate(message)  
 
             if both_ready:
-                logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring.")
+                logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring message: {message}")
                 continue
             
+            message = PregameWSPlayerReadyMessage.model_validate(message)  
+
             await self.handle_player_ready_message(game, player, message, session)
 
             if game_connection.num_ready_players() == 2:
@@ -103,9 +104,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
 
     async def handle_player_ready_message(self, game: Game, player: Player, message: PregameWSPlayerReadyMessage, session: AsyncSession):
-        if not (player_conn := self.get_player_connection(game, player)):
-            logger.error(f"Player connection not found for game {game.id}, player {player.id}")
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player not connected")
+        player_conn = self.get_player_connection(game, player)
         
         # update readiness state
         player_conn.ready = True

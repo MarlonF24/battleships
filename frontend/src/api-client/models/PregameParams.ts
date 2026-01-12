@@ -59,9 +59,9 @@ export function PregameParamsFromJSONTyped(json: any, ignoreDiscriminator: boole
     }
     return {
         
-        'battleGridRows': json['battle_grid_rows'],
-        'battleGridCols': json['battle_grid_cols'],
-        'shipLengths': json['ship_lengths'],
+        'battleGridRows': json['battleGridRows'],
+        'battleGridCols': json['battleGridCols'],
+        'shipLengths': json['shipLengths'],
     };
 }
 
@@ -76,9 +76,9 @@ export function PregameParamsToJSONTyped(value?: PregameParams | null, ignoreDis
 
     return {
         
-        'battle_grid_rows': value['battleGridRows'],
-        'battle_grid_cols': value['battleGridCols'],
-        'ship_lengths': value['shipLengths'],
+        'battleGridRows': value['battleGridRows'],
+        'battleGridCols': value['battleGridCols'],
+        'shipLengths': value['shipLengths'],
     };
 }
 

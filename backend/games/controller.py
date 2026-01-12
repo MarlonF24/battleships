@@ -27,21 +27,9 @@ async def join_game(player: PlayerDep, game: GameDep, session: SessionDep):
     
 
 
-
-@router.get("/{gameId}/pregame/params", status_code=status.HTTP_200_OK)
-def get_pregame_params(player_game: PlayerGameDep) -> PregameParams:
-    
-    return PregameParams.model_validate(player_game[1])
-
-
-@router.get("/games/{gameId}/game/params", status_code=status.HTTP_200_OK)
+@router.get("/{gameId}/params", status_code=status.HTTP_200_OK)
 async def get_game_params(player_game: PlayerGameDep, ships: ShipsDep) -> GameParams:
     
-    pregame_params = PregameParams.model_validate(player_game[1])
+    params = PregameParams.model_validate(player_game[1])
 
-    return GameParams(
-        battle_grid_rows=pregame_params.battle_grid_rows,
-        battle_grid_cols=pregame_params.battle_grid_cols,
-        ship_lengths=pregame_params.ship_lengths, 
-        own_ships=ships
-    )
+    return GameParams(**params.model_dump(), own_ships=ships)

@@ -84,8 +84,8 @@ export function ActiveShipFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         
         'length': json['length'],
         'orientation': OrientationFromJSON(json['orientation']),
-        'headRow': json['head_row'],
-        'headCol': json['head_col'],
+        'headRow': json['headRow'],
+        'headCol': json['headCol'],
         'hits': json['hits'] == null ? undefined : json['hits'],
     };
 }
@@ -103,8 +103,8 @@ export function ActiveShipToJSONTyped(value?: ActiveShip | null, ignoreDiscrimin
         
         'length': value['length'],
         'orientation': OrientationToJSON(value['orientation']),
-        'head_row': value['headRow'],
-        'head_col': value['headCol'],
+        'headRow': value['headRow'],
+        'headCol': value['headCol'],
         'hits': value['hits'],
     };
 }

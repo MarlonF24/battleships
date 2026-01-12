@@ -78,12 +78,6 @@ import {
 export interface Data {
     /**
      * 
-     * @type {Array<Ship>}
-     * @memberof Data
-     */
-    ships: Array<Ship>;
-    /**
-     * 
      * @type {boolean}
      * @memberof Data
      */
@@ -94,6 +88,12 @@ export interface Data {
      * @memberof Data
      */
     initiallyConnected: boolean;
+    /**
+     * 
+     * @type {Array<Ship>}
+     * @memberof Data
+     */
+    ships: Array<Ship>;
     /**
      * 
      * @type {View}
@@ -120,18 +120,6 @@ export interface Data {
     col: number;
     /**
      * 
-     * @type {number}
-     * @memberof Data
-     */
-    numPlayersReady: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof Data
-     */
-    selfReady: boolean;
-    /**
-     * 
      * @type {boolean}
      * @memberof Data
      */
@@ -142,23 +130,35 @@ export interface Data {
      * @memberof Data
      */
     sunkShip: Ship;
+    /**
+     * 
+     * @type {number}
+     * @memberof Data
+     */
+    numPlayersReady: number;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Data
+     */
+    selfReady: boolean;
 }
 
 /**
  * Check if a given object implements the Data interface.
  */
 export function instanceOfData(value: object): value is Data {
-    if (!('ships' in value) || value['ships'] === undefined) return false;
     if (!('opponentConnected' in value) || value['opponentConnected'] === undefined) return false;
     if (!('initiallyConnected' in value) || value['initiallyConnected'] === undefined) return false;
+    if (!('ships' in value) || value['ships'] === undefined) return false;
     if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
     if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
-    if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
-    if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
     if (!('hit' in value) || value['hit'] === undefined) return false;
     if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
+    if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
+    if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
     return true;
 }
 
@@ -172,17 +172,17 @@ export function DataFromJSONTyped(json: any, ignoreDiscriminator: boolean): Data
     }
     return {
         
-        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
         'opponentConnected': json['opponentConnected'],
         'initiallyConnected': json['initiallyConnected'],
+        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
         'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
         'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
         'row': json['row'],
         'col': json['col'],
-        'numPlayersReady': json['numPlayersReady'],
-        'selfReady': json['selfReady'],
         'hit': json['hit'],
         'sunkShip': ShipFromJSON(json['sunkShip']),
+        'numPlayersReady': json['numPlayersReady'],
+        'selfReady': json['selfReady'],
     };
 }
 
@@ -197,17 +197,17 @@ export function DataToJSONTyped(value?: Data | null, ignoreDiscriminator: boolea
 
     return {
         
-        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
         'opponentConnected': value['opponentConnected'],
         'initiallyConnected': value['initiallyConnected'],
+        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
         'ownShipGrid': ViewToJSON(value['ownShipGrid']),
         'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
         'row': value['row'],
         'col': value['col'],
-        'numPlayersReady': value['numPlayersReady'],
-        'selfReady': value['selfReady'],
         'hit': value['hit'],
         'sunkShip': ShipToJSON(value['sunkShip']),
+        'numPlayersReady': value['numPlayersReady'],
+        'selfReady': value['selfReady'],
     };
 }
 

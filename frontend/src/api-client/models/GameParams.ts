@@ -74,10 +74,10 @@ export function GameParamsFromJSONTyped(json: any, ignoreDiscriminator: boolean)
     }
     return {
         
-        'battleGridRows': json['battle_grid_rows'],
-        'battleGridCols': json['battle_grid_cols'],
-        'shipLengths': json['ship_lengths'],
-        'ownShips': ((json['own_ships'] as Array<any>).map(ShipFromJSON)),
+        'battleGridRows': json['battleGridRows'],
+        'battleGridCols': json['battleGridCols'],
+        'shipLengths': json['shipLengths'],
+        'ownShips': ((json['ownShips'] as Array<any>).map(ShipFromJSON)),
     };
 }
 
@@ -92,10 +92,10 @@ export function GameParamsToJSONTyped(value?: GameParams | null, ignoreDiscrimin
 
     return {
         
-        'battle_grid_rows': value['battleGridRows'],
-        'battle_grid_cols': value['battleGridCols'],
-        'ship_lengths': value['shipLengths'],
-        'own_ships': ((value['ownShips'] as Array<any>).map(ShipToJSON)),
+        'battleGridRows': value['battleGridRows'],
+        'battleGridCols': value['battleGridCols'],
+        'shipLengths': value['shipLengths'],
+        'ownShips': ((value['ownShips'] as Array<any>).map(ShipToJSON)),
     };
 }
 

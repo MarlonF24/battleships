@@ -1,14 +1,7 @@
 from typing import Any
-from pydantic import BaseModel
+from ..model import Base
 
-def to_camel(string: str) -> str:
-    parts = string.split('_')
-    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
-
-class WSMessage(BaseModel):
-    class Config:
-        alias_generator = to_camel
-        populate_by_name = True
+class WSMessage(Base):
 
     def model_dump(self, *args: Any, **kwargs: Any) -> dict[str, Any]: 
         return super().model_dump(*args, **{**kwargs, "by_alias": True})
