@@ -8,7 +8,7 @@ Name | Type
 ------------ | -------------
 `battleGridRows` | number
 `battleGridCols` | number
-`shipLengths` | Array&lt;number&gt;
+`shipLengths` | { [key: string]: number; }
 `ownShips` | [Array&lt;Ship&gt;](Ship.md)
 
 ## Example

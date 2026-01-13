@@ -1,0 +1,28 @@
+
+
+.copy-button {
+	background: none;
+	border: none;
+	color: var(--primary-color);
+	font-size: 1.2em;
+	cursor: pointer;
+	padding: 0.25em 0.6em;
+	border-radius: 4px;
+	transition: background 0.12s, color 0.12s;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	vertical-align: middle;
+}
+.copy-button:hover {
+	background: #e3eaf6;
+}
+
+
+.copy-button[data-copied="true"] {
+	background: var(--primary-color) !important;
+	color: #fff !important;
+	transition: background 0.07s, color 0.07s !important;
+}

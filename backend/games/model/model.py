@@ -25,7 +25,7 @@ class Ship(Base):
 class PregameParams(Base):
     battle_grid_rows: int
     battle_grid_cols: int
-    ship_lengths: list[int]
+    ship_lengths: dict[int, int]  # length -> count
 
   
 

@@ -1,6 +1,6 @@
 import uuid, enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import CheckConstraint, UniqueConstraint, ARRAY, Integer, ForeignKey, ForeignKeyConstraint, Enum
+from sqlalchemy import CheckConstraint, UniqueConstraint, Integer, ForeignKey, ForeignKeyConstraint, Enum, JSON
 
 
 from ..db import Base
@@ -18,7 +18,7 @@ class Game(Base):
     players: Mapped[list["Player"]] = relationship(secondary="game_player_link", back_populates="games")
     battle_grid_rows: Mapped[int] = mapped_column()
     battle_grid_cols: Mapped[int] = mapped_column()
-    ship_lengths: Mapped[list[int]] = mapped_column(ARRAY(Integer))  # e.g., [5, 4, 3, 3, 2]
+    ship_lengths: Mapped[dict[int, int]] = mapped_column(JSON)  # e.g., [5, 4, 3, 3, 2]
     phase: Mapped[GamePhase] = mapped_column(Enum(GamePhase), default=GamePhase.PREGAME)
   
   

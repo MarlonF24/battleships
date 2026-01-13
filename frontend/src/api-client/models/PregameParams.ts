@@ -33,10 +33,10 @@ export interface PregameParams {
     battleGridCols: number;
     /**
      * 
-     * @type {Array<number>}
+     * @type {{ [key: string]: number; }}
      * @memberof PregameParams
      */
-    shipLengths: Array<number>;
+    shipLengths: { [key: string]: number; };
 }
 
 /**

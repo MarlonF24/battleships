@@ -1,12 +1,13 @@
 
 import { createBrowserRouter, LoaderFunction, Navigate } from "react-router-dom";
-import { api, ResponseError, unpackErrorMessage, ErrorPage } from "../base/index.js";
-import PreGameView, { PreGameViewLoaderData } from "../pregame/view.js";
-import  WelcomeView  from "../welcome/view.js";
-import GameView from "../game/view.js";
+import { api, ResponseError, unpackErrorMessage } from "../base/index.js";
+import PreGameView, { GameViewLoaderData } from "../pages/pregame";
+import  WelcomeView  from "../pages/welcome";
+import GameView from "../pages/game";
+import ErrorPage from "../pages/error";
 
 
-const pregameLoader: LoaderFunction<PreGameViewLoaderData> = async ({ params }) => {
+const pregameLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
   const playerId = sessionStorage.getItem("playerId")!;
   try {

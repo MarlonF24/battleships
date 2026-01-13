@@ -1,0 +1,59 @@
+import { useRef, useEffect } from "react";
+
+import { action, makeObservable } from "mobx";
+
+
+import { Ship, ShipPosition, ShipGrid, Grid } from "../../base/index.js";
+import { Dragger } from "./DragDrop/drag.js";
+import { observer } from "mobx-react-lite";
+
+
+export abstract class PregameShipGrid  {
+	abstract readonly shipInHandler: EventListener;
+	abstract readonly styleClassName: string;
+	readonly shipGrid: ShipGrid;
+
+	constructor(size: {rows: number; cols: number}, ships?: Map<Ship, ShipPosition>) {
+		this.shipGrid = new ShipGrid(size, ships);
+		makeObservable(this, {
+			reset: action,
+		});
+	}
+
+	get ships(): Map<Ship, ShipPosition> {
+		return this.shipGrid.ships;
+	}
+
+	get size(): {rows: number; cols: number} {
+		return this.shipGrid.size;
+	}
+
+	get shipCells(): (Ship | null)[][] {
+		return this.shipGrid.shipCells;
+	}
+
+
+	abstract reset(): void;
+
+
+	public readonly Renderer = observer(() => {
+		const divRef = useRef<HTMLDivElement>(null);
+		
+		useEffect(() => {
+			const tbody = divRef.current!;
+			
+			tbody.addEventListener("ship-in", this.shipInHandler);
+			return () => {
+				tbody.removeEventListener("ship-in", this.shipInHandler);
+			}
+		}, [this.shipInHandler]);
+		
+		return (
+			<div ref={divRef} className={this.styleClassName}>
+				<this.shipGrid.Renderer mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
+			</div>
+		);
+	});
+}
+
+

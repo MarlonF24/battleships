@@ -1,0 +1,25 @@
+.ship-display{
+    --display-down-scale: 0.4;
+}
+
+.ship-display tr {
+    height: calc(var(--cell-size) * var(--display-down-scale));
+}
+
+.ship-display td {
+    width: calc(var(--cell-size) * var(--display-down-scale));
+    height: calc(var(--cell-size) * var(--display-down-scale));
+}
+
+.ship-display .spacer {
+    visibility: hidden;
+}
+
+.ship-display .hit {
+    background-color: red;
+}
+
+.ship-display .ship-cell {
+    border: 2px solid black;
+    background-color: lightgray;
+}

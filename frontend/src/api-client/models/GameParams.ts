@@ -41,10 +41,10 @@ export interface GameParams {
     battleGridCols: number;
     /**
      * 
-     * @type {Array<number>}
+     * @type {{ [key: string]: number; }}
      * @memberof GameParams
      */
-    shipLengths: Array<number>;
+    shipLengths: { [key: string]: number; };
     /**
      * 
      * @type {Array<Ship>}

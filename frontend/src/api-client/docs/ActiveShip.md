@@ -10,7 +10,7 @@ Name | Type
 `orientation` | [Orientation](Orientation.md)
 `headRow` | number
 `headCol` | number
-`hits` | number
+`hits` | Array&lt;boolean&gt;
 
 ## Example
 

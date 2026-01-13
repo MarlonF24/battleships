@@ -1,0 +1,4 @@
+.red-X {
+    width: var(--cell-size);
+    height: var(--cell-size);
+}

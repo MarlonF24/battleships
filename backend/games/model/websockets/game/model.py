@@ -1,20 +1,48 @@
-from typing import Collection
+from typing import Any, Collection
+from pydantic import Field
 
 from ....relations import Orientation, Ship as DBShip
 from ...model import BaseModel, Ship, Base
 
 
 class ActiveShip(Ship):
-    hits: int = 0
+    hits: list[bool] = Field(default_factory=list, validate_default=True) 
+
+    def model_post_init(self, context: Any) -> None:
+        if not self.hits:
+            self.hits = [False for _ in range(self.length)]
+
+    def is_sunk(self) -> bool:
+        return self.hits.count(True) >= self.length
+    
+    def hit(self, idx: int) -> None:
+        if self.is_sunk():
+            raise ValueError("Tried to hit a ship that is already sunk")
+        
+        if self.hits[idx]:
+            raise ValueError(f"Tried to hit already hit position {idx} of ship")
+        
+        self.hits[idx] = True
+
+class CellInfo(BaseModel):
+    ship: ActiveShip | None = None
+    was_shot: bool = False
 
 
 class ShipGrid(BaseModel):
     __pydantic_custom_init__ = True
 
-    cells: list[list[tuple[ActiveShip | None, bool]]]  # [Ship on cell, was shot?]
-    ships: list[ActiveShip] = []
-    sunk_ships: list[ActiveShip] = []
+    cells: list[list[CellInfo]]  # [Ship on cell, was shot?]
+
+    @property
+    def ships(self) -> list[ActiveShip]:
+        return [cellInfo.ship for row in self.cells for cellInfo in row if cellInfo.ship is not None]
     
+    @property
+    def sunk_ships(self) -> list[ActiveShip]:
+        return [ship for ship in self.ships if ship.is_sunk()]
+    
+
     def __init__(self, ships: Collection[Ship | DBShip], rows: int, cols: int):
         cells = [[None for _ in range(cols)] for _ in range(rows)]
         super().__init__(cells=cells)
@@ -26,19 +54,27 @@ class ShipGrid(BaseModel):
             
             if ship.orientation == Orientation.HORIZONTAL:
                 for c in range(ship.head_col, ship.head_col + ship.length):
-                    self.cells[ship.head_row][c] = (ship, False)
+                    self.cells[ship.head_row][c] = CellInfo(ship=ship, was_shot=False)
             else:
                 for r in range(ship.head_row, ship.head_row + ship.length):
-                    self.cells[r][ship.head_col] = (ship, False)
+                    self.cells[r][ship.head_col] = CellInfo(ship=ship, was_shot=False)
 
 
     def shoot_at(self, row: int, col: int) -> tuple[bool, Ship | None]:
-        ship = self.cells[row][col][0]
+        if self.cells[row][col].was_shot:
+            raise ValueError(f"Position ({row}, {col}) has already been shot.")
+        
+        self.cells[row][col].was_shot = True
+        
+        ship = self.cells[row][col].ship
+        
         if ship:
-            ship.hits += 1
-            if ship.hits == ship.length:
+            ship_idx = (col - ship.head_col) if ship.orientation == Orientation.HORIZONTAL else (row - ship.head_row)
+            ship.hit(ship_idx)
+
+            if ship.is_sunk():
                 self.sunk_ships.append(ship)
-            return True, ship if ship.hits == ship.length else None
+            return True, ship if ship.is_sunk() else None
         else:
             return False, None
     
@@ -49,13 +85,13 @@ class ShipGrid(BaseModel):
 
     def get_own_view(self) -> View:
         return self.View(
-            cells=[[cell[1] for cell in row] for row in self.cells],
+            cells=[[cell.was_shot for cell in row] for row in self.cells],
             ships=self.ships,
         )
 
     def get_opponent_view(self) -> View:
         return self.View(
-            cells=[[cell[1] for cell in row] for row in self.cells],
+            cells=[[cell.was_shot for cell in row] for row in self.cells],
             ships=self.sunk_ships,
         )
     

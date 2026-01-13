@@ -1,0 +1,4 @@
+.battle-grid .grid .cell {
+  background: var(--grid-cell-bg);
+  border: 1px solid var(--grid-border-color);
+}

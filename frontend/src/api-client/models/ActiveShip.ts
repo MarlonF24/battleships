@@ -53,10 +53,10 @@ export interface ActiveShip {
     headCol: number;
     /**
      * 
-     * @type {number}
+     * @type {Array<boolean>}
      * @memberof ActiveShip
      */
-    hits?: number;
+    hits?: Array<boolean>;
 }
 
 

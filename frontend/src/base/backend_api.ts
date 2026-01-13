@@ -64,7 +64,7 @@ export class BackendWebSocket {
         console.error("WebSocket error:", event);
     }
 
-    static connect(page: Page, gameId: string, playerId: string, 
+    static connect(page: Page.PREGAME | Page.GAME, gameId: string, playerId: string, 
         {onMessage = undefined, 
         onOpen = undefined, 
         onClose = undefined, 
