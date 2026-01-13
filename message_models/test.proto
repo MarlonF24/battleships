@@ -1,0 +1,3 @@
+message  Test {
+  optional int32 id = 1; // Unique identifier for the test
+}

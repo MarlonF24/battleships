@@ -90,6 +90,12 @@ export interface Data {
     initiallyConnected: boolean;
     /**
      * 
+     * @type {Array<Ship>}
+     * @memberof Data
+     */
+    ships: Array<Ship>;
+    /**
+     * 
      * @type {View}
      * @memberof Data
      */
@@ -126,12 +132,6 @@ export interface Data {
     sunkShip: Ship;
     /**
      * 
-     * @type {Array<Ship>}
-     * @memberof Data
-     */
-    ships: Array<Ship>;
-    /**
-     * 
      * @type {number}
      * @memberof Data
      */
@@ -150,13 +150,13 @@ export interface Data {
 export function instanceOfData(value: object): value is Data {
     if (!('opponentConnected' in value) || value['opponentConnected'] === undefined) return false;
     if (!('initiallyConnected' in value) || value['initiallyConnected'] === undefined) return false;
+    if (!('ships' in value) || value['ships'] === undefined) return false;
     if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
     if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
     if (!('hit' in value) || value['hit'] === undefined) return false;
     if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
-    if (!('ships' in value) || value['ships'] === undefined) return false;
     if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
     if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
     return true;
@@ -174,13 +174,13 @@ export function DataFromJSONTyped(json: any, ignoreDiscriminator: boolean): Data
         
         'opponentConnected': json['opponentConnected'],
         'initiallyConnected': json['initiallyConnected'],
+        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
         'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
         'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
         'row': json['row'],
         'col': json['col'],
         'hit': json['hit'],
         'sunkShip': ShipFromJSON(json['sunkShip']),
-        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
         'numPlayersReady': json['numPlayersReady'],
         'selfReady': json['selfReady'],
     };
@@ -199,13 +199,13 @@ export function DataToJSONTyped(value?: Data | null, ignoreDiscriminator: boolea
         
         'opponentConnected': value['opponentConnected'],
         'initiallyConnected': value['initiallyConnected'],
+        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
         'ownShipGrid': ViewToJSON(value['ownShipGrid']),
         'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
         'row': value['row'],
         'col': value['col'],
         'hit': value['hit'],
         'sunkShip': ShipToJSON(value['sunkShip']),
-        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
         'numPlayersReady': value['numPlayersReady'],
         'selfReady': value['selfReady'],
     };

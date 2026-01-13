@@ -5,11 +5,10 @@ configure({
     enforceActions: "observed" 
 });
 
-import { api, unpackErrorMessage } from "./base/backend_api.js";
+import { api, unpackErrorMessage, ResponseError } from "./base";
 
 
 import "./main.css";
-import { ResponseError } from "./api-client/index.js";
 import App from "./App.js";
 
 

@@ -18,7 +18,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   const [numReadyPlayers, setNumReadyPlayers] = useState(0);
   const [inert, setInert] = useState(true);
   const [websocketConnected, setWebsocketConnected] = useState(false);
-  const [opponentConnected, setOpponentConnected] = useState<apiModels.WSServerOpponentConnectionMessage>({opponentConnected: false, initiallyConnected: false});
+  
   const switchView = useSwitchView();
 
 
@@ -53,10 +53,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
     if (apiModels.instanceOfPregameWSServerStateMessage(message)) {
       handleServerStateMessage(message);
     
-    } else if (apiModels.instanceOfWSServerOpponentConnectionMessage(message)) {
-      console.log(`Opponent connection status changed: connected=${message.opponentConnected}`);
-      setOpponentConnected(message);
-    }
+    } 
     
   }, []);
 
@@ -87,7 +84,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
 
   return (
     <ReadyContext.Provider value={{ numReadyPlayers}}>
-      <OpponentConnection connectionInfo={opponentConnected}/>
+      <OpponentConnection/>
       <br/>
       <div inert={inert}>
         {children}

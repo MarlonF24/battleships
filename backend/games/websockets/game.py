@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import WebSocket, WebSocketException, status
+from fastapi import WebSocket
 from collections import defaultdict
 from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession

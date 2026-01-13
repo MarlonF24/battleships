@@ -5,9 +5,9 @@ declare global {
 }
 
 
-import { DefaultApi, Configuration, ResponseError } from "../api-client/index";
-export { ResponseError } from "../api-client/index";
-export * as apiModels from "../api-client/models";
+import { DefaultApi, Configuration, ResponseError } from "./api-client/index";
+export { ResponseError } from "./api-client/index";
+export * as apiModels from "./api-client/models";
 import { Page } from "../routing/switch_view";
 
 export async function unpackErrorMessage(error: ResponseError): Promise<string> {
@@ -45,6 +45,15 @@ export class BackendWebSocket {
             throw new Error("WebSocket not connected. Call BackendWebSocket.connect(page, gameId, playerId) first.");
         }
         return this.currentSocket.socket;
+    }
+
+
+    static registerMessageHandler(handler: (event: MessageEvent) => void) {
+        const socket = BackendWebSocket.socket;
+
+        if (!socket) throw new Error("Tried to register message handler but WebSocket is not connected.");
+
+        socket.addEventListener("message", handler);
     }
 
     static defaultOnMessage = (event: MessageEvent) => {
