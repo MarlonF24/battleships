@@ -37,20 +37,20 @@ export abstract class PregameShipGrid  {
 
 
 	public readonly Renderer = observer(() => {
-		const divRef = useRef<HTMLDivElement>(null);
+		const shipGridRef = useRef<HTMLDivElement>(null);
 		
 		useEffect(() => {
-			const tbody = divRef.current!;
+			const shipGrid = shipGridRef.current!;
 			
-			tbody.addEventListener("ship-in", this.shipInHandler);
+			shipGrid.addEventListener("ship-in", this.shipInHandler);
 			return () => {
-				tbody.removeEventListener("ship-in", this.shipInHandler);
+				shipGrid.removeEventListener("ship-in", this.shipInHandler);
 			}
 		}, [this.shipInHandler]);
 		
 		return (
-			<div ref={divRef} className={this.styleClassName}>
-				<this.shipGrid.Renderer mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
+			<div className={this.styleClassName}>
+				<this.shipGrid.Renderer ref={shipGridRef} mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
 			</div>
 		);
 	});

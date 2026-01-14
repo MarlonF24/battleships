@@ -47,7 +47,7 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
     
 
 
-class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage]):
+class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage, GamePlayerMessage]):
     def __init__(self):
             super().__init__()
             self.active_connections: dict[UUID, GameGameConnections] = defaultdict(GameGameConnections)
@@ -96,15 +96,14 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
         async for message in self.message_generator(websocket, game, player):
     
-            message = GamePlayerMessage().parse(message)
 
-            group, payload = betterproto.which_one_of(message, "payload")
+            _, payload = betterproto.which_one_of(message, "payload")
 
             match payload:
                 case GamePlayerShotMessage() as shot_msg:
                     pass
                 case _:
-                    logger.warning(f"Unhandled message type received in game {game.id}: ({group}) {payload}")
+                    logger.warning(f"Unhandled message type received in game {game.id}: {payload}")
                     continue
 
             # player_conn.ship_grid.shoot_at()

@@ -1,6 +1,6 @@
-import { Ship, Orientation, toggle_orientation, ShipPosition } from "../../../base";
+import { Ship, socketModels, toggle_orientation, ShipPosition } from "../../../base";
 
-
+type Orientation = socketModels.Orientation;
 
 abstract class DynamicShip  {
 	protected _orientation: Orientation;
@@ -14,7 +14,7 @@ abstract class DynamicShip  {
 		this.html = originalHTML.cloneNode(true) as HTMLDivElement;
 	
 
-		this._orientation = this.html.dataset.orientation as Orientation;
+		this._orientation = parseInt(this.html.dataset.orientation!) as Orientation;
 		
 		this.length = parseInt(
 			this.html.style.getPropertyValue("--ship-length")
@@ -28,7 +28,7 @@ abstract class DynamicShip  {
 
 	set orientation(value: Orientation) {
 		this._orientation = value;
-		this.html.dataset.orientation = value;
+		this.html.dataset.orientation = value.toString();
 	}
 
 	abstract remove(): void;

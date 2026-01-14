@@ -1,6 +1,6 @@
 from uuid import UUID
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar, Any, Callable
+from typing import AsyncGenerator, Generic, TypeVar, Any, Callable
 from abc import ABC, abstractmethod
 import betterproto
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,7 @@ from fastapi import WebSocket, WebSocketException, websockets, status
 
 
 from backend.logger import logger
-from ..model import PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, PlayerOpponentConnectionPoll, ServerMessage, GeneralServerMessage
+from ..model import GamePlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, PlayerOpponentConnectionPoll, ServerMessage, GeneralServerMessage, GeneralPlayerMessage, PregamePlayerMessage
 from ..relations import Game, Player
 
 
@@ -72,9 +72,9 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
 GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])
 
 ServerMessageType = TypeVar('ServerMessageType', PregameServerMessage, GameServerMessage)
+PlayerMessageType = TypeVar('PlayerMessageType', PregamePlayerMessage, GamePlayerMessage)
 
-
-class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, ServerMessageType]):
+class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, ServerMessageType, PlayerMessageType]):
     type MessageFactory = Callable[[UUID], ServerMessageType]
 
     def __init__(self):
@@ -157,19 +157,6 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             logger.info(f"Informed player {player.id} in game {game.id} about opponent's connection status.")
 
 
-    async def inform_both_about_connections(self, game: Game, player: Player, websocket: WebSocket):
-        
-        await self.inform_opponent_about_own_connection(game, player)
-       
-        await self.inform_self_about_opponent_connection(game, player)
-
-
-
-    async def clean_up(self, game: Game, player: Player):
-        await self.inform_opponent_about_own_connection(game, player)
-        
-        await self.disconnect(game, player)
-        
 
 
     async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
@@ -180,27 +167,38 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             await self._handle_websocket(game, player, websocket, session)
 
         finally:
-            await self.clean_up(game, player)
+            await self.inform_opponent_about_own_connection(game, player)
+        
+            await self.disconnect(game, player)
 
 
-    async def message_generator(self, websocket: WebSocket, game: Game, player: Player):
+    async def message_generator(self, websocket: WebSocket, game: Game, player: Player) -> AsyncGenerator[PlayerMessageType, None]:
         async for message in websocket.iter_bytes():
 
             message = PlayerMessage().parse(message)
 
-            logger.info(f"Received WebSocket message: {message}")
+            logger.info(f"Received WebSocket message in game {game.id} from player {player.id}")
 
 
             _, payload = betterproto.which_one_of(message, "payload")
 
             match payload:
-                case PlayerOpponentConnectionPoll():
-                    await self.inform_self_about_opponent_connection(game, player)
+                case GeneralPlayerMessage():
+                    logger.info(f"Trying to read message as GeneralPlayerMessage in game {game.id} from player {player.id}")
+                    await self.handle_general_player_message(game, player, payload)
                 case _:
                     yield payload   
             
     
-
+    async def handle_general_player_message(self, game: Game, player: Player, message: GeneralPlayerMessage):
+        _, payload = betterproto.which_one_of(message, "payload")
+        
+        match payload:
+            case PlayerOpponentConnectionPoll():
+                logger.info(f"Received PlayerOpponentConnectionPoll from player {player.id} in game {game.id}: {message}")
+                await self.inform_self_about_opponent_connection(game, player)
+            case _:
+                logger.warning(f"Received unknown GeneralPlayerMessage: {message}")
 
     
     @abstractmethod

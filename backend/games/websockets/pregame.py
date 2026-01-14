@@ -10,7 +10,7 @@ from .conn_manager import *
 
 from ..model import PregameServerMessage, PregamePlayerSetReadyStateMessage, PregameServerReadyStateMessage, PregamePlayerMessage
 
-from ..relations import Game, GamePhase, Player, Ship as DBShip
+from ..relations import Game, GamePhase, Player, Ship as DBShip, Orientation as DBOrientation
 
 @dataclass
 class PregamePlayerConnection(PlayerConnection):
@@ -43,7 +43,7 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
         )
 
 
-class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage]):
+class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage, PregamePlayerMessage]):
     def __init__(self):
             super().__init__()
             self.active_connections: dict[UUID, PregameGameConnections] = defaultdict(PregameGameConnections)
@@ -59,7 +59,9 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         game.phase = GamePhase.GAME
         session.add(game)
         await session.commit()
-        
+
+
+        # This seems to break things: when we have ready 2/2 then the frontend disconnects and then the finally block tries to inform opponent about disconnection, but then hes not found even though kinda weird cause it should not find the game connections in the first place ## !! ok, seems to have been a coincidence cause worked after all ?? ##
         del self.active_connections[game.id]
 
         logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
@@ -89,26 +91,25 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
             if both_ready:
                 logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring message: {message}")
                 continue    
-                
+            
+              
+            logger.info(f"Trying to read message as PregamePlayerMessage in game {game.id} from player {player.id}")
+            
+            _, payload = betterproto.which_one_of(message, "payload")
 
-            match message:
-                case PregamePlayerMessage() as message:    
-                    _, payload = betterproto.which_one_of(message, "payload")
+            match payload:
+                case PregamePlayerSetReadyStateMessage() as message:
+                    logger.info(f"Received PregamePlayerSetReadyStateMessage from player {player.id} in game {game.id}: {message}")
+                    await self.handle_player_ready_message(game, player, message, session)
 
-                    match payload:
-                        case PregamePlayerSetReadyStateMessage() as message:
-                            await self.handle_player_ready_message(game, player, message, session)
+                    if game_connection.num_ready_players() == 2:
+                        logger.info(f"Both players ready in game {game.id}.")
+                        await self.end_pregame(game, session)
 
-                            if game_connection.num_ready_players() == 2:
-                                logger.info(f"Both players ready in game {game.id}.")
-                                await self.end_pregame(game, session)
-
-                        case _:
-                            logger.warning(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
-                
                 case _:
-                    logger.warning(f"Non-PregamePlayerMessage type received in pregame {game.id}: {message}")
+                    logger.warning(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
                 
+               
                 
 
     async def handle_player_ready_message(self, game: Game, player: Player, message: PregamePlayerSetReadyStateMessage, session: AsyncSession):
@@ -117,12 +118,11 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         # update readiness state
         player_conn.ready = True
         
-        ships = [DBShip(game_id=game.id, player_id=player.id, length=ship.length, head_row=ship.head_row, head_col=ship.head_col, orientation=ship.orientation) for ship in message.ships]
+        ships = [DBShip(game_id=game.id, player_id=player.id, length=ship.length, head_row=ship.head_row, head_col=ship.head_col, orientation=DBOrientation(ship.orientation)) for ship in message.ships]
 
         session.add_all(ships)
         
         await session.commit()
-
         # broadcast updated ready count to both players
         await self.broadcast_ready_state(game)
 

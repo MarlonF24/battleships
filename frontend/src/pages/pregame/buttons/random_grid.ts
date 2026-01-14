@@ -26,7 +26,7 @@ export class RandomBattleGridGenerator {
 
 		let shipToPlace = shipsToPlace[0];
 
-		const orientations = Object.values(Orientation).sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
+		const orientations = [Orientation.HORIZONTAL, Orientation.VERTICAL].sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
 
 		for (let orientation of orientations) {
 

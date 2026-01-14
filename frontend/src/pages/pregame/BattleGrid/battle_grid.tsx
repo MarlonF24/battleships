@@ -1,6 +1,6 @@
 import { override, makeObservable } from "mobx";
 
-import { Ship, Orientation, ShipPosition, ShipLike } from "../../../base";
+import { Ship, ShipPosition, ShipLike, Orientation } from "../../../base";
 import { PregameShipGrid } from "../PregameShipGrid.js";
 import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
 
@@ -54,6 +54,7 @@ interface BattleGridSuggestionState extends BaseSuggestionState {
 export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 	protected state : Partial<BattleGridSuggestionState> = {};
 	
+	
 	constructor(private battleGrid: BattleGrid) {super(battleGrid)}
 
 
@@ -67,9 +68,9 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 			return;
 		}
 		
-		const targetCell = event.detail.currentTargetCell.element;
-		this.state.targetShipGridHTML ??= (event.currentTarget as HTMLElement).querySelector(".ship-grid")!;
 		const detail = event.detail;
+		const targetCell = detail.currentTargetCell.element;
+		this.targetShipGridHTML ??= event.currentTarget as HTMLElement;
 		
 		
 		this.state.currentCell = {
@@ -101,7 +102,7 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 				detail.originalShip // disregard the original ship to allow moving ships on their old position
 			)
 		) {
-			suggestionShip.suggest(this.state.targetShipGridHTML!, headPosition);
+			suggestionShip.suggest(this.targetShipGridHTML!, headPosition);
 			this.state.currentSuggestion = {
 				ship: suggestionShip,
 				positon: headPosition,

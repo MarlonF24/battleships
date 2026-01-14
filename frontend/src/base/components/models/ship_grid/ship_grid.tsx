@@ -4,14 +4,21 @@ import { observer } from "mobx-react-lite";
 import { Ship, ShipPosition, Orientation } from "../ship/ship.js";
 import { Grid } from "../grid/grid.js";
 
+
 import "./ship_grid.css";
+import { forwardRef } from "react";
 
 type mouseDownHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
-type mouseDownHandlerFactory = (ship: Ship) => mouseDownHandler;
 
 export interface ShipLike {
-	readonly length: number;
+    readonly length: number;
 	orientation: Orientation;
+}
+
+type mouseDownHandlerFactory = (ship: Ship) => mouseDownHandler;
+interface ShipGridRendererProps {
+    mouseDownHandlerFactory?: mouseDownHandlerFactory;
+    children?: React.ReactNode;
 }
 
 export class ShipGrid<ShipType extends Ship = Ship> {
@@ -128,11 +135,12 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 		this.ships.forEach((_, ship) => {this.removeShip(ship);})
 	}
 
+    
 
-    public readonly Renderer = observer(({mouseDownHandlerFactory, children}: {mouseDownHandlerFactory?: mouseDownHandlerFactory, children?: React.ReactNode}) => {
+    public readonly Renderer = observer(forwardRef<HTMLElement, ShipGridRendererProps>(({mouseDownHandlerFactory, children}, ref) => {
        
         return (
-            <section className="ship-grid">
+            <section className="ship-grid" ref={ref}>
                 <Grid rows={this.size.rows} cols={this.size.cols}/>
                 {Array.from(this.ships.entries()).map(([ship, position]) => (
                     <ship.Renderer position={position} onMouseDown={mouseDownHandlerFactory ? mouseDownHandlerFactory(ship) : undefined} />
@@ -140,5 +148,5 @@ export class ShipGrid<ShipType extends Ship = Ship> {
                 {children}
             </section>
         );
-    });
+    }));
 }

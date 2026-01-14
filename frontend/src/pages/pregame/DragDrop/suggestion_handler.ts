@@ -60,7 +60,6 @@ export class ShipRotatedEvent extends Event {
 
 export interface BaseSuggestionState {
 	source: PregameShipGrid;
-	targetShipGridHTML: Element;
 	clone: ShipDragClone;
 	originalShip: Ship;
 	currentSuggestion: {
@@ -71,6 +70,7 @@ export interface BaseSuggestionState {
 
 export abstract class BaseSuggestionHandler {
 	protected state: Partial<BaseSuggestionState> = {};
+	protected targetShipGridHTML!: HTMLElement; // !!!must be assigned on first suggestion
 
 	constructor(readonly targetShipGrid: PregameShipGrid) {}
 

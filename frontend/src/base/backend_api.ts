@@ -10,6 +10,7 @@ export { ResponseError } from "./api-client/index";
 export * as apiModels from "./api-client/models";
 import * as socketModels from "./socketModels";
 export * as socketModels from "./socketModels";
+export { Orientation } from "./socketModels";
 import { Page } from "../routing/switch_view";
 import { create, fromBinary, Message, Registry, toBinary } from "@bufbuild/protobuf"; 
 

@@ -110,7 +110,7 @@ class GarageSuggestionHandler extends BaseSuggestionHandler {
 		const detail = (event as CustomEvent<ShipInEventDetail>).detail;
 		const targetCell = detail.currentTargetCell.element;
 		const targetRow = targetCell.parentElement! as HTMLTableRowElement;
-		this.state.targetShipGridHTML ??= (event.currentTarget as HTMLElement).querySelector(".ship-grid")!;
+		this.targetShipGridHTML ??= (event.currentTarget as HTMLElement);
 		const rowIdx = targetRow.rowIndex;
 
 
@@ -127,7 +127,7 @@ class GarageSuggestionHandler extends BaseSuggestionHandler {
 			let suggestionShip = new ShipSuggestion(detail.clone);
 
 			
-			suggestionShip.suggest(this.state.targetShipGridHTML, { headRow: freeRow, headCol: 0 }, Orientation.HORIZONTAL);
+			suggestionShip.suggest(this.targetShipGridHTML, { headRow: freeRow, headCol: 0 }, Orientation.HORIZONTAL);
 
 			this.state = {
 				originalShip: detail.originalShip,
