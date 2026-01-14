@@ -1,10 +1,11 @@
 import React, { useCallback} from "react";
+import { create } from "@bufbuild/protobuf";
 
-import { useReadyContext, PregameWSPlayerReadyMessage } from "../ReadyContext.js";
+import { useReadyContext } from "../ReadyContext.js";
 import { BattleGrid } from "../BattleGrid/battle_grid.js";
 import { ShipGarage } from "../Garage/garage.js";
-import { Tooltip, TooltipPosition, Ship } from "../../../base/index.js";
-
+import { Tooltip, TooltipPosition, Ship, socketModels } from "../../../base";
+import sendPregamePlayerMessage from "../sendPregamePlayerMessage.js";
 
 
 
@@ -48,16 +49,18 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 			return;
 		}
 
-		let ships: PregameWSPlayerReadyMessage["ships"] = [];
+		let ships: socketModels.PregamePlayerSetReadyStateMessage["ships"] = [];
 		for (let [ship, position] of battleGrid.ships) {
-			ships.push({length: ship.length, orientation: ship.orientation, head_row: position.headRow, head_col: position.headCol});
+			ships.push(
+				create(socketModels.ShipSchema,
+					{length: ship.length, orientation: ship.orientation, headRow: position.headRow, headCol: position.headCol})
+				);
 		}
 
-		let WSMessage: PregameWSPlayerReadyMessage = {ships};
+		let WSMessage: socketModels.PregamePlayerSetReadyStateMessage = create(socketModels.PregamePlayerSetReadyStateMessageSchema, {ships: ships});
 
-		let message = JSON.stringify(WSMessage);
-		console.log("Sending ready message to backend:", message);
-		BackendWebSocket.socket.send(message);
+		console.log("Sending ready message to backend:", WSMessage);
+		sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
 		
 		console.log("Player is ready!");
 	}, [battleGrid, shipGarage]);
@@ -74,7 +77,6 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 }
 
 import { BattleGridInfo, RandomBattleGridGenerator } from "./random_grid.js";
-import { BackendWebSocket } from "../../../base/backend_api.js";
 
 export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
 

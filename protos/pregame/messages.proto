@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "root/model.proto";
+
+package pregame_messages;
+
+message PregameServerMessage {
+  oneof payload {
+    PregameServerReadyStateMessage ready_state = 1;
+  }
+}
+
+message  PregameServerReadyStateMessage {
+  int32 num_ready_players = 1;
+  bool self_ready = 2;
+}
+
+message PregamePlayerMessage {
+  oneof payload {
+    PregamePlayerSetReadyStateMessage set_ready_state = 1;
+  }
+}
+
+message PregamePlayerSetReadyStateMessage {
+  repeated root_models.Ship ships = 1;
+}
+

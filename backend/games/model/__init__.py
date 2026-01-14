@@ -1,2 +1,2 @@
 from .model import *
-from .websockets import *
+from .websocket_models import *

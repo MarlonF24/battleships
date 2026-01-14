@@ -16,6 +16,8 @@
   },
   "type": "module",
   "dependencies": {
+    "@bufbuild/protobuf": "^2.10.2",
+    "@bufbuild/protoc-gen-es": "^2.10.2",
     "mobx": "^6.15.0",
     "mobx-react-lite": "^4.1.1",
     "protobufjs": "^8.0.0",

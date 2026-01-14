@@ -48,20 +48,20 @@ import {
     ShipToJSON,
     ShipToJSONTyped,
 } from './Ship';
-import type { GameWSPlayerShotMessage } from './GameWSPlayerShotMessage';
+import type { GameWSGamePlayerShotMessageMessage } from './GameWSGamePlayerShotMessageMessage';
 import {
-    GameWSPlayerShotMessageFromJSON,
-    GameWSPlayerShotMessageFromJSONTyped,
-    GameWSPlayerShotMessageToJSON,
-    GameWSPlayerShotMessageToJSONTyped,
-} from './GameWSPlayerShotMessage';
-import type { GameWSServerShotResultMessage } from './GameWSServerShotResultMessage';
+    GameWSGamePlayerShotMessageMessageFromJSON,
+    GameWSGamePlayerShotMessageMessageFromJSONTyped,
+    GameWSGamePlayerShotMessageMessageToJSON,
+    GameWSGamePlayerShotMessageMessageToJSONTyped,
+} from './GameWSGamePlayerShotMessageMessage';
+import type { GameWSGameServerShotResultMessageMessage } from './GameWSGameServerShotResultMessageMessage';
 import {
-    GameWSServerShotResultMessageFromJSON,
-    GameWSServerShotResultMessageFromJSONTyped,
-    GameWSServerShotResultMessageToJSON,
-    GameWSServerShotResultMessageToJSONTyped,
-} from './GameWSServerShotResultMessage';
+    GameWSGameServerShotResultMessageMessageFromJSON,
+    GameWSGameServerShotResultMessageMessageFromJSONTyped,
+    GameWSGameServerShotResultMessageMessageToJSON,
+    GameWSGameServerShotResultMessageMessageToJSONTyped,
+} from './GameWSGameServerShotResultMessageMessage';
 import type { View } from './View';
 import {
     ViewFromJSON,
@@ -90,22 +90,16 @@ export interface Data {
     initiallyConnected: boolean;
     /**
      * 
-     * @type {Array<Ship>}
+     * @type {number}
      * @memberof Data
      */
-    ships: Array<Ship>;
+    numPlayersReady: number;
     /**
      * 
-     * @type {View}
+     * @type {boolean}
      * @memberof Data
      */
-    ownShipGrid: View;
-    /**
-     * 
-     * @type {View}
-     * @memberof Data
-     */
-    opponentShipGrid: View;
+    selfReady: boolean;
     /**
      * 
      * @type {number}
@@ -120,6 +114,18 @@ export interface Data {
     col: number;
     /**
      * 
+     * @type {View}
+     * @memberof Data
+     */
+    ownShipGrid: View;
+    /**
+     * 
+     * @type {View}
+     * @memberof Data
+     */
+    opponentShipGrid: View;
+    /**
+     * 
      * @type {boolean}
      * @memberof Data
      */
@@ -132,16 +138,10 @@ export interface Data {
     sunkShip: Ship;
     /**
      * 
-     * @type {number}
+     * @type {Array<Ship>}
      * @memberof Data
      */
-    numPlayersReady: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof Data
-     */
-    selfReady: boolean;
+    ships: Array<Ship>;
 }
 
 /**
@@ -150,15 +150,15 @@ export interface Data {
 export function instanceOfData(value: object): value is Data {
     if (!('opponentConnected' in value) || value['opponentConnected'] === undefined) return false;
     if (!('initiallyConnected' in value) || value['initiallyConnected'] === undefined) return false;
-    if (!('ships' in value) || value['ships'] === undefined) return false;
-    if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
-    if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
-    if (!('row' in value) || value['row'] === undefined) return false;
-    if (!('col' in value) || value['col'] === undefined) return false;
-    if (!('hit' in value) || value['hit'] === undefined) return false;
-    if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
     if (!('numPlayersReady' in value) || value['numPlayersReady'] === undefined) return false;
     if (!('selfReady' in value) || value['selfReady'] === undefined) return false;
+    if (!('row' in value) || value['row'] === undefined) return false;
+    if (!('col' in value) || value['col'] === undefined) return false;
+    if (!('ownShipGrid' in value) || value['ownShipGrid'] === undefined) return false;
+    if (!('opponentShipGrid' in value) || value['opponentShipGrid'] === undefined) return false;
+    if (!('hit' in value) || value['hit'] === undefined) return false;
+    if (!('sunkShip' in value) || value['sunkShip'] === undefined) return false;
+    if (!('ships' in value) || value['ships'] === undefined) return false;
     return true;
 }
 
@@ -174,15 +174,15 @@ export function DataFromJSONTyped(json: any, ignoreDiscriminator: boolean): Data
         
         'opponentConnected': json['opponentConnected'],
         'initiallyConnected': json['initiallyConnected'],
-        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
-        'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
-        'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
-        'row': json['row'],
-        'col': json['col'],
-        'hit': json['hit'],
-        'sunkShip': ShipFromJSON(json['sunkShip']),
         'numPlayersReady': json['numPlayersReady'],
         'selfReady': json['selfReady'],
+        'row': json['row'],
+        'col': json['col'],
+        'ownShipGrid': ViewFromJSON(json['ownShipGrid']),
+        'opponentShipGrid': ViewFromJSON(json['opponentShipGrid']),
+        'hit': json['hit'],
+        'sunkShip': ShipFromJSON(json['sunkShip']),
+        'ships': ((json['ships'] as Array<any>).map(ShipFromJSON)),
     };
 }
 
@@ -199,15 +199,15 @@ export function DataToJSONTyped(value?: Data | null, ignoreDiscriminator: boolea
         
         'opponentConnected': value['opponentConnected'],
         'initiallyConnected': value['initiallyConnected'],
-        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
-        'ownShipGrid': ViewToJSON(value['ownShipGrid']),
-        'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
-        'row': value['row'],
-        'col': value['col'],
-        'hit': value['hit'],
-        'sunkShip': ShipToJSON(value['sunkShip']),
         'numPlayersReady': value['numPlayersReady'],
         'selfReady': value['selfReady'],
+        'row': value['row'],
+        'col': value['col'],
+        'ownShipGrid': ViewToJSON(value['ownShipGrid']),
+        'opponentShipGrid': ViewToJSON(value['opponentShipGrid']),
+        'hit': value['hit'],
+        'sunkShip': ShipToJSON(value['sunkShip']),
+        'ships': ((value['ships'] as Array<any>).map(ShipToJSON)),
     };
 }
 

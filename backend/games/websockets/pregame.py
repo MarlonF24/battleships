@@ -8,7 +8,7 @@ from backend.logger import logger
 
 from .conn_manager import *
 
-from ..model import PregameWSServerStateMessage, PregameWSServerMessage, PregameWSPlayerReadyMessage
+from ..model import PregameServerMessage, PregamePlayerSetReadyStateMessage, PregameServerReadyStateMessage, PregamePlayerMessage
 
 from ..relations import Game, GamePhase, Player, Ship as DBShip
 
@@ -36,15 +36,16 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
     def num_ready_players(self) -> int:
         return sum(1 for conn in self.players.values() if conn.ready)
 
-    def get_ready_state(self, player_id: UUID) -> PregameWSServerStateMessage:
-        return PregameWSServerStateMessage(
-            num_players_ready=self.num_ready_players(),
+    def get_ready_state(self, player_id: UUID) -> PregameServerReadyStateMessage:
+        return PregameServerReadyStateMessage(
+            num_ready_players=self.num_ready_players(),
             self_ready=self.players[player_id].ready
         )
 
 
-class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameWSServerMessage]):
+class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage]):
     def __init__(self):
+            super().__init__()
             self.active_connections: dict[UUID, PregameGameConnections] = defaultdict(PregameGameConnections)
 
 
@@ -71,7 +72,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
     async def broadcast_ready_state(self, game: Game):
         game_conns = self.get_game_connections(game)    
         
-        await self.broadcast(game, sender=None, message=lambda pid: game_conns.get_ready_state(pid))
+        await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)))
         
 
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
@@ -79,31 +80,38 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         # initial send of current ready count
         game_connection = self.get_game_connections(game)
         
-        await self.send_personal_message(game, player, game_connection.get_ready_state(player.id))
+        await self.send_personal_message(game, player, PregameServerMessage(ready_state=game_connection.get_ready_state(player.id)))
 
         both_ready = False
 
-        async for message in websocket.iter_json():
-            logger.info(f"Received WebSocket message: {message}")
+        async for message in self.message_generator(websocket, game, player):
             
-
             if both_ready:
                 logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring message: {message}")
-                continue
-            
-            message = PregameWSPlayerReadyMessage.model_validate(message)  
-
-            await self.handle_player_ready_message(game, player, message, session)
-
-            if game_connection.num_ready_players() == 2:
-                logger.info(f"Both players ready in game {game.id}.")
-                await self.end_pregame(game, session)
+                continue    
                 
-                    
 
+            match message:
+                case PregamePlayerMessage() as message:    
+                    _, payload = betterproto.which_one_of(message, "payload")
 
+                    match payload:
+                        case PregamePlayerSetReadyStateMessage() as message:
+                            await self.handle_player_ready_message(game, player, message, session)
 
-    async def handle_player_ready_message(self, game: Game, player: Player, message: PregameWSPlayerReadyMessage, session: AsyncSession):
+                            if game_connection.num_ready_players() == 2:
+                                logger.info(f"Both players ready in game {game.id}.")
+                                await self.end_pregame(game, session)
+
+                        case _:
+                            logger.warning(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
+                
+                case _:
+                    logger.warning(f"Non-PregamePlayerMessage type received in pregame {game.id}: {message}")
+                
+                
+
+    async def handle_player_ready_message(self, game: Game, player: Player, message: PregamePlayerSetReadyStateMessage, session: AsyncSession):
         player_conn = self.get_player_connection(game, player)
         
         # update readiness state
@@ -123,3 +131,5 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
 conn_manager = PregameConnectionManager()
 
+if __name__ == "__main__":
+    pass

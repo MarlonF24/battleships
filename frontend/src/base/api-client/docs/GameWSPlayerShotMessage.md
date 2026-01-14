@@ -1,5 +1,5 @@
 
-# GameWSPlayerShotMessage
+# GameWSGamePlayerShotMessageMessage
 
 
 ## Properties
@@ -12,13 +12,13 @@ Name | Type
 ## Example
 
 ```typescript
-import type { GameWSPlayerShotMessage } from ''
+import type { GameWSGamePlayerShotMessageMessage } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "row": null,
   "col": null,
-} satisfies GameWSPlayerShotMessage
+} satisfies GameWSGamePlayerShotMessageMessage
 
 console.log(example)
 
@@ -27,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as GameWSPlayerShotMessage
+const exampleParsed = JSON.parse(exampleJSON) as GameWSGamePlayerShotMessageMessage
 console.log(exampleParsed)
 ```
 

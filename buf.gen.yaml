@@ -1,27 +1,31 @@
 version: v2
-
 clean: true
 
+managed:
+  enabled: true
+
 plugins:
-  
   - protoc_builtin: python_betterproto
-    out: backend/games/models
+    out: backend/games/model/websocket_models
     opt:
-      # This is the magic flag for Pydantic support
       - pydantic_dataclasses
       - async_lib=asyncio
-    
-  # TypeScript side
-  # This points to the ts-proto plugin you just installed via npm
-  - local: frontend\node_modules\.bin\protoc-gen-ts_proto.cmd
-    out: frontend/src/messageModels
+      - typing.310
+
+  - local: frontend\node_modules\.bin\protoc-gen-es.cmd
+    out: frontend/src/base/socketModels
     opt:
-      - env=browser
-      - oneof=unions
-      - exportCommonSymbols=false
-      - outputJsonMethods=true
-      - lowerCaseServiceMethods=true
-      - esModuleInterop=true
-      - stringEnums=true
-      - unrecognizedEnum=throw
+      - target=ts
   
+  # - local: frontend\node_modules\.bin\protoc-gen-ts_proto.cmd
+  #   out: frontend/src/base/socketModels
+  #   opt:
+  #     - env=browser
+  #     - oneof=unions
+  #     - exportCommonSymbols=false
+  #     - outputJsonMethods=true
+  #     - lowerCaseServiceMethods=true
+  #     - esModuleInterop=true
+  #     - stringEnums=true
+  #     - unrecognizedEnum=throw
+  #     - outputTypeRegistry=true

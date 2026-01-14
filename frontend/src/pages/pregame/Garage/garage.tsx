@@ -33,7 +33,7 @@ export class ShipGarage extends PregameShipGrid {
 			JSON.stringify((ships as Ship[]).map((s) => s.length))
 		);
 
-		this.shipGrid.placeShip = this.horizontalCheckDecorator(this.shipGrid.placeShip);
+		this.shipGrid.placeShip = this.HORIZONTALCheckDecorator(this.shipGrid.placeShip);
 	}
 
 	reset() { // !! only call this when removing all ships !!
@@ -69,10 +69,10 @@ export class ShipGarage extends PregameShipGrid {
 	}
 
 
-	horizontalCheckDecorator(func: (this: ShipGrid, ship: Ship, position: {headRow: number, headCol: number}) => void) {
+	HORIZONTALCheckDecorator(func: (this: ShipGrid, ship: Ship, position: {headRow: number, headCol: number}) => void) {
 		
 		function wrapper( this: ShipGrid, ship: Ship, {headRow, headCol = 0}: {headRow: number, headCol?: number} ): void {
-			if (ship.orientation != Orientation.HORIZONTAL) throw new Error("Cannot place non-horizontal ship in garage"); 
+			if (ship.orientation != Orientation.HORIZONTAL) throw new Error("Cannot place non-HORIZONTAL ship in garage"); 
 	
 			func.call(this, ship, {headRow, headCol});
 		}

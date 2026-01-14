@@ -16,37 +16,37 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface GameWSPlayerShotMessage
+ * @interface GameWSGamePlayerShotMessageMessage
  */
-export interface GameWSPlayerShotMessage {
+export interface GameWSGamePlayerShotMessageMessage {
     /**
      * 
      * @type {number}
-     * @memberof GameWSPlayerShotMessage
+     * @memberof GameWSGamePlayerShotMessageMessage
      */
     row: number;
     /**
      * 
      * @type {number}
-     * @memberof GameWSPlayerShotMessage
+     * @memberof GameWSGamePlayerShotMessageMessage
      */
     col: number;
 }
 
 /**
- * Check if a given object implements the GameWSPlayerShotMessage interface.
+ * Check if a given object implements the GameWSGamePlayerShotMessageMessage interface.
  */
-export function instanceOfGameWSPlayerShotMessage(value: object): value is GameWSPlayerShotMessage {
+export function instanceOfGameWSGamePlayerShotMessageMessage(value: object): value is GameWSGamePlayerShotMessageMessage {
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
     return true;
 }
 
-export function GameWSPlayerShotMessageFromJSON(json: any): GameWSPlayerShotMessage {
-    return GameWSPlayerShotMessageFromJSONTyped(json, false);
+export function GameWSGamePlayerShotMessageMessageFromJSON(json: any): GameWSGamePlayerShotMessageMessage {
+    return GameWSGamePlayerShotMessageMessageFromJSONTyped(json, false);
 }
 
-export function GameWSPlayerShotMessageFromJSONTyped(json: any, ignoreDiscriminator: boolean): GameWSPlayerShotMessage {
+export function GameWSGamePlayerShotMessageMessageFromJSONTyped(json: any, ignoreDiscriminator: boolean): GameWSGamePlayerShotMessageMessage {
     if (json == null) {
         return json;
     }
@@ -57,11 +57,11 @@ export function GameWSPlayerShotMessageFromJSONTyped(json: any, ignoreDiscrimina
     };
 }
 
-export function GameWSPlayerShotMessageToJSON(json: any): GameWSPlayerShotMessage {
-    return GameWSPlayerShotMessageToJSONTyped(json, false);
+export function GameWSGamePlayerShotMessageMessageToJSON(json: any): GameWSGamePlayerShotMessageMessage {
+    return GameWSGamePlayerShotMessageMessageToJSONTyped(json, false);
 }
 
-export function GameWSPlayerShotMessageToJSONTyped(value?: GameWSPlayerShotMessage | null, ignoreDiscriminator: boolean = false): any {
+export function GameWSGamePlayerShotMessageMessageToJSONTyped(value?: GameWSGamePlayerShotMessageMessage | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

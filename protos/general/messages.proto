@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package general_messages;
+
+message GeneralServerMessage {
+    oneof payload {
+        ServerOpponentConnectionMessage opponent_connection_message = 1;
+    }
+}
+
+message ServerOpponentConnectionMessage {
+    bool opponent_connected = 1;
+    bool initially_connected = 2;
+}
+
+
+message GeneralPlayerMessage {
+    oneof payload {
+        PlayerOpponentConnectionPoll opponent_connection_listening = 1;
+    }
+}
+
+message PlayerOpponentConnectionPoll {
+} 

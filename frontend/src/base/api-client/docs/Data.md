@@ -8,15 +8,15 @@ Name | Type
 ------------ | -------------
 `opponentConnected` | boolean
 `initiallyConnected` | boolean
-`ships` | [Array&lt;Ship&gt;](Ship.md)
-`ownShipGrid` | [View](View.md)
-`opponentShipGrid` | [View](View.md)
-`row` | number
-`col` | number
-`hit` | boolean
-`sunkShip` | [Ship](Ship.md)
 `numPlayersReady` | number
 `selfReady` | boolean
+`row` | number
+`col` | number
+`ownShipGrid` | [View](View.md)
+`opponentShipGrid` | [View](View.md)
+`hit` | boolean
+`sunkShip` | [Ship](Ship.md)
+`ships` | [Array&lt;Ship&gt;](Ship.md)
 
 ## Example
 
@@ -27,15 +27,15 @@ import type { Data } from ''
 const example = {
   "opponentConnected": null,
   "initiallyConnected": null,
-  "ships": null,
-  "ownShipGrid": null,
-  "opponentShipGrid": null,
-  "row": null,
-  "col": null,
-  "hit": null,
-  "sunkShip": null,
   "numPlayersReady": null,
   "selfReady": null,
+  "row": null,
+  "col": null,
+  "ownShipGrid": null,
+  "opponentShipGrid": null,
+  "hit": null,
+  "sunkShip": null,
+  "ships": null,
 } satisfies Data
 
 console.log(example)

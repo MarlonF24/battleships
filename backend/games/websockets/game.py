@@ -1,14 +1,14 @@
 from uuid import UUID
+import betterproto
 from fastapi import WebSocket
 from collections import defaultdict
 from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from pydantic import ValidationError
 
 from .conn_manager import *
 
-from ..model import GameWSServerStateMessage, GameWSServerMessage, GameWSPlayerShotMessage, WSServerOpponentConnectionMessage, ShipGrid
+from ..model import GameServerStateMessage, GameServerMessage, GamePlayerShotMessage, GamePlayerMessage, ShipGrid
 from ..relations import Game, Ship
 
 
@@ -34,21 +34,22 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
         if not self.first_to_shoot:
             self.first_to_shoot = player_id
 
-    def get_game_state(self, player_id: UUID) -> GameWSServerStateMessage:
+    def get_game_state(self, player_id: UUID) -> GameServerStateMessage:
         player_connection = self.players[player_id]
         opponent_connection = next(
             conn for pid, conn in self.players.items() if pid != player_id
         )
 
-        return GameWSServerStateMessage(
-            own_ship_grid=player_connection.ship_grid.get_own_view(),
-            opponent_ship_grid=opponent_connection.ship_grid.get_opponent_view(),
+        return GameServerStateMessage(
+            own_grid=player_connection.ship_grid.get_own_view(),
+            opponent_grid=opponent_connection.ship_grid.get_opponent_view(),
         )
     
 
 
-class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameWSServerMessage]):
+class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage]):
     def __init__(self):
+            super().__init__()
             self.active_connections: dict[UUID, GameGameConnections] = defaultdict(GameGameConnections)
 
 
@@ -89,33 +90,25 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
                     game_connections.started = True
 
 
-        await self.send_personal_message(game, player, game_connections.get_game_state(player.id))
+        await self.send_personal_message(game, player, GameServerMessage(game_state=game_connections.get_game_state(player.id)))
 
 
 
-        async for message in websocket.iter_json():
-            logger.info(f"Received WebSocket message: {message}")
+        async for message in self.message_generator(websocket, game, player):
     
-            message = GameWSPlayerShotMessage.model_validate(message)
+            message = GamePlayerMessage().parse(message)
+
+            group, payload = betterproto.which_one_of(message, "payload")
+
+            match payload:
+                case GamePlayerShotMessage() as shot_msg:
+                    pass
+                case _:
+                    logger.warning(f"Unhandled message type received in game {game.id}: ({group}) {payload}")
+                    continue
 
             # player_conn.ship_grid.shoot_at()
-
-
-
-    async def wait_for_both_players_connected(self, websocket: WebSocket):
-        async for message in websocket.iter_json():
-            logger.info(f"Received WebSocket message: {message}")
-
-            try:
-                message = WSServerOpponentConnectionMessage.model_validate(message)
-            except ValidationError as e:
-                logger.error(f"Expected GameWSServerOpponentConnectionMessage, but received different message: {e}")
-                continue
-
-            if message.opponent_connected:
-                return
                 
-
 
 conn_manager = GameConnectionManager()
 

@@ -1,15 +1,28 @@
 import { useEffect, useState } from "react";
-import { apiModels, BackendWebSocket } from "../backend_api";
+import { create } from "@bufbuild/protobuf";
+import { BackendWebSocket, socketModels, sendGeneralPlayerMessage } from "../backend_api";
+
 
 export const OpponentConnection: React.FC = () => {
-    const [connectionInfo, setConnectionInfo] = useState<apiModels.WSServerOpponentConnectionMessage>({opponentConnected: false, initiallyConnected: false});
+    const [connectionInfo, setConnectionInfo] = useState(create(socketModels.ServerOpponentConnectionMessageSchema, {opponentConnected: false, initiallyConnected: false}));
+
+
 
     useEffect(() => {
-        BackendWebSocket.registerMessageHandler((message: MessageEvent) => {
-            if (apiModels.instanceOfWSServerOpponentConnectionMessage(message)) {
-                console.log(`Opponent connection status changed: connected=${message.opponentConnected}`);
-                setConnectionInfo(message);
+        BackendWebSocket.createMessageHandler((message: socketModels.ServerMessage) => {
+            if (message.payload.case === "generalMessage") {
+                let innerPayload = message.payload.value;
+                if (innerPayload.payload.case === "opponentConnectionMessage") {
+                    let connMessage = innerPayload.payload.value;
+                    console.log(`Opponent connection status changed: connected=${connMessage.opponentConnected}`);
+                    setConnectionInfo(connMessage);
+                }
             }});
+        
+            sendGeneralPlayerMessage({
+                case: "opponentConnectionListening", 
+                value: create(socketModels.PlayerOpponentConnectionPollSchema)
+            });
     }, [])
 
     return (

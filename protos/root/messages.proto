@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "pregame/messages.proto";
+import "game/messages.proto";
+import "general/messages.proto";
+
+
+package root_messages;
+
+message PlayerMessage {
+    oneof payload {
+        general_messages.GeneralPlayerMessage general_message = 1;
+        pregame_messages.PregamePlayerMessage pregame_message = 2;
+        game_messages.GamePlayerMessage game_message = 3;
+    }
+}
+
+
+
+message ServerMessage {
+  oneof payload {
+      general_messages.GeneralServerMessage general_message = 1;
+        pregame_messages.PregameServerMessage pregame_message = 2;
+        game_messages.GameServerMessage game_message = 3;
+    }
+}
+
+
+
+
+

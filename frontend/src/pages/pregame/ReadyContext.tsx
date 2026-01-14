@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useState, useEffect } from "react";
 
-import { BackendWebSocket, Orientation, apiModels, OpponentConnection } from "../../base";
+import { BackendWebSocket, socketModels, OpponentConnection } from "../../base";
 import { useSwitchView, Page } from "../../routing/switch_view.js";
 
 interface ReadyContextType {
@@ -8,10 +8,6 @@ interface ReadyContextType {
 }
 
 const ReadyContext = createContext<ReadyContextType>(null!);
-
-export interface PregameWSPlayerReadyMessage {
-  ships: {length: number, orientation: Orientation, head_row: number, head_col: number}[];
-}
 
 
 export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNode }> = ({ gameId, children }) => {
@@ -22,9 +18,9 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   const switchView = useSwitchView();
 
 
-  const handleServerStateMessage = useCallback((message: apiModels.PregameWSServerStateMessage) => {
+  const handleServerStateMessage = useCallback((message: socketModels.PregameServerReadyStateMessage) => {
     
-    setNumReadyPlayers(message.numPlayersReady);
+    setNumReadyPlayers(message.numReadyPlayers);
     
     if (!message.selfReady) { // catch the first backend message after connecting
       setInert(false); 
@@ -33,7 +29,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
       setInert(true); 
     }
 
-    if (message.numPlayersReady === 2) {
+    if (message.numReadyPlayers === 2) {
       console.log("Both players ready! Starting game...");
       
       BackendWebSocket.socket.onclose = () => console.log("Pregame WebSocket closed after both players ready"); // server is expected to close the WS
@@ -46,15 +42,14 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   }, []);
 
 
-  const pregameWSOnMessage = useCallback((event: MessageEvent) => {
-    
-    const message = JSON.parse(event.data);
-
-    if (apiModels.instanceOfPregameWSServerStateMessage(message)) {
-      handleServerStateMessage(message);
-    
+  const pregameWSOnMessage = useCallback((event: socketModels.ServerMessage) => {
+    const outerPayload = event.payload;
+    if (outerPayload.case === "pregameMessage") {
+      let innerPayload = outerPayload.value;
+      if (innerPayload.payload.case === "readyState") {
+        handleServerStateMessage(innerPayload.payload.value);
+      }
     } 
-    
   }, []);
 
   useEffect(() => {

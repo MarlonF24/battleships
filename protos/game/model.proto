@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "root/model.proto";
+
+package game_models;
+
+
+message ShipGridView {
+    message Row {
+        repeated bool cells = 1;
+    }
+    repeated Row grid = 1;
+    repeated ActiveShip ships = 2;
+}
+
+
+
+message ActiveShip {
+    int32 length = 1;
+    root_models.Orientation orientation = 2;
+    int32 head_row = 3; 
+    int32 head_col = 4;
+    repeated bool hits = 5;
+}
+
+

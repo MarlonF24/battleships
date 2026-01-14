@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "game/model.proto";
+import "root/model.proto";
+
+package game_messages;
+
+
+message GamePlayerMessage {
+  oneof payload {
+    GamePlayerShotMessage shot = 1;
+  }
+}
+
+
+message GamePlayerShotMessage {
+    int32 x = 1;
+    int32 y = 2;
+}
+
+
+message GameServerMessage {
+  oneof payload {
+    GameServerStateMessage game_state = 1;
+    GameServerShotResultMessage shot_result = 2;
+  }
+}
+
+message GameServerStateMessage {
+    game_models.ShipGridView own_grid = 1;
+    game_models.ShipGridView opponent_grid = 2;
+}
+
+message GameServerShotResultMessage {
+    int32 x = 1;
+    int32 y = 2;
+    bool is_hit = 3;
+    root_models.Ship sunk_ship = 4;
+}
+

@@ -1,4 +1,4 @@
 version: v2
 
 modules:
-  - path: message_models
+  - path: protos

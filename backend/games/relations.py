@@ -38,8 +38,8 @@ class GamePlayerLink(Base):
     )
 
 class Orientation(enum.Enum):
-    HORIZONTAL = "horizontal"
-    VERTICAL = "vertical"
+    HORIZONTAL = 1
+    VERTICAL = 2
 
 
 class Ship(Base):

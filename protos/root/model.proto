@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package root_models;
+
+
+
+enum Orientation {
+    UNSPECIFIED = 0;
+    HORIZONTAL = 1;
+    VERTICAL = 2;
+}
+
+message Ship {
+    int32 length = 1;
+    Orientation orientation = 2;
+    int32 head_row = 3;
+    int32 head_col = 4;
+}
+
+

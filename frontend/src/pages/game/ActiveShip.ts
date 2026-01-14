@@ -1,11 +1,11 @@
 import { action, computed, makeObservable, observable } from "mobx";
-import { Ship, apiModels, Orientation, ShipPosition } from "../../base";
+import { Ship, socketModels, Orientation, ShipPosition } from "../../base";
 
-class ActiveShip extends Ship implements apiModels.ActiveShip {
+class ActiveShip extends Ship  {
     readonly headRow: number;
     readonly headCol: number;
     
-    constructor(length: number, orientation: Orientation, position: ShipPosition, public hits: boolean[] = []) {
+    constructor(length: number, orientation: socketModels.Orientation, position: ShipPosition, public hits: boolean[] = []) {
         super(length, orientation);
         this.headRow = position.headRow;
         this.headCol = position.headCol;

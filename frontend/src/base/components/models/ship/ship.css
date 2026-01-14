@@ -9,12 +9,12 @@
   /* opacity: 0.9; */
 }
 
-.ship:not(.clone)[data-orientation="horizontal"] {
+.ship:not(.clone)[data-orientation="1"] {
   width: calc(var(--cell-size) * var(--ship-length));
   height: var(--cell-size);
 }
 
-.ship:not(.clone)[data-orientation="vertical"] {
+.ship:not(.clone)[data-orientation="2"] {
   width: var(--cell-size);
   height: calc(var(--cell-size) * var(--ship-length));
 }

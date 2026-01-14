@@ -32,25 +32,25 @@ export interface Ship {
      * @type {number}
      * @memberof Ship
      */
-    length: number;
+    length?: number;
     /**
      * 
      * @type {Orientation}
      * @memberof Ship
      */
-    orientation: Orientation;
+    orientation?: Orientation;
     /**
      * 
      * @type {number}
      * @memberof Ship
      */
-    headRow: number;
+    headRow?: number;
     /**
      * 
      * @type {number}
      * @memberof Ship
      */
-    headCol: number;
+    headCol?: number;
 }
 
 
@@ -59,10 +59,6 @@ export interface Ship {
  * Check if a given object implements the Ship interface.
  */
 export function instanceOfShip(value: object): value is Ship {
-    if (!('length' in value) || value['length'] === undefined) return false;
-    if (!('orientation' in value) || value['orientation'] === undefined) return false;
-    if (!('headRow' in value) || value['headRow'] === undefined) return false;
-    if (!('headCol' in value) || value['headCol'] === undefined) return false;
     return true;
 }
 
@@ -76,10 +72,10 @@ export function ShipFromJSONTyped(json: any, ignoreDiscriminator: boolean): Ship
     }
     return {
         
-        'length': json['length'],
-        'orientation': OrientationFromJSON(json['orientation']),
-        'headRow': json['headRow'],
-        'headCol': json['headCol'],
+        'length': json['length'] == null ? undefined : json['length'],
+        'orientation': json['orientation'] == null ? undefined : OrientationFromJSON(json['orientation']),
+        'headRow': json['headRow'] == null ? undefined : json['headRow'],
+        'headCol': json['headCol'] == null ? undefined : json['headCol'],
     };
 }
 

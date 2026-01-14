@@ -46,7 +46,7 @@ async def get_ships_for_player_in_game(
         select(DBShip).where(DBShip.game_id == game.id, DBShip.player_id == player.id)
     )
  
-    test = [Ship.model_validate(ship) for ship in result.all()]
+    test = [Ship(**ship.__dict__) for ship in result.all()]
     print(f"Validated ships: {test}")
     return test
 

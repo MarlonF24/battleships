@@ -8,7 +8,6 @@ All URIs are relative to *http://localhost*
 | [**createPlayerPlayersCreatePost**](DefaultApi.md#createplayerplayerscreatepost) | **POST** /players/create | Create Player |
 | [**getGameParamsGamesGameIdParamsGet**](DefaultApi.md#getgameparamsgamesgameidparamsget) | **GET** /games/{gameId}/params | Get Game Params |
 | [**joinGameGamesGameIdJoinPost**](DefaultApi.md#joingamegamesgameidjoinpost) | **POST** /games/{gameId}/join | Join Game |
-| [**schemaDummyGamesWsSchemaDummyGet**](DefaultApi.md#schemadummygameswsschemadummyget) | **GET** /games/ws/_schema_dummy | Schema Dummy |
 | [**welcomeFullPathGet**](DefaultApi.md#welcomefullpathget) | **GET** /{full_path} | Welcome |
 
 
@@ -281,72 +280,6 @@ No authorization required
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **204** | Successful Response |  -  |
-| **422** | Validation Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
-
-
-## schemaDummyGamesWsSchemaDummyGet
-
-> any schemaDummyGamesWsSchemaDummyGet(data)
-
-Schema Dummy
-
-### Example
-
-```ts
-import {
-  Configuration,
-  DefaultApi,
-} from '';
-import type { SchemaDummyGamesWsSchemaDummyGetRequest } from '';
-
-async function example() {
-  console.log("🚀 Testing  SDK...");
-  const api = new DefaultApi();
-
-  const body = {
-    // Data
-    data: ...,
-  } satisfies SchemaDummyGamesWsSchemaDummyGetRequest;
-
-  try {
-    const data = await api.schemaDummyGamesWsSchemaDummyGet(body);
-    console.log(data);
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// Run the test
-example().catch(console.error);
-```
-
-### Parameters
-
-
-| Name | Type | Description  | Notes |
-|------------- | ------------- | ------------- | -------------|
-| **data** | [Data](Data.md) |  | |
-
-### Return type
-
-**any**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: `application/json`
-- **Accept**: `application/json`
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-| **200** | Successful Response |  -  |
 | **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

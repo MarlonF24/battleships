@@ -24,39 +24,39 @@ import {
 /**
  * 
  * @export
- * @interface GameWSServerShotResultMessage
+ * @interface GameWSGameServerShotResultMessageMessage
  */
-export interface GameWSServerShotResultMessage {
+export interface GameWSGameServerShotResultMessageMessage {
     /**
      * 
      * @type {number}
-     * @memberof GameWSServerShotResultMessage
+     * @memberof GameWSGameServerShotResultMessageMessage
      */
     row: number;
     /**
      * 
      * @type {number}
-     * @memberof GameWSServerShotResultMessage
+     * @memberof GameWSGameServerShotResultMessageMessage
      */
     col: number;
     /**
      * 
      * @type {boolean}
-     * @memberof GameWSServerShotResultMessage
+     * @memberof GameWSGameServerShotResultMessageMessage
      */
     hit: boolean;
     /**
      * 
      * @type {Ship}
-     * @memberof GameWSServerShotResultMessage
+     * @memberof GameWSGameServerShotResultMessageMessage
      */
     sunkShip: Ship | null;
 }
 
 /**
- * Check if a given object implements the GameWSServerShotResultMessage interface.
+ * Check if a given object implements the GameWSGameServerShotResultMessageMessage interface.
  */
-export function instanceOfGameWSServerShotResultMessage(value: object): value is GameWSServerShotResultMessage {
+export function instanceOfGameWSGameServerShotResultMessageMessage(value: object): value is GameWSGameServerShotResultMessageMessage {
     if (!('row' in value) || value['row'] === undefined) return false;
     if (!('col' in value) || value['col'] === undefined) return false;
     if (!('hit' in value) || value['hit'] === undefined) return false;
@@ -64,11 +64,11 @@ export function instanceOfGameWSServerShotResultMessage(value: object): value is
     return true;
 }
 
-export function GameWSServerShotResultMessageFromJSON(json: any): GameWSServerShotResultMessage {
-    return GameWSServerShotResultMessageFromJSONTyped(json, false);
+export function GameWSGameServerShotResultMessageMessageFromJSON(json: any): GameWSGameServerShotResultMessageMessage {
+    return GameWSGameServerShotResultMessageMessageFromJSONTyped(json, false);
 }
 
-export function GameWSServerShotResultMessageFromJSONTyped(json: any, ignoreDiscriminator: boolean): GameWSServerShotResultMessage {
+export function GameWSGameServerShotResultMessageMessageFromJSONTyped(json: any, ignoreDiscriminator: boolean): GameWSGameServerShotResultMessageMessage {
     if (json == null) {
         return json;
     }
@@ -81,11 +81,11 @@ export function GameWSServerShotResultMessageFromJSONTyped(json: any, ignoreDisc
     };
 }
 
-export function GameWSServerShotResultMessageToJSON(json: any): GameWSServerShotResultMessage {
-    return GameWSServerShotResultMessageToJSONTyped(json, false);
+export function GameWSGameServerShotResultMessageMessageToJSON(json: any): GameWSGameServerShotResultMessageMessage {
+    return GameWSGameServerShotResultMessageMessageToJSONTyped(json, false);
 }
 
-export function GameWSServerShotResultMessageToJSONTyped(value?: GameWSServerShotResultMessage | null, ignoreDiscriminator: boolean = false): any {
+export function GameWSGameServerShotResultMessageMessageToJSONTyped(value?: GameWSGameServerShotResultMessageMessage | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
