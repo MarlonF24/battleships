@@ -1,6 +1,6 @@
 from uuid import UUID
 from dataclasses import dataclass, field
-from typing import AsyncGenerator, Generic, TypeVar, Any, Callable
+from typing import AsyncGenerator, Generic, TypeVar, Any, Callable, overload
 from abc import ABC, abstractmethod
 import betterproto
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +8,7 @@ from fastapi import WebSocket, WebSocketException, websockets, status
 
 
 from backend.logger import logger
-from ..model import GamePlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, PlayerOpponentConnectionPoll, ServerMessage, GeneralServerMessage, GeneralPlayerMessage, PregamePlayerMessage
+from ..model import GamePlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, PlayerOpponentConnectionRequest, ServerMessage, GeneralServerMessage, GeneralPlayerMessage, PregamePlayerMessage
 from ..relations import Game, Player
 
 
@@ -37,18 +37,30 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
             raise WebSocketException(code=status._1008_POLICY_VIOLATION, reason="Requested game connections data with foreign player ID.")
 
 
-    def get_opponent_id(self, own_id: UUID) -> UUID | None:
+
+    @overload
+    def get_opponent_id(self, own_id: UUID, raise_on_missing: str) -> UUID: ...
+    @overload
+    def get_opponent_id(self, own_id: UUID, raise_on_missing: None) -> UUID | None: ...
+    def get_opponent_id(self, own_id: UUID, raise_on_missing: str | None = None) -> UUID | None:
         self.validate_player_in_game(own_id)
         
         for player_id in self.players.keys():
             if player_id != own_id:
                 return player_id
+        
+        if raise_on_missing is not None:
+            raise ValueError("Opponent ID not found.")
+        
         return None
     
     
     def currently_connected(self, player_id: UUID) -> bool:
         """Check if player is currently connected."""
-        self.validate_player_in_game(player_id)
+        try:
+            self.validate_player_in_game(player_id)
+        except WebSocketException:
+            raise WebSocketException(code=1002, reason="Trying to check connection status of a player not in the game.")
         
         return self.players[player_id].websocket.client_state == websockets.WebSocketState.CONNECTED
         
@@ -66,7 +78,17 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
             initially_connected=self.initially_connected(player_id)
         ))
     
-    
+    @overload
+    def get_opponent_connection(self, own_id: UUID, raise_on_missing: str) -> PlayerConnectionType: ...
+    @overload
+    def get_opponent_connection(self, own_id: UUID, raise_on_missing: None) -> PlayerConnectionType | None: ...
+    def get_opponent_connection(self, own_id: UUID, raise_on_missing: str | None = None) -> PlayerConnectionType | None:
+        opponent_id = self.get_opponent_id(own_id, raise_on_missing=raise_on_missing)
+        
+        if opponent_id:
+            return self.players[opponent_id]
+        
+        return None
     
 
 GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])
@@ -111,7 +133,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         
         await websocket.send_bytes(bytes(message))
 
-    async def broadcast(self, game: Game, sender: Player | None, message: ServerMessageType | GeneralServerMessage | MessageFactory, only_opponent: bool = False):
+    async def broadcast(self, game: Game, sender: Player | None, message: ServerMessageType | GeneralServerMessage | MessageFactory, only_opponent: bool = False, raise_on_closed_socket: str | None = None):
         #TODO: make more elegant, maybe remove player arg and pass sender as part in only_opponent arg
         if not sender and only_opponent:
             raise ValueError("Cannot broadcast only to opponent when sender is None.")
@@ -126,8 +148,11 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 message_instance = message
     
             
-            if connection.websocket.client_state == websockets.WebSocketState.CONNECTED:
-                await self.send_server_message(connection.websocket, message_instance)
+            if connection.websocket.client_state != websockets.WebSocketState.CONNECTED:
+                if raise_on_closed_socket is not None:
+                    raise WebSocketException(code=1002, reason=raise_on_closed_socket)
+                
+            await self.send_server_message(connection.websocket, message_instance)
 
 
     async def send_personal_message(self, game: Game, player: Player, message: ServerMessageType | GeneralServerMessage):        
@@ -149,7 +174,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         
         game_conns = self.get_game_connections(game)
         
-        if opponent := game_conns.get_opponent_id(player.id):
+        if opponent := game_conns.get_opponent_id(player.id, raise_on_missing=None):
             message = game_conns.get_connection_message(opponent)
             
             await self.send_personal_message(game, player, message) # type: ignore
@@ -157,19 +182,24 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             logger.info(f"Informed player {player.id} in game {game.id} about opponent's connection status.")
 
 
+    async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await self.connect(game, player, websocket, session)
+        await self.inform_opponent_about_own_connection(game, player)
+
+    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await self.inform_opponent_about_own_connection(game, player)
+        await self.disconnect(game, player)
 
 
     async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         try:
-            await self.connect(game, player, websocket, session)
-            await self.inform_opponent_about_own_connection(game, player)
+            await self.start_up(game, player, websocket, session)
             
             await self._handle_websocket(game, player, websocket, session)
 
         finally:
-            await self.inform_opponent_about_own_connection(game, player)
-        
-            await self.disconnect(game, player)
+            await self.clean_up(game, player, websocket, session)
+
 
 
     async def message_generator(self, websocket: WebSocket, game: Game, player: Player) -> AsyncGenerator[PlayerMessageType, None]:
@@ -182,20 +212,21 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
             _, payload = betterproto.which_one_of(message, "payload")
 
+
             match payload:
                 case GeneralPlayerMessage():
                     logger.info(f"Trying to read message as GeneralPlayerMessage in game {game.id} from player {player.id}")
                     await self.handle_general_player_message(game, player, payload)
                 case _:
-                    yield payload   
+                    yield payload  # type: ignore 
             
     
     async def handle_general_player_message(self, game: Game, player: Player, message: GeneralPlayerMessage):
         _, payload = betterproto.which_one_of(message, "payload")
         
         match payload:
-            case PlayerOpponentConnectionPoll():
-                logger.info(f"Received PlayerOpponentConnectionPoll from player {player.id} in game {game.id}: {message}")
+            case PlayerOpponentConnectionRequest():
+                logger.info(f"Received PlayerOpponentConnectionRequest from player {player.id} in game {game.id}: {message}")
                 await self.inform_self_about_opponent_connection(game, player)
             case _:
                 logger.warning(f"Received unknown GeneralPlayerMessage: {message}")

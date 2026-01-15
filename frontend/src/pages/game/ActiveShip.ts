@@ -17,6 +17,17 @@ class ActiveShip extends Ship  {
         });
     }
 
+    static fromSocketModel(model: socketModels.ActiveShip): ActiveShip {
+        return new ActiveShip(
+            model.length,
+            model.orientation,
+            {headRow: model.headRow, headCol: model.headCol},
+            model.hits
+        );
+    }
+
+
+
     get isSunk(): boolean {
         return this.hits.filter(hit => hit).length >= this.length;
     }

@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file general/messages.proto.
  */
 export const file_general_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzInsKFEdlbmVyYWxTZXJ2ZXJNZXNzYWdlElgKG29wcG9uZW50X2Nvbm5lY3Rpb25fbWVzc2FnZRgBIAEoCzIxLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZUgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCCJ6ChRHZW5lcmFsUGxheWVyTWVzc2FnZRJXCh1vcHBvbmVudF9jb25uZWN0aW9uX2xpc3RlbmluZxgBIAEoCzIuLmdlbmVyYWxfbWVzc2FnZXMuUGxheWVyT3Bwb25lbnRDb25uZWN0aW9uUG9sbEgAQgkKB3BheWxvYWQiHgocUGxheWVyT3Bwb25lbnRDb25uZWN0aW9uUG9sbEKBAQoUY29tLmdlbmVyYWxfbWVzc2FnZXNCDU1lc3NhZ2VzUHJvdG9QAaICA0dYWKoCD0dlbmVyYWxNZXNzYWdlc8oCD0dlbmVyYWxNZXNzYWdlc+ICG0dlbmVyYWxNZXNzYWdlc1xHUEJNZXRhZGF0YeoCD0dlbmVyYWxNZXNzYWdlc2IGcHJvdG8z");
+  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzInsKFEdlbmVyYWxTZXJ2ZXJNZXNzYWdlElgKG29wcG9uZW50X2Nvbm5lY3Rpb25fbWVzc2FnZRgBIAEoCzIxLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZUgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCCJ/ChRHZW5lcmFsUGxheWVyTWVzc2FnZRJcCh1vcHBvbmVudF9jb25uZWN0aW9uX2xpc3RlbmluZxgBIAEoCzIzLmdlbmVyYWxfbWVzc2FnZXMuUGxheWVyT3Bwb25lbnRDb25uZWN0aW9uTGlzdGVuaW5nSABCCQoHcGF5bG9hZCIjCiFQbGF5ZXJPcHBvbmVudENvbm5lY3Rpb25MaXN0ZW5pbmdCgQEKFGNvbS5nZW5lcmFsX21lc3NhZ2VzQg1NZXNzYWdlc1Byb3RvUAGiAgNHWFiqAg9HZW5lcmFsTWVzc2FnZXPKAg9HZW5lcmFsTWVzc2FnZXPiAhtHZW5lcmFsTWVzc2FnZXNcR1BCTWV0YWRhdGHqAg9HZW5lcmFsTWVzc2FnZXNiBnByb3RvMw");
 
 /**
  * @generated from message general_messages.GeneralServerMessage
@@ -66,9 +66,9 @@ export type GeneralPlayerMessage = Message<"general_messages.GeneralPlayerMessag
    */
   payload: {
     /**
-     * @generated from field: general_messages.PlayerOpponentConnectionPoll opponent_connection_listening = 1;
+     * @generated from field: general_messages.PlayerOpponentConnectionRequest opponent_connection_listening = 1;
      */
-    value: PlayerOpponentConnectionPoll;
+    value: PlayerOpponentConnectionRequest;
     case: "opponentConnectionListening";
   } | { case: undefined; value?: undefined };
 };
@@ -81,15 +81,15 @@ export const GeneralPlayerMessageSchema: GenMessage<GeneralPlayerMessage> = /*@_
   messageDesc(file_general_messages, 2);
 
 /**
- * @generated from message general_messages.PlayerOpponentConnectionPoll
+ * @generated from message general_messages.PlayerOpponentConnectionRequest
  */
-export type PlayerOpponentConnectionPoll = Message<"general_messages.PlayerOpponentConnectionPoll"> & {
+export type PlayerOpponentConnectionRequest = Message<"general_messages.PlayerOpponentConnectionRequest"> & {
 };
 
 /**
- * Describes the message general_messages.PlayerOpponentConnectionPoll.
- * Use `create(PlayerOpponentConnectionPollSchema)` to create a new message.
+ * Describes the message general_messages.PlayerOpponentConnectionRequest.
+ * Use `create(PlayerOpponentConnectionRequestSchema)` to create a new message.
  */
-export const PlayerOpponentConnectionPollSchema: GenMessage<PlayerOpponentConnectionPoll> = /*@__PURE__*/
+export const PlayerOpponentConnectionRequestSchema: GenMessage<PlayerOpponentConnectionRequest> = /*@__PURE__*/
   messageDesc(file_general_messages, 3);
 

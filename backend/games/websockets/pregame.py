@@ -77,6 +77,8 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)))
         
 
+    
+    
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         
         # initial send of current ready count
@@ -105,6 +107,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
                     if game_connection.num_ready_players() == 2:
                         logger.info(f"Both players ready in game {game.id}.")
                         await self.end_pregame(game, session)
+                        both_ready = True
 
                 case _:
                     logger.warning(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")

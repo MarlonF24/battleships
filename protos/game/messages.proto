@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "game/model.proto";
-import "root/model.proto";
 
 package game_messages;
 
@@ -14,8 +13,8 @@ message GamePlayerMessage {
 
 
 message GamePlayerShotMessage {
-    int32 x = 1;
-    int32 y = 2;
+    int32 row = 1;
+    int32 column = 2;
 }
 
 
@@ -23,6 +22,7 @@ message GameServerMessage {
   oneof payload {
     GameServerStateMessage game_state = 1;
     GameServerShotResultMessage shot_result = 2;
+    GameServerTurnMessage turn = 3;
   }
 }
 
@@ -32,9 +32,11 @@ message GameServerStateMessage {
 }
 
 message GameServerShotResultMessage {
-    int32 x = 1;
-    int32 y = 2;
+    int32 row = 1;
+    int32 column = 2;
     bool is_hit = 3;
-    root_models.Ship sunk_ship = 4;
+    optional game_models.ActiveShip sunk_ship = 4;
 }
 
+message GameServerTurnMessage {
+}

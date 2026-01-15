@@ -26,8 +26,7 @@
 }
 
 
-:has(> .tooltip):hover .tooltip,
-:has(> .tooltip):focus .tooltip {
+:has(> .tooltip):hover .tooltip {
 	visibility: visible;
 	opacity: var(--tooltip-opacity);
 }

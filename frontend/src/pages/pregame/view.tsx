@@ -16,7 +16,7 @@ export interface GameViewLoaderData {
 const PreGameView: React.FC = () => {
 	const { gameParams, gameId } = useLoaderData<GameViewLoaderData>();
 
-	const submittedShips = new Map(gameParams.ownShips?.map(ship => [new Ship(ship.length, ship.orientation as Orientation), {headRow: ship.headRow, headCol: ship.headCol}]));
+	const submittedShips = new Map(gameParams.ownShips?.map(ship => [new Ship(ship.length!, ship.orientation as Orientation), {headRow: ship.headRow!, headCol: ship.headCol!}]));
 
 	const battleGrid = new BattleGrid({rows: gameParams.battleGridRows, cols: gameParams.battleGridCols}, submittedShips);
 	

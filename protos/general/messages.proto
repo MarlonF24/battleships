@@ -16,9 +16,9 @@ message ServerOpponentConnectionMessage {
 
 message GeneralPlayerMessage {
     oneof payload {
-        PlayerOpponentConnectionPoll opponent_connection_listening = 1;
+        PlayerOpponentConnectionRequest opponent_connection_listening = 1;
     }
 }
 
-message PlayerOpponentConnectionPoll {
+message PlayerOpponentConnectionRequest {
 } 

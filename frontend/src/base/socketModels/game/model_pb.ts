@@ -12,16 +12,16 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file game/model.proto.
  */
 export const file_game_model: GenFile = /*@__PURE__*/
-  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyJ5CgxTaGlwR3JpZFZpZXcSKwoEZ3JpZBgBIAMoCzIdLmdhbWVfbW9kZWxzLlNoaXBHcmlkVmlldy5Sb3cSJgoFc2hpcHMYAiADKAsyFy5nYW1lX21vZGVscy5BY3RpdmVTaGlwGhQKA1JvdxINCgVjZWxscxgBIAMoCCJ9CgpBY3RpdmVTaGlwEg4KBmxlbmd0aBgBIAEoBRItCgtvcmllbnRhdGlvbhgCIAEoDjIYLnJvb3RfbW9kZWxzLk9yaWVudGF0aW9uEhAKCGhlYWRfcm93GAMgASgFEhAKCGhlYWRfY29sGAQgASgFEgwKBGhpdHMYBSADKAhCZQoPY29tLmdhbWVfbW9kZWxzQgpNb2RlbFByb3RvUAGiAgNHWFiqAgpHYW1lTW9kZWxzygIKR2FtZU1vZGVsc+ICFkdhbWVNb2RlbHNcR1BCTWV0YWRhdGHqAgpHYW1lTW9kZWxzYgZwcm90bzM", [file_root_model]);
+  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyJ9CgxTaGlwR3JpZFZpZXcSLwoIaGl0X2dyaWQYASADKAsyHS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXcuUm93EiYKBXNoaXBzGAIgAygLMhcuZ2FtZV9tb2RlbHMuQWN0aXZlU2hpcBoUCgNSb3cSDQoFY2VsbHMYASADKAgifQoKQWN0aXZlU2hpcBIOCgZsZW5ndGgYASABKAUSLQoLb3JpZW50YXRpb24YAiABKA4yGC5yb290X21vZGVscy5PcmllbnRhdGlvbhIQCghoZWFkX3JvdxgDIAEoBRIQCghoZWFkX2NvbBgEIAEoBRIMCgRoaXRzGAUgAygIQmUKD2NvbS5nYW1lX21vZGVsc0IKTW9kZWxQcm90b1ABogIDR1hYqgIKR2FtZU1vZGVsc8oCCkdhbWVNb2RlbHPiAhZHYW1lTW9kZWxzXEdQQk1ldGFkYXRh6gIKR2FtZU1vZGVsc2IGcHJvdG8z", [file_root_model]);
 
 /**
  * @generated from message game_models.ShipGridView
  */
 export type ShipGridView = Message<"game_models.ShipGridView"> & {
   /**
-   * @generated from field: repeated game_models.ShipGridView.Row grid = 1;
+   * @generated from field: repeated game_models.ShipGridView.Row hit_grid = 1;
    */
-  grid: ShipGridView_Row[];
+  hitGrid: ShipGridView_Row[];
 
   /**
    * @generated from field: repeated game_models.ActiveShip ships = 2;

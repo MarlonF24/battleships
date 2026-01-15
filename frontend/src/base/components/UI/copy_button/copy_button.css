@@ -21,8 +21,7 @@
 }
 
 
-.copy-button[data-copied="true"] {
+.copy-button:active {
 	background: var(--primary-color) !important;
 	color: #fff !important;
-	transition: background 0.07s, color 0.07s !important;
 }

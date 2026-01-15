@@ -1,34 +1,54 @@
 import { makeAutoObservable, makeObservable } from "mobx";
-import { ShipGrid, ShipPosition, Orientation, apiModels } from "../../../base";
+import { ShipGrid, ShipPosition, Orientation, apiModels, socketModels } from "../../../base";
 import HitGrid from "../HitGrid/HitGrid.js";
 import ActiveShip from "../ActiveShip.js";
 import FleetDisplay from "../FleetDisplay/FleetDisplay.js";
 
+
+type ShipLengthsType = Map<number, number> | {[length: number]: number};
 
 export class GameGrid {
     private readonly shipGrid: ShipGrid<ActiveShip>;
     private readonly hitGrid: boolean[][];
     private readonly fleetDisplay: FleetDisplay;
 
-    constructor(size: {rows: number; cols: number}, shipLengths: Map<number, number>, activeShips: ActiveShip[], hitPositions: boolean[][]) {
+    constructor(size: {rows: number; cols: number}, shipLengths: ShipLengthsType, activeShips: ActiveShip[], hitPositions: boolean[][]) {
         const shipPositions = new Map(activeShips.map(ship => [ship, {headRow: ship.headRow, headCol: ship.headCol} as ShipPosition]));
         
         this.shipGrid = new ShipGrid(size, shipPositions);
 
-         if (Array.isArray(hitPositions)) {
-            this.hitGrid = hitPositions;
+        this.hitGrid = hitPositions;
+        
+        let shipLengthsMap: Map<number, number>;
+        if (shipLengths instanceof Map) {
+            shipLengthsMap = shipLengths;
         } else {
-            this.hitGrid = Array.from({ length: size.rows }, () => Array(size.cols).fill(false));
+            shipLengthsMap = new Map(Object.entries(shipLengths).map(([lengthStr, count]) => [parseInt(lengthStr), count]));
         }
 
+
         this.fleetDisplay = new FleetDisplay(
-            shipLengths,
+            shipLengthsMap,
             activeShips
         );
 
         makeAutoObservable(this);
     } 
     
+    static fromSocketModel(size: {rows: number; cols: number}, shipLengths: ShipLengthsType, view: socketModels.ShipGridView): GameGrid {
+        const activeShips = view.ships.map(ship => ActiveShip.fromSocketModel(ship));
+        
+        const hitGrid = view.hitGrid.map(row => row.cells);
+
+        return new GameGrid(
+            size,
+            shipLengths,
+            activeShips,
+            hitGrid
+        );
+    }
+
+
     get ships(): Map<ActiveShip, ShipPosition> {
         return this.shipGrid.ships;
     }
@@ -48,7 +68,7 @@ export class GameGrid {
     }
 
 
-    readonly Renderer = ({fleetPosition}: {fleetPosition: "left" | "right"}) => {
+    readonly Renderer = ({fleetPosition}: {fleetPosition: "left" | "right"}, ) => {
         return (
             <section className="game-area">
                 {fleetPosition === "left" && <this.fleetDisplay.Renderer />}

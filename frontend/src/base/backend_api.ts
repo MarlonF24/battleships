@@ -92,9 +92,17 @@ export class BackendWebSocket {
             handler(message);
         }
 
-        if (addAsListener) socket.addEventListener("message", wrappedHandler);
         
-        return wrappedHandler;
+        const removeListener = () => {
+            socket.removeEventListener("message", wrappedHandler);
+        }
+        
+        
+        if (addAsListener) socket.addEventListener("message", wrappedHandler);
+
+
+        
+        return [wrappedHandler, removeListener];
     }
 
     static defaultOnMessage = (message: socketModels.ServerMessage) => {
@@ -151,7 +159,7 @@ export class BackendWebSocket {
         newSocket.onmessage =  this.createMessageHandler(async (message) => {
             this.defaultOnMessage(message);
             await onMessage?.(message);
-        }, false);
+        }, false)[0];
 
         
 

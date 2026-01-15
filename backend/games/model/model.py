@@ -1,3 +1,4 @@
+import random
 from pydantic import BaseModel
 from typing import Any, Collection
 
@@ -139,16 +140,27 @@ class ShipGrid(BaseModel):
 
     def get_own_view(self) -> ShipGridView:
         return ShipGridView(
-            grid=[ShipGridViewRow(cells=[cell.was_shot for cell in row]) for row in self.cells],
+            hit_grid=[ShipGridViewRow(cells=[cell.was_shot for cell in row]) for row in self.cells],
             ships=[ActiveShipLogic.to_protobuf(ship) for ship in self.ships],
         )
 
     def get_opponent_view(self) -> ShipGridView:
         return ShipGridView(
-            grid=[ShipGridViewRow(cells=[cell.was_shot for cell in row]) for row in self.cells],
+            hit_grid=[ShipGridViewRow(cells=[cell.was_shot for cell in row]) for row in self.cells],
             ships=[ActiveShipLogic.to_protobuf(ship) for ship in self.sunk_ships],
         )
     
+    def random_shot(self) -> tuple[int, int]:
+
+        rows = len(self.cells)
+        cols = len(self.cells[0]) if rows > 0 else 0
+
+        unshot_positions = [(r, c) for r in range(rows) for c in range(cols) if not self.cells[r][c].was_shot]
+
+        if not unshot_positions:
+            raise ValueError("No unshot positions available.")
+
+        return random.choice(unshot_positions)
 
 
 

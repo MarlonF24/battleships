@@ -8,11 +8,19 @@ wait_for_server() {
 
 index_python() {
     local dir=$1
+    touch "$dir/__init__.py"
     echo '"""Auto-generated package imports."""' > "$dir/__init__.py"
     for f in "$dir"/*.py; do
         [ -f "$f" ] || continue
         local name=$(basename "$f" .py)
         [[ "$name" != "__init__" ]] && echo "from .$name import *" >> "$dir/__init__.py"
+    done
+
+    # Ensure subdirectories are imported in the top-level __init__.py
+    for subdir in "$dir"/*/; do
+        [ -d "$subdir" ] || continue
+        local subname=$(basename "$subdir")
+        echo "from .$subname import *" >> "$dir/__init__.py"
     done
 }
 

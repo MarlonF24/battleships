@@ -42,8 +42,8 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
   }, []);
 
 
-  const pregameWSOnMessage = useCallback((event: socketModels.ServerMessage) => {
-    const outerPayload = event.payload;
+  const pregameWSOnMessage = useCallback((message: socketModels.ServerMessage) => {
+    const outerPayload = message.payload;
     if (outerPayload.case === "pregameMessage") {
       let innerPayload = outerPayload.value;
       if (innerPayload.payload.case === "readyState") {
@@ -61,7 +61,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
       sessionStorage.getItem("playerId")!,
       {onMessage: pregameWSOnMessage,
       onOpen: () => {setWebsocketConnected(true)},
-      onClose: () => {switchView(Page.ERROR, undefined, "Connection to server lost during pregame phase."); } // closed from server side
+      onClose: () => {switchView(Page.ERROR, gameId, "Connection to server lost during pregame phase."); } // closed from server side
     }
     );
 
@@ -71,7 +71,7 @@ export const ReadyContextProvider: React.FC<{ gameId: string, children: ReactNod
         ws.close();
       }
     }; // closed due to component unmounting
-  }, [])
+  }, [gameId])
 
   if (!websocketConnected) {
     return <div>Connecting to pregame server...</div>;

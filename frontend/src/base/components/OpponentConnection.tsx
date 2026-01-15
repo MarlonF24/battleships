@@ -21,7 +21,7 @@ export const OpponentConnection: React.FC = () => {
         
             sendGeneralPlayerMessage({
                 case: "opponentConnectionListening", 
-                value: create(socketModels.PlayerOpponentConnectionPollSchema)
+                value: create(socketModels.PlayerOpponentConnectionRequestSchema)
             });
     }, [])
 

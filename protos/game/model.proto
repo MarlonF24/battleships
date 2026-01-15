@@ -9,7 +9,7 @@ message ShipGridView {
     message Row {
         repeated bool cells = 1;
     }
-    repeated Row grid = 1;
+    repeated Row hit_grid = 1;
     repeated ActiveShip ships = 2;
 }
 
