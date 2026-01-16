@@ -2,7 +2,6 @@ import asyncio
 from uuid import UUID
 import betterproto
 from fastapi import WebSocket
-from collections import defaultdict
 from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -30,12 +29,6 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
     def add_player(self, player_id: UUID, connection: GamePlayerConnection):
         super().add_player(player_id, connection)
         
-        if player_id not in self.players:
-            self.players[player_id] = connection
-        else:
-            self.players[player_id].websocket = connection.websocket
-
-
         if not self.first_to_shoot:
             self.first_to_shoot = player_id
 
@@ -77,15 +70,15 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
 
 
 class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage, GamePlayerMessage]):
-    def __init__(self):
-            super().__init__()
-            self.active_connections: dict[UUID, GameGameConnections] = defaultdict(GameGameConnections)
-
-
+    
     async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        if self.get_player_connection(game, player):
-            await self.disconnect(game, player)  # Disconnect existing connection for this user in the game
-        
+        await super().connect(game, player, websocket, session)
+
+        if game.id not in self.active_connections:
+            self.active_connections[game.id] = GameGameConnections()
+            logger.info(f"Created new GameConnections for game {game.id}")
+
+
         ships = await session.scalars(
             select(Ship)
             .where(Ship.game_id == game.id) # type: ignore
@@ -101,7 +94,6 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         
         self.active_connections[game.id].add_player(player.id, player_connection)
         
-        await super().connect(game, player, websocket, session)
 
 
     async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
@@ -109,7 +101,10 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         if game_connections.started and game_connections.turn_player_id == player.id:
             logger.info(f"Player {player.id} disconnected during their turn in game {game.id}, taking random shot for them.")
             await self.take_random_shot_for_player(game, player, session)
+
         await super().clean_up(game, player, websocket, session)
+
+        raise NotImplementedError("Implement how active connections are eventually removed from self.active_connections in subclasses.")
 
 
     async def end_battle(self, game: Game, session: AsyncSession):

@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from uuid import UUID
 from dataclasses import dataclass, field
 from typing import AsyncGenerator, Generic, TypeVar, Any, Callable, overload
@@ -22,19 +23,25 @@ PlayerConnectionType = TypeVar('PlayerConnectionType', bound=PlayerConnection)
 class GameConnections(ABC, Generic[PlayerConnectionType]):
     players: dict[UUID, PlayerConnectionType] = field(default_factory=dict) # type: ignore
     
-    @abstractmethod
     def add_player(self, player_id: UUID, connection: PlayerConnectionType):
         if player_id not in self.players and len(self.players) >= 2:
-            raise WebSocketException(code=status._1008_POLICY_VIOLATION, reason="Attempted to add third player to game connections.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Attempted to add third player to game connections.")
         
-        ...
+        if player_id not in self.players:
+            logger.info(f"Added player {player_id} to PregameGameConnections.")
+            self.players[player_id] = connection
+        else:
+            logger.info(f"Player {player_id} reconnected. Updating connection.")
+            self.players[player_id].websocket = connection.websocket
+            
     
     def num_players(self) -> int:
         return len(self.players)
     
     def validate_player_in_game(self, player_id: UUID):
         if player_id not in self.players:
-            raise WebSocketException(code=status._1008_POLICY_VIOLATION, reason="Requested game connections data with foreign player ID.")
+            
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Requested game connections data with foreign player ID. {player_id} not found in {list(self.players.keys())}.")
 
 
 
@@ -90,6 +97,12 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
         
         return None
     
+    def remove_player(self, player_id: UUID):
+        self.validate_player_in_game(player_id)
+        
+        del self.players[player_id]
+        logger.info(f"Removed player {player_id} from GameConnections.")
+    
 
 GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])
 
@@ -104,7 +117,6 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         self.server_message_payload_map: dict[type, str] = {
             field_type : field_name for field_name, field_type in ServerMessage._betterproto.cls_by_field.items() # type: ignore
         }
-        print(self.server_message_payload_map)
 
 
     def get_game_connections(self, game: Game) -> GameConnectionsType:
@@ -119,23 +131,30 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         await websocket.accept() 
         logger.info(f"WebSocket connection accepted for game {game.id}, player {player.id}")
 
+       
+
 
     async def disconnect(self, game: Game, player: Player):
+        
+        socket = self.get_player_connection(game, player)
         try:
-            socket = self.get_player_connection(game, player)
             await socket.websocket.close() # probably redundant as fastapi should do this automatically
-        
-            logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
-        except Exception:
-            logger.info(f"WebSocket connection for game {game.id}, player {player.id} was already closed.")
+        except Exception as e:
+            logger.warning(f"Error closing WebSocket for game {game.id}, player {player.id}. Likely harmless as the socket might already be closed: {e}")
     
+        logger.info(f"WebSocket connection closed for game {game.id}, player {player.id}")
+    
+
     async def send_server_message(self, websocket: WebSocket, message: ServerMessageType | GeneralServerMessage):
-        message = ServerMessage(**{self.server_message_payload_map[type(message)]: message}) # type: ignore
+        if websocket.client_state != websockets.WebSocketState.CONNECTED:
+            raise WebSocketException(code=1002, reason="Attempting to send message on closed WebSocket.")
         
+        message = ServerMessage(**{self.server_message_payload_map[type(message)]: message}) # type: ignore
+
         await websocket.send_bytes(bytes(message))
 
     async def broadcast(self, game: Game, sender: Player | None, message: ServerMessageType | GeneralServerMessage | MessageFactory, only_opponent: bool = False, raise_on_closed_socket: str | None = None):
-        #TODO: make more elegant, maybe remove player arg and pass sender as part in only_opponent arg
+        
         if not sender and only_opponent:
             raise ValueError("Cannot broadcast only to opponent when sender is None.")
 
@@ -152,8 +171,8 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             if connection.websocket.client_state != websockets.WebSocketState.CONNECTED:
                 if raise_on_closed_socket is not None:
                     raise WebSocketException(code=1002, reason=raise_on_closed_socket)
-                
-            await self.send_server_message(connection.websocket, message_instance)
+            else:
+                await self.send_server_message(connection.websocket, message_instance)
 
 
     async def send_personal_message(self, game: Game, player: Player, message: ServerMessageType | GeneralServerMessage):        
@@ -188,21 +207,32 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         await self.inform_opponent_about_own_connection(game, player)
         await self.inform_self_about_opponent_connection(game, player)
         
-
+    @abstractmethod
     async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        if game.id not in self.active_connections:
+            raise WebSocketException(code=1002, reason="Game connections not found during cleanup.")
+        
         await self.inform_opponent_about_own_connection(game, player)
         await self.disconnect(game, player)
+        # Implement how active connections are eventually removed from self.active_connections in subclasses
+
+    @asynccontextmanager
+    async def websocket_lifecycle(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        try:
+            logger.info(f"Starting WebSocket lifecycle for game {game.id}, player {player.id}")
+            await self.start_up(game, player, websocket, session)
+            
+            yield
+
+        finally:
+            logger.info(f"Cleaning up WebSocket lifecycle for game {game.id}, player {player.id}")
+            await self.clean_up(game, player, websocket, session)
 
 
     async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        try:
-            await self.start_up(game, player, websocket, session)
+        async with self.websocket_lifecycle(game, player, websocket, session):
             
             await self._handle_websocket(game, player, websocket, session)
-
-        finally:
-            await self.clean_up(game, player, websocket, session)
-
 
 
     async def message_generator(self, websocket: WebSocket, game: Game, player: Player) -> AsyncGenerator[PlayerMessageType, None]:
@@ -227,7 +257,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                     yield payload  # type: ignore 
             
     
-    
+
     @abstractmethod
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         ...

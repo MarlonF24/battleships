@@ -1,7 +1,6 @@
 from fastapi import WebSocket
 from dataclasses import dataclass, field
 from uuid import UUID
-from collections import defaultdict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.logger import logger
@@ -23,16 +22,6 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
     players: dict[UUID, PregamePlayerConnection] = field(default_factory=dict) # type: ignore
     
 
-    def add_player(self, player_id: UUID, connection: PregamePlayerConnection):
-        super().add_player(player_id, connection)
-
-        if player_id not in self.players:
-            self.players[player_id] = PregamePlayerConnection(websocket=connection.websocket)
-   
-        else:
-            self.players[player_id].websocket = connection.websocket
-
-
     def num_ready_players(self) -> int:
         return sum(1 for conn in self.players.values() if conn.ready)
 
@@ -44,15 +33,17 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
 
 
 class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage, PregamePlayerMessage]):
-    def __init__(self):
-            super().__init__()
-            self.active_connections: dict[UUID, PregameGameConnections] = defaultdict(PregameGameConnections)
-
+    
 
     async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await super().connect(game, player, websocket, session=session)
+
+        if game.id not in self.active_connections:
+            self.active_connections[game.id] = PregameGameConnections()
+            logger.info(f"Created new GameConnections for game {game.id}")
+
         self.active_connections[game.id].add_player(player.id, PregamePlayerConnection(websocket=websocket))
         
-        await super().connect(game, player, websocket, session=session)  # session is not used in this context
 
 
     async def end_pregame(self, game: Game, session: AsyncSession):
@@ -60,9 +51,6 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         session.add(game)
         await session.commit()
 
-
-        # This seems to break things: when we have ready 2/2 then the frontend disconnects and then the finally block tries to inform opponent about disconnection, but then hes not found even though kinda weird cause it should not find the game connections in the first place ## !! ok, seems to have been a coincidence cause worked after all ?? ##
-        del self.active_connections[game.id]
 
         logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
         
@@ -77,7 +65,17 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)))
         
 
-    
+    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await super().clean_up(game, player, websocket, session)
+
+        game_conns = self.get_game_connections(game)
+        game_conns.remove_player(player.id)
+
+        if not game_conns.players:
+            del self.active_connections[game.id]
+            logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")
+
+
     
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         

@@ -1,16 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Ship, GameId, apiModels, socketModels, WebSocketProvider } from "../../base";
 
 import { BattleGrid } from "./BattleGrid/battle_grid.js";
 import { ShipGarage } from "./Garage/garage.js";
-import { ButtonBar } from "./buttons/button_bar.js";
 import { useLoaderData } from "react-router-dom";
 import { PregameWebSocketStore } from "./PregameWebsocket.js";
 import { Page, useSwitchView } from "../../routing/switch_view.js";
+import PregameActionArea from "./ActionArea.js";
 
 import "./pregame.css";
-import { useEffect } from "react";
 
 export interface GameViewLoaderData {
 	gameParams: apiModels.GameParams;
@@ -50,7 +49,7 @@ const PreGameView: React.FC = () => {
 		throw new Error("Too many ships for the game grid");
 	}
 
-	const [WS] = useState<PregameWebSocketStore>(() => new PregameWebSocketStore(gameId, () => switchView(Page.ERROR, gameId, "Connection to server lost during pregame phase.")));
+	const [WS] = useState<PregameWebSocketStore>(() => new PregameWebSocketStore(gameId, switchView));
 
 	useEffect(() => {
 		return () => {
@@ -63,11 +62,7 @@ const PreGameView: React.FC = () => {
 		<>
 			<GameId gameId={gameId} />
 			<WebSocketProvider store={WS}>	
-				<ButtonBar battleGrid={battleGrid} shipGarage={shipGarage}/>
-				<section className="game-area">
-					<battleGrid.Renderer/>
-					<shipGarage.Renderer/>
-				</section>
+				<PregameActionArea battleGrid={battleGrid} shipGarage={shipGarage}/>
 			</WebSocketProvider>
 		</>
 	);

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 
-import { action, makeObservable } from "mobx";
+import { makeObservable } from "mobx";
 
 
 import { Ship, ShipPosition, ShipGrid, Grid } from "../../base/index.js";
@@ -16,7 +16,7 @@ export abstract class PregameShipGrid  {
 	constructor(size: {rows: number; cols: number}, ships?: Map<Ship, ShipPosition>) {
 		this.shipGrid = new ShipGrid(size, ships);
 		makeObservable(this, {
-			reset: action,
+			reset: true,
 		});
 	}
 

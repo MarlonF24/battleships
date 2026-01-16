@@ -7,6 +7,7 @@ import { BackendWebSocket } from "../api";
 import { socketModels } from "../api";
 import { Page } from "../../routing/switch_view";
 import { useSwitchView } from "../../routing/switch_view";
+import { OpponentConnection } from "../components";
 
 export type ExcludeTypeField<T> = Omit<T, keyof Message<any>>;
 
@@ -24,7 +25,7 @@ export class WebSocketStore {
 
     private readonly WS: WebSocket;
 
-    constructor(page: Page.PREGAME | Page.GAME, gameId: string, protected readonly navigation: ReturnType<typeof useSwitchView>) {
+    constructor(page: Page.PREGAME | Page.GAME, readonly gameId: string, protected readonly navigation: ReturnType<typeof useSwitchView>) {
         this.registerHandler("generalMessage", this.handleGeneralServerMessage);
 
         makeObservable(this, {
@@ -92,6 +93,8 @@ export const WebSocketContext = createContext<WebSocketStore | null>(null);
 export const WebSocketProvider = ({ store, children }: { store: WebSocketStore, children: React.ReactNode }) => { 
     return (
         <WebSocketContext.Provider value={store}>
+            <OpponentConnection/>
+            <br/>
             {children}
         </WebSocketContext.Provider>
     );

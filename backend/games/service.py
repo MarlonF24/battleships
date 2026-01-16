@@ -36,5 +36,5 @@ async def join_game(player: Player, game: Game, session: AsyncSession):
         await session.commit()
     except IntegrityError:
         await session.rollback()
-        print("IntegrityError: Unable to join game.")
+        logger.error(f"Player ID {player.id} failed to join game ID {game.id}: IntegrityError")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unable to join game. It may be full or you are already joined.")

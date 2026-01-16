@@ -47,7 +47,6 @@ async def get_ships_for_player_in_game(
     )
  
     test = [Ship(**ship.__dict__) for ship in result.all()]
-    print(f"Validated ships: {test}")
     return test
 
 ShipsDep = Annotated[list[Ship], Depends(get_ships_for_player_in_game)]

@@ -1,3 +1,11 @@
+.hit-grid {
+    z-index: 10;
+}
+
+/* .hit-grid .cell {
+
+} */
+
 .red-X {
     width: var(--cell-size);
     height: var(--cell-size);

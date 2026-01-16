@@ -1,5 +1,7 @@
 from __future__ import annotations
-import os
+import os, dotenv
+dotenv.load_dotenv("backend/.env")
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, responses, staticfiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,7 +34,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(games_router)
 app.include_router(players_router)
 
-allowed =os.getenv("CORS_ALLOW_ORIGINS", "*")[1:-1].split(",")
+allowed = os.getenv("CORS_ALLOW_ORIGINS", "*")[1:-1].split(",")
 
 logger.info(f"CORS allowed origins: {allowed}")
 app.add_middleware(
@@ -51,7 +53,7 @@ app.mount("/assets", staticfiles.StaticFiles(directory=FROTENTDIR / "assets"), n
 
 @app.get("/{full_path:path}") # catch all route
 def welcome(full_path: str) -> responses.FileResponse:
-    print(f"Redirecting {full_path} to welcome")
+    logger.info(f"Redirecting to welcome page from path: {full_path}")
     return responses.FileResponse(FROTENTDIR / "index.html")
 
 

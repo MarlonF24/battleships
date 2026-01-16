@@ -18,7 +18,7 @@ interface WebSocketHandlers {
 
 
 type PlayerMessagePayload = Exclude<socketModels.PlayerMessage["payload"], {case: undefined, value?: undefined}>;
-type GeneralPlayerMessagePayload = Exclude<socketModels.GeneralPlayerMessage["payload"], {case: undefined, value?: undefined}>;
+
 
 
 export class BackendWebSocket {
@@ -32,13 +32,6 @@ export class BackendWebSocket {
     }
 
     
-    static sendGeneralPlayerMessage(message: GeneralPlayerMessagePayload): void {
-        const wrappedMessage = create(socketModels.GeneralPlayerMessageSchema, {
-            payload: message
-        });
-    
-        BackendWebSocket.sendPlayerMessage({case: "generalMessage", value: wrappedMessage});
-    }
     
     static sendPlayerMessage(message: PlayerMessagePayload): void {
         const wrappedMessage = create(socketModels.PlayerMessageSchema, {

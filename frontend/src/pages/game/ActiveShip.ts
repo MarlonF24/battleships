@@ -12,8 +12,8 @@ class ActiveShip extends Ship  {
 
         makeObservable(this, {
             hits: observable,
-            hit: action,
-            isSunk: computed
+            hit: true,
+            isSunk: true
         });
     }
 

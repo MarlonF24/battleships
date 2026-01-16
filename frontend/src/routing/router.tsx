@@ -6,7 +6,7 @@ import GameView from "../pages/game";
 import ErrorPage from "../pages/error";
 
 
-const pregameLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
+const paramsLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
   const playerId = sessionStorage.getItem("playerId")!;
   try {
@@ -25,14 +25,11 @@ const pregameLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => 
   }
 }
 
-const gameLoader: LoaderFunction = async ({ params }) => {
-  const gameId  = params.gameId!;
-  const playerId = sessionStorage.getItem("playerId")!;
-  
-  const gameState = await api.getGameParamsGamesGameIdParamsGet({ gameId, playerId });
-  return { ...gameState, gameId };
-};
-
+const loadingFallbackElement = (
+  <div className="loading-container">
+    <span className="loading-indicator">Loading Game Data...</span>
+  </div>
+);
 
 const router = createBrowserRouter([
   {
@@ -46,14 +43,15 @@ const router = createBrowserRouter([
   {
     path: "/games/:gameId/pregame",
     element: <PreGameView />,
-    loader: pregameLoader,
-    hydrateFallbackElement: <div className="loading-container"><span className="loading-indicator">Loading Game Data...</span></div>,
+    loader: paramsLoader,
+    hydrateFallbackElement: loadingFallbackElement,
     errorElement: <ErrorPage />
   },
   {
       path: "/games/:gameId/game",
     element: <GameView />,
-    loader: gameLoader,
+    loader: paramsLoader,
+    hydrateFallbackElement: loadingFallbackElement,
     errorElement: <ErrorPage />
   },
   { path: "/error",

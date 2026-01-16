@@ -68,13 +68,13 @@ export class GameGrid {
     }
 
 
-    readonly Renderer = ({fleetPosition}: {fleetPosition: "left" | "right"}, ) => {
+    readonly Renderer = ({fleetPosition, opponent}: {fleetPosition: "left" | "right", opponent: boolean} ) => {
         return (
-            <section className="game-area">
+            <section className="game-grid">
                 {fleetPosition === "left" && <this.fleetDisplay.Renderer />}
                 
                 <this.shipGrid.Renderer>
-                    <HitGrid grid={this.hitGrid}/>
+                    <HitGrid grid={this.hitGrid} shootable={opponent} />
                 </this.shipGrid.Renderer>
 
                 {fleetPosition === "right" && <this.fleetDisplay.Renderer />}

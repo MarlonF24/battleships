@@ -17,7 +17,7 @@ export class PregameWebSocketStore extends WebSocketStore {
 
       makeObservable(this, {
           readyState: observable,
-          handleReadyStateMessage: action,
+          handleReadyStateMessage: true,
       });
   }
 
@@ -34,13 +34,13 @@ export class PregameWebSocketStore extends WebSocketStore {
 
   handleReadyStateMessage = (message: socketModels.PregameServerReadyStateMessage) => {
       Object.assign(this.readyState, message);
-      console.log("Updated ready state:", this.readyState);
+      console.log("Updated ready state:, numReadyPlayers:", this.readyState.numReadyPlayers, "selfReady:", this.readyState.selfReady);
 
       if (this.readyState.numReadyPlayers === 2) {
           console.log("Both players are ready!, Switching to game view...");
           setTimeout(() => {
             this.intentionalDisconnect();
-            this.navigation(Page.GAME);
+            this.navigation(Page.GAME, this.gameId);
           }, 1500); // slight delay to allow players to see both are ready
       } 
   }
