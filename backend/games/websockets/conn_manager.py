@@ -5,10 +5,10 @@ from abc import ABC, abstractmethod
 import betterproto
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import WebSocket, WebSocketException, websockets, status
-
+from unittest.mock import patch
 
 from backend.logger import logger
-from ..model import GamePlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, PlayerOpponentConnectionRequest, ServerMessage, GeneralServerMessage, GeneralPlayerMessage, PregamePlayerMessage
+from ..model import GamePlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, ServerMessage, GeneralServerMessage, PregamePlayerMessage
 from ..relations import Game, Player
 
 
@@ -101,9 +101,10 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
     def __init__(self):
         self.active_connections: dict[UUID, GameConnectionsType] = {} 
-        self.server_message_payload_map: dict[type[betterproto.Message], str] = {
-            field_type: field_name for field_name, field_type in ServerMessage.__annotations__.items()
+        self.server_message_payload_map: dict[type, str] = {
+            field_type : field_name for field_name, field_type in ServerMessage._betterproto.cls_by_field.items() # type: ignore
         }
+        print(self.server_message_payload_map)
 
 
     def get_game_connections(self, game: Game) -> GameConnectionsType:
@@ -185,6 +186,8 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
     async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         await self.connect(game, player, websocket, session)
         await self.inform_opponent_about_own_connection(game, player)
+        await self.inform_self_about_opponent_connection(game, player)
+        
 
     async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         await self.inform_opponent_about_own_connection(game, player)
@@ -204,33 +207,26 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
     async def message_generator(self, websocket: WebSocket, game: Game, player: Player) -> AsyncGenerator[PlayerMessageType, None]:
         async for message in websocket.iter_bytes():
-
-            message = PlayerMessage().parse(message)
+          
+            # For some reason betterproto works like that Message().parse(bytes) but pydantic checks before we parse then, thus we circumvent validation like this:
+            with patch.object(betterproto.Message, "_validate_field_groups", side_effect=lambda _: None): # type: ignore
+                message_obj = PlayerMessage() 
+                message_obj.parse(message) 
 
             logger.info(f"Received WebSocket message in game {game.id} from player {player.id}")
 
 
-            _, payload = betterproto.which_one_of(message, "payload")
+            _, payload = betterproto.which_one_of(message_obj, "payload")
 
 
             match payload:
-                case GeneralPlayerMessage():
-                    logger.info(f"Trying to read message as GeneralPlayerMessage in game {game.id} from player {player.id}")
-                    await self.handle_general_player_message(game, player, payload)
+                # case GeneralPlayerMessage():
+                #     logger.info(f"Trying to read message as GeneralPlayerMessage in game {game.id} from player {player.id}")
+                    
                 case _:
                     yield payload  # type: ignore 
             
     
-    async def handle_general_player_message(self, game: Game, player: Player, message: GeneralPlayerMessage):
-        _, payload = betterproto.which_one_of(message, "payload")
-        
-        match payload:
-            case PlayerOpponentConnectionRequest():
-                logger.info(f"Received PlayerOpponentConnectionRequest from player {player.id} in game {game.id}: {message}")
-                await self.inform_self_about_opponent_connection(game, player)
-            case _:
-                logger.warning(f"Received unknown GeneralPlayerMessage: {message}")
-
     
     @abstractmethod
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):

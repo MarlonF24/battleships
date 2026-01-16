@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, use, useState, useEffectEvent } from "react";
 import { useLoaderData } from "react-router-dom";
 
 import { GameId, BackendWebSocket, OpponentConnection, socketModels } from "../../base";
@@ -7,19 +7,20 @@ import { GameViewLoaderData } from "../pregame";
 import { Page, useSwitchView } from "../../routing/switch_view";
 
 
+
 const GameView: React.FC = () => {
     const { gameParams, gameId } = useLoaderData<GameViewLoaderData>();
 
     const switchView = useSwitchView();
 
     const [websocketConnected, setWebsocketConnected] = React.useState(false);
-    
-    const [ownGrid, setOwnGrid] = React.useState<GameGrid>(null!);
 
-    const [opponentGrid, setOpponentGrid] = React.useState<GameGrid>(null!);
+    const [ownGrid, setOwnGrid] = React.useState<GameGrid | null>(null);
+    const [opponentGrid, setOpponentGrid] = React.useState<GameGrid | null>(null);
+    
+    
+    
 
-    
-    
     const handleServerStateMessage = useCallback((message: socketModels.GameServerStateMessage) => {
         const ownGridView = message.ownGrid!;
         const opponentnGridView = message.opponentGrid!;
@@ -29,7 +30,6 @@ const GameView: React.FC = () => {
             gameParams.shipLengths,
             ownGridView
         ));
-
         setOpponentGrid(GameGrid.fromSocketModel(
             {rows: gameParams.battleGridRows, cols: gameParams.battleGridCols},
             gameParams.shipLengths,
@@ -38,10 +38,14 @@ const GameView: React.FC = () => {
     
     }, []);
     
-    const handleServerShotResultMessage = useCallback((message: socketModels.GameServerShotResultMessage) => {
-        ownGrid.hit(message.row, message.column);
-    }, []);
     
+    const handleServerShotResultMessage = useEffectEvent((message: socketModels.GameServerShotResultMessage) => {
+        ownGrid!.hit(message.row, message.column);
+    });
+    
+    const handleServerTurnMessage = useCallback((message: socketModels.GameServerTurnMessage) => {
+    
+    }, []);
     
     const gameWSOnMessage = useCallback((message: socketModels.ServerMessage) => {
         const outerPayload = message.payload;
@@ -49,11 +53,17 @@ const GameView: React.FC = () => {
             const innerPayload = outerPayload.value;
             const innerPayloadCase = innerPayload.payload.case;
             
-            if (innerPayloadCase === "gameState") {
-                const gameState = innerPayload.payload.value;
-                handleServerStateMessage(gameState);
-            } else if (innerPayloadCase === "shotResult") { 
-                handleServerShotResultMessage(innerPayload.payload.value);
+            switch (innerPayloadCase) {
+                case "gameState":
+                    handleServerStateMessage(innerPayload.payload.value);
+                    break;
+                case "turn":
+                    handleServerTurnMessage(innerPayload.payload.value);
+                    break
+                case "shotResult":
+                    handleServerShotResultMessage(innerPayload.payload.value);
+                    break;
+                
             }
         }
     }, []);
@@ -74,21 +84,23 @@ const GameView: React.FC = () => {
         );
 
 
-    
         return () => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.onclose = () => console.log("Game WebSocket closed");
                 ws.close();
             }
         };
-    }, [gameId]);
+    }, [gameParams, gameId]);
 
 
 
     if (!websocketConnected) {
-        return <div>Connecting to pregame server...</div>;
+        return <div>Connecting to server...</div>;
     }
 
+    if (!ownGrid || !opponentGrid) {
+        return <div>Loading game grids...</div>;
+    }
 
 
     return (

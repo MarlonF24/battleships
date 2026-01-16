@@ -1,4 +1,4 @@
-import { Orientation, Ship, ShipPosition } from "../../../base";
+import { socketModels, Ship, ShipPosition } from "../../../base";
 
 
 interface Gap { // gapsize -> start coordinate of gap in the perp dimension
@@ -26,14 +26,14 @@ export class RandomBattleGridGenerator {
 
 		let shipToPlace = shipsToPlace[0];
 
-		const orientations = [Orientation.HORIZONTAL, Orientation.VERTICAL].sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
+		const orientations = [socketModels.Orientation.HORIZONTAL, socketModels.Orientation.VERTICAL].sort(() => 0.5 - Math.random()); // quick but imperfect shuffling
 
 		for (let orientation of orientations) {
 
 			shipToPlace.orientation = orientation;
 			let {rowGaps, colGaps} = partialSolution;
 
-			const parallelGaps = orientation == Orientation.HORIZONTAL ? rowGaps : colGaps;
+			const parallelGaps = orientation == socketModels.Orientation.HORIZONTAL ? rowGaps : colGaps;
 
 
 			let candidateParallelIdxs = parallelGaps.reduce((acc, value, index) => {
@@ -64,7 +64,7 @@ export class RandomBattleGridGenerator {
 
 						const cloneSolution = RandomBattleGridGenerator.shallowCopyBattleGridInfo(partialSolution);
 
-						let shipPosition = orientation == Orientation.HORIZONTAL ?
+						let shipPosition = orientation == socketModels.Orientation.HORIZONTAL ?
 							{headRow: candidateParallelIdx, headCol: actualPerp} :
 							{headRow: actualPerp, headCol: candidateParallelIdx};
 
@@ -104,7 +104,7 @@ export class RandomBattleGridGenerator {
 
 		let {headRow, headCol} = position;
 
-		const [parallelGaps, perpGaps, parallelIdx, perpIdx] = ship.orientation == Orientation.HORIZONTAL ? [battleGridInfo.rowGaps, battleGridInfo.colGaps, headRow, headCol] : [battleGridInfo.colGaps, battleGridInfo.rowGaps, headCol, headRow];
+		const [parallelGaps, perpGaps, parallelIdx, perpIdx] = ship.orientation == socketModels.Orientation.HORIZONTAL ? [battleGridInfo.rowGaps, battleGridInfo.colGaps, headRow, headCol] : [battleGridInfo.colGaps, battleGridInfo.rowGaps, headCol, headRow];
 
 		gapIdx = gapIdx ?? RandomBattleGridGenerator.findGapIdxContainingCoord(parallelGaps[parallelIdx], perpIdx);
 

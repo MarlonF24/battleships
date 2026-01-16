@@ -14,11 +14,3 @@ message ServerOpponentConnectionMessage {
 }
 
 
-message GeneralPlayerMessage {
-    oneof payload {
-        PlayerOpponentConnectionRequest opponent_connection_listening = 1;
-    }
-}
-
-message PlayerOpponentConnectionRequest {
-} 

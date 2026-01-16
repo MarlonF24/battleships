@@ -54,7 +54,7 @@ gen_api() {
     wait_for_server "http://localhost:8000/openapi.json"
 
     cd ../frontend
-    openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-fetch -o ./src/base/api-client
+    openapi-generator-cli generate -i http://localhost:8000/openapi.json -g typescript-fetch -o ./src/base/api/api-client
     
     kill $pid && wait $pid 2>/dev/null
     cd ..
@@ -64,7 +64,7 @@ gen_proto() {
     echo "Generating Protos..."
     buf generate
     index_python "./backend/games/model/websocket_models"
-    index_typescript "./frontend/src/base/socketModels"
+    index_typescript "./frontend/src/base/api/socketModels"
 }
 
 # --- Execution ---

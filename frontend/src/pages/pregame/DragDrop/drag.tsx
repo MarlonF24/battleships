@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Ship, Orientation } from "../../../base";
+import { Ship, socketModels } from "../../../base";
 import { ShipDragClone } from "./dynamic_ship.js";
 import { ShipInEvent, ShipOutEvent, ShipPlacedEvent, ShipRotatedEvent, EquatorCrossEvent } from "./suggestion_handler.js";
 import { PregameShipGrid } from "../PregameShipGrid.js";
@@ -87,7 +87,7 @@ export class Dragger {
 			) {
 				this.dispatchMouseOver();
 			} else if (this.state.clone.length % 2 === 0) {
-				const [oldCoordToCheck, newCoordToCheck] = this.state.clone.orientation == Orientation.HORIZONTAL ? [oldInCellX, newInCellX] : [oldInCellY, newInCellY];
+				const [oldCoordToCheck, newCoordToCheck] = this.state.clone.orientation == socketModels.Orientation.HORIZONTAL ? [oldInCellX, newInCellX] : [oldInCellY, newInCellY];
 				
 				if (oldCoordToCheck >= 0.5  !==  newCoordToCheck >= 0.5) {
 				

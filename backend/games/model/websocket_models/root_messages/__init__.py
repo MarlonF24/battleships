@@ -24,14 +24,11 @@ from .. import (
 
 @dataclass(eq=False, repr=False)
 class PlayerMessage(betterproto.Message):
-    general_message: "_general_messages__.GeneralPlayerMessage | None" = (
+    pregame_message: "_pregame_messages__.PregamePlayerMessage | None" = (
         betterproto.message_field(1, optional=True, group="payload")
     )
-    pregame_message: "_pregame_messages__.PregamePlayerMessage | None" = (
-        betterproto.message_field(2, optional=True, group="payload")
-    )
     game_message: "_game_messages__.GamePlayerMessage | None" = (
-        betterproto.message_field(3, optional=True, group="payload")
+        betterproto.message_field(2, optional=True, group="payload")
     )
 
     @model_validator(mode="after")

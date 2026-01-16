@@ -1,6 +1,6 @@
 import { override, makeObservable } from "mobx";
 
-import { Ship, ShipPosition, ShipLike, Orientation } from "../../../base";
+import { Ship, ShipPosition, ShipLike, socketModels } from "../../../base";
 import { PregameShipGrid } from "../PregameShipGrid.js";
 import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
 
@@ -174,7 +174,7 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 		centerPosition: { row: number; col: number },
 		inCellPosition?: { x: number; y: number }
 	): { headRow: number; headCol: number } {
-		if (ship.orientation === Orientation.HORIZONTAL) {
+		if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
 			let lengthOffset = Math.floor(ship.length / 2); // offset from center to head
 			let headRow = centerPosition.row;
 			let cloneHeadCol = centerPosition.col - lengthOffset;

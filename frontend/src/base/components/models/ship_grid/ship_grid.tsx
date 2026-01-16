@@ -1,18 +1,19 @@
 
 import { action, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { Ship, ShipPosition, Orientation } from "../ship/ship.js";
+import { Ship, ShipPosition } from "../ship/ship.js";
 import { Grid } from "../grid/grid.js";
 
 
 import "./ship_grid.css";
 import { forwardRef } from "react";
+import { socketModels } from "../../../api";
 
 type mouseDownHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
 
 export interface ShipLike {
     readonly length: number;
-	orientation: Orientation;
+	orientation: socketModels.Orientation;
 }
 
 type mouseDownHandlerFactory = (ship: Ship) => mouseDownHandler;
@@ -51,7 +52,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 		ship: ShipLike,
 		{headRow, headCol }: ShipPosition = {headRow: 0, headCol: 0}
 	): boolean {
-		if (ship.orientation === Orientation.HORIZONTAL) {
+		if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
 			return headCol + ship.length <= this.size.cols;
 		} else {
 			return headRow + ship.length <= this.size.rows;
@@ -75,7 +76,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 		{headRow, headCol}: ShipPosition,
 		disregard?: Ship
 	): boolean {
-		if (ship.orientation === Orientation.HORIZONTAL) {
+		if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
 			for (let c = headCol; c < headCol + ship.length; c++) {
 				const cell = this.shipCells[headRow][c];
 				if (cell && cell !== disregard) {
@@ -100,7 +101,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
             throw new RangeError("cannot place ship");
         
         const {headRow, headCol} = position;
-        if (ship.orientation === Orientation.HORIZONTAL) {
+        if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
             for (let c = headCol; c < headCol + ship.length; c++) {
                 this.shipCells[headRow][c] = ship;
             }
@@ -118,7 +119,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 
         const {headRow, headCol} = this.ships.get(ship)!;
 
-        if (ship.orientation === Orientation.HORIZONTAL) {
+        if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
             for (let c = headCol; c < headCol + ship.length; c++) {
                 this.shipCells[headRow][c] = null;
             }

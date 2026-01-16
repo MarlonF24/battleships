@@ -33,21 +33,4 @@ class ServerOpponentConnectionMessage(betterproto.Message):
     initially_connected: bool = betterproto.bool_field(2)
 
 
-@dataclass(eq=False, repr=False)
-class GeneralPlayerMessage(betterproto.Message):
-    opponent_connection_listening: "PlayerOpponentConnectionRequest | None" = (
-        betterproto.message_field(1, optional=True, group="payload")
-    )
-
-    @model_validator(mode="after")
-    def check_oneof(cls, values):
-        return cls._validate_field_groups(values)
-
-
-@dataclass(eq=False, repr=False)
-class PlayerOpponentConnectionRequest(betterproto.Message):
-    pass
-
-
 rebuild_dataclass(GeneralServerMessage)  # type: ignore
-rebuild_dataclass(GeneralPlayerMessage)  # type: ignore

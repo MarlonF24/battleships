@@ -119,6 +119,11 @@ class ShipGrid(BaseModel):
                 for r in range(ship.head_row, ship.head_row + ship.length):
                     self.cells[r][ship.head_col] = CellInfo(ship=ship, was_shot=False)
 
+
+    @property
+    def all_ships_sunk(self) -> bool:
+        return all(ship.is_sunk() for ship in self.ships)
+
     def shoot_at(self, row: int, col: int) -> tuple[bool, ActiveShipLogic | None]:
         if self.cells[row][col].was_shot:
             raise ValueError(f"Position ({row}, {col}) has already been shot.")

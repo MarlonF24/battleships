@@ -1,18 +1,16 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
-import { Orientation } from "../../../backend_api.js";
-export { Orientation } from "../../../backend_api.js"; // re-
+import { socketModels } from "../../../api";
 import "./ship.css";
 
 
 
-
-export function toggle_orientation(current: Orientation): Orientation;
+export function toggle_orientation(current: socketModels.Orientation): socketModels.Orientation;
 export function toggle_orientation(current: string): string;
 export function toggle_orientation(current: any): any {
-	return current === Orientation.HORIZONTAL 
-        ? Orientation.VERTICAL
-        : Orientation.HORIZONTAL;
+	return current === socketModels.Orientation.HORIZONTAL 
+        ? socketModels.Orientation.VERTICAL
+        : socketModels.Orientation.HORIZONTAL;
 }
 
 
@@ -24,8 +22,8 @@ export interface ShipPosition {
 
 export class Ship {
 	
-	constructor(readonly length: number, public orientation: Orientation = Orientation.HORIZONTAL) {
-		if (this.orientation === Orientation.UNSPECIFIED) {
+	constructor(readonly length: number, public orientation: socketModels.Orientation = socketModels.Orientation.HORIZONTAL) {
+		if (this.orientation === socketModels.Orientation.UNSPECIFIED) {
 			console.warn("Invalid orientation for Ship: UNSPECIFIED. Defaulting to HORIZONTAL.");
 		}
 	}

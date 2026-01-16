@@ -13,14 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { Orientation } from './Orientation';
-import {
-    OrientationFromJSON,
-    OrientationFromJSONTyped,
-    OrientationToJSON,
-    OrientationToJSONTyped,
-} from './Orientation';
-
 /**
  * 
  * @export
@@ -35,10 +27,10 @@ export interface Ship {
     length?: number;
     /**
      * 
-     * @type {Orientation}
+     * @type {number}
      * @memberof Ship
      */
-    orientation?: Orientation;
+    orientation?: number;
     /**
      * 
      * @type {number}
@@ -52,8 +44,6 @@ export interface Ship {
      */
     headCol?: number;
 }
-
-
 
 /**
  * Check if a given object implements the Ship interface.
@@ -73,9 +63,9 @@ export function ShipFromJSONTyped(json: any, ignoreDiscriminator: boolean): Ship
     return {
         
         'length': json['length'] == null ? undefined : json['length'],
-        'orientation': json['orientation'] == null ? undefined : OrientationFromJSON(json['orientation']),
-        'headRow': json['headRow'] == null ? undefined : json['headRow'],
-        'headCol': json['headCol'] == null ? undefined : json['headCol'],
+        'orientation': json['orientation'] == null ? undefined : json['orientation'],
+        'headRow': json['head_row'] == null ? undefined : json['head_row'],
+        'headCol': json['head_col'] == null ? undefined : json['head_col'],
     };
 }
 
@@ -91,9 +81,9 @@ export function ShipToJSONTyped(value?: Ship | null, ignoreDiscriminator: boolea
     return {
         
         'length': value['length'],
-        'orientation': OrientationToJSON(value['orientation']),
-        'headRow': value['headRow'],
-        'headCol': value['headCol'],
+        'orientation': value['orientation'],
+        'head_row': value['headRow'],
+        'head_col': value['headCol'],
     };
 }
 

@@ -1,33 +1,23 @@
-import { useEffect, useState } from "react";
-import { create } from "@bufbuild/protobuf";
-import { BackendWebSocket, socketModels, sendGeneralPlayerMessage } from "../backend_api";
+import { observer } from "mobx-react-lite";
 
-
-export const OpponentConnection: React.FC = () => {
-    const [connectionInfo, setConnectionInfo] = useState(create(socketModels.ServerOpponentConnectionMessageSchema, {opponentConnected: false, initiallyConnected: false}));
+import { useWebSocketStore } from "../context"; 
 
 
 
-    useEffect(() => {
-        BackendWebSocket.createMessageHandler((message: socketModels.ServerMessage) => {
-            if (message.payload.case === "generalMessage") {
-                let innerPayload = message.payload.value;
-                if (innerPayload.payload.case === "opponentConnectionMessage") {
-                    let connMessage = innerPayload.payload.value;
-                    console.log(`Opponent connection status changed: connected=${connMessage.opponentConnected}`);
-                    setConnectionInfo(connMessage);
-                }
-            }});
-        
-            sendGeneralPlayerMessage({
-                case: "opponentConnectionListening", 
-                value: create(socketModels.PlayerOpponentConnectionRequestSchema)
-            });
-    }, [])
+export const OpponentConnection: React.FC = observer(() => {
+    const webSocketStore = useWebSocketStore();
+    const { opponentConnected, initiallyConnected } = webSocketStore.opponentConnection;
+
+    let statusMessage = "Waiting for opponent to connect...";
+    if (opponentConnected) {
+        statusMessage = "Opponent connected";
+    } else if (initiallyConnected) {
+        statusMessage = "Opponent disconnected";
+    }
 
     return (
         <span style={{ fontStyle: "italic", color: "var(--secondary-text-color)" }}>
-            {connectionInfo.opponentConnected ? "Opponent connected" : connectionInfo.initiallyConnected ? "Opponent disconnected" : "Waiting for opponent to connect..."}
+            {statusMessage}
         </span>
     );
-}
+})

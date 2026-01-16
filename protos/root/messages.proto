@@ -9,9 +9,8 @@ package root_messages;
 
 message PlayerMessage {
     oneof payload {
-        general_messages.GeneralPlayerMessage general_message = 1;
-        pregame_messages.PregamePlayerMessage pregame_message = 2;
-        game_messages.GamePlayerMessage game_message = 3;
+        pregame_messages.PregamePlayerMessage pregame_message = 1;
+        game_messages.GamePlayerMessage game_message = 2;
     }
 }
 

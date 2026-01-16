@@ -1,6 +1,5 @@
-
 import { createBrowserRouter, LoaderFunction, Navigate } from "react-router-dom";
-import { api, ResponseError, unpackErrorMessage } from "../base/index.js";
+import { api, ResponseError, unpackErrorMessage } from "../base";
 import PreGameView, { GameViewLoaderData } from "../pages/pregame";
 import  WelcomeView  from "../pages/welcome";
 import GameView from "../pages/game";

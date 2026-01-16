@@ -1,10 +1,10 @@
 import React, { useCallback} from "react";
 import { create } from "@bufbuild/protobuf";
 
-import { useReadyContext } from "../ReadyContext.js";
+import {  PregameWebSocketStore } from "../PregameWebsocket.js";
 import { BattleGrid } from "../BattleGrid/battle_grid.js";
 import { ShipGarage } from "../Garage/garage.js";
-import { Tooltip, TooltipPosition, Ship, socketModels } from "../../../base";
+import { useWebSocketStore, Tooltip, TooltipPosition, Ship, socketModels } from "../../../base";
 import sendPregamePlayerMessage from "../sendPregamePlayerMessage.js";
 
 
@@ -32,9 +32,9 @@ interface ReadyButtonProps extends PregameButtonProps {
 
 
 
-export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}) => {
+export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, battleGrid}) => {
 	
-	const { numReadyPlayers } = useReadyContext();
+	const store = useWebSocketStore(PregameWebSocketStore);
 	
 	const clickHandler = useCallback(() => {
 		if (shipGarage.ships.size > 0) {
@@ -69,14 +69,15 @@ export const ReadyButton: React.FC<ReadyButtonProps> = ({shipGarage, battleGrid}
 
 	return (
 		<button className="btn-success" onClick={clickHandler}> 
-		Ready! <span className="num-ready-players">{`(${numReadyPlayers}/2)`}</span> 
+		Ready! <span className="num-ready-players">{`(${store.readyState.numReadyPlayers}/2)`}</span> 
 		</button>
 	);
 
 	
-}
+})
 
 import { BattleGridInfo, RandomBattleGridGenerator } from "./random_grid.js";
+import { observer } from "mobx-react-lite";
 
 export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
 

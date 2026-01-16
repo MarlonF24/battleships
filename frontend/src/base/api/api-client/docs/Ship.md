@@ -1,20 +1,28 @@
 
-# Orientation
+# Ship
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
+`length` | number
+`orientation` | number
+`headRow` | number
+`headCol` | number
 
 ## Example
 
 ```typescript
-import type { Orientation } from ''
+import type { Ship } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-} satisfies Orientation
+  "length": null,
+  "orientation": null,
+  "headRow": null,
+  "headCol": null,
+} satisfies Ship
 
 console.log(example)
 
@@ -23,7 +31,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as Orientation
+const exampleParsed = JSON.parse(exampleJSON) as Ship
 console.log(exampleParsed)
 ```
 

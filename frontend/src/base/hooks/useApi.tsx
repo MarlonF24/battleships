@@ -1,4 +1,4 @@
-import { ResponseError, unpackErrorMessage } from "../backend_api.js";
+import { ResponseError, unpackErrorMessage } from "../api";
 import { useAsync } from "./useAsync.js";
 
 

@@ -1,6 +1,6 @@
-import { observable, override, makeObservable } from "mobx";
+import { override, makeObservable } from "mobx";
 
-import { Ship, ShipLike, Orientation, ShipGrid } from "../../../base";
+import { Ship, ShipLike, socketModels, ShipGrid } from "../../../base";
 import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
 import { PregameShipGrid } from "../PregameShipGrid.js";
 
@@ -42,7 +42,7 @@ export class ShipGarage extends PregameShipGrid {
 		const initialShips = JSON.parse(sessionStorage.getItem("initial-garage")!);
 
 		initialShips.forEach((length: number, index: number) => {
-			this.shipGrid.placeShip(new Ship(length, Orientation.HORIZONTAL), {headRow: index, headCol: 0});
+			this.shipGrid.placeShip(new Ship(length, socketModels.Orientation.HORIZONTAL), {headRow: index, headCol: 0});
 		});
 	}
 
@@ -72,7 +72,7 @@ export class ShipGarage extends PregameShipGrid {
 	HORIZONTALCheckDecorator(func: (this: ShipGrid, ship: Ship, position: {headRow: number, headCol: number}) => void) {
 		
 		function wrapper( this: ShipGrid, ship: Ship, {headRow, headCol = 0}: {headRow: number, headCol?: number} ): void {
-			if (ship.orientation != Orientation.HORIZONTAL) throw new Error("Cannot place non-HORIZONTAL ship in garage"); 
+			if (ship.orientation != socketModels.Orientation.HORIZONTAL) throw new Error("Cannot place non-HORIZONTAL ship in garage"); 
 	
 			func.call(this, ship, {headRow, headCol});
 		}
@@ -127,7 +127,7 @@ class GarageSuggestionHandler extends BaseSuggestionHandler {
 			let suggestionShip = new ShipSuggestion(detail.clone);
 
 			
-			suggestionShip.suggest(this.targetShipGridHTML, { headRow: freeRow, headCol: 0 }, Orientation.HORIZONTAL);
+			suggestionShip.suggest(this.targetShipGridHTML, { headRow: freeRow, headCol: 0 }, socketModels.Orientation.HORIZONTAL);
 
 			this.state = {
 				originalShip: detail.originalShip,

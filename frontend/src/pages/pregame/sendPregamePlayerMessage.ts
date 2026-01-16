@@ -7,7 +7,7 @@ const sendPregamePlayerMessage = (message: PregamePlayerMessagePayload): void =>
     const wrappedMessage = create(socketModels.PregamePlayerMessageSchema, {
         payload: message
     });
-    
+    console.log("Sending pregame player message:", wrappedMessage);
     BackendWebSocket.sendPlayerMessage({case: "pregameMessage", value: wrappedMessage});
 }
 

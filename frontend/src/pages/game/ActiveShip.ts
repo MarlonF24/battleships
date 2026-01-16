@@ -1,5 +1,5 @@
 import { action, computed, makeObservable, observable } from "mobx";
-import { Ship, socketModels, Orientation, ShipPosition } from "../../base";
+import { Ship, socketModels, ShipPosition } from "../../base";
 
 class ActiveShip extends Ship  {
     readonly headRow: number;

@@ -1,32 +1,7 @@
-declare global {
-    interface Window {
-        BACKEND_ORIGIN: string;
-    }
-}
+import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 
-
-import { DefaultApi, Configuration, ResponseError } from "./api-client/index";
-export { ResponseError } from "./api-client/index";
-export * as apiModels from "./api-client/models";
 import * as socketModels from "./socketModels";
-export * as socketModels from "./socketModels";
-export { Orientation } from "./socketModels";
-import { Page } from "../routing/switch_view";
-import { create, fromBinary, Message, Registry, toBinary } from "@bufbuild/protobuf"; 
-
-export async function unpackErrorMessage(error: ResponseError): Promise<string> {
-    const response = await error.response.json();
-    const detail = response.detail instanceof Array ? response.detail[0] : response.detail;
-    const message = typeof detail === "string" ? detail : detail.msg;
-    return error.response.status + ": " + message;
-}
-
-const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN ?? window.location.origin;
-
-window.BACKEND_ORIGIN = BACKEND_ORIGIN;
-
-export const api = new DefaultApi(new Configuration({ basePath: `http://${BACKEND_ORIGIN}` }));
-
+import { Page } from "../../routing/switch_view";
 
 interface CurrentSocket {
     readonly socket: WebSocket;
@@ -41,47 +16,40 @@ interface WebSocketHandlers {
 }
 
 
-// export type CaseFromValue<T, V> = T extends { case: infer C; value: infer Val }
-//   ? (V extends Val ? C : never)
-//   : never;
-
-// type MyCase = CaseFromValue<socketModels.PlayerMessage["payload"], socketModels.GamePlayerMessage>; 
-
-
-type GeneralPlayerMessagePayload = Exclude<socketModels.GeneralPlayerMessage["payload"], {case: undefined, value?: undefined}>;
-
-
-export function sendGeneralPlayerMessage(message: GeneralPlayerMessagePayload): void {
-    const wrappedMessage = create(socketModels.GeneralPlayerMessageSchema, {
-        payload: message
-    });
-    
-
-    BackendWebSocket.sendPlayerMessage({case: "generalMessage", value: wrappedMessage});
-}
-
 
 type PlayerMessagePayload = Exclude<socketModels.PlayerMessage["payload"], {case: undefined, value?: undefined}>;
+type GeneralPlayerMessagePayload = Exclude<socketModels.GeneralPlayerMessage["payload"], {case: undefined, value?: undefined}>;
+
 
 export class BackendWebSocket {
     private static currentSocket: CurrentSocket | null = null;
 
-    static get socket(): WebSocket {
+    private static get socket(): WebSocket {
         if (!this.currentSocket) {
             throw new Error("WebSocket not connected. Call BackendWebSocket.connect(page, gameId, playerId) first.");
         }
         return this.currentSocket.socket;
     }
 
-
+    
+    static sendGeneralPlayerMessage(message: GeneralPlayerMessagePayload): void {
+        const wrappedMessage = create(socketModels.GeneralPlayerMessageSchema, {
+            payload: message
+        });
+    
+        BackendWebSocket.sendPlayerMessage({case: "generalMessage", value: wrappedMessage});
+    }
+    
     static sendPlayerMessage(message: PlayerMessagePayload): void {
         const wrappedMessage = create(socketModels.PlayerMessageSchema, {
             payload: message
         });
+        console.log("Sending player message:", wrappedMessage);
         BackendWebSocket.socket.send(toBinary(socketModels.PlayerMessageSchema, wrappedMessage));
     }
 
-    static createMessageHandler(handler: (event: socketModels.ServerMessage) => void, addAsListener: boolean = true) {
+
+    private static createMessageHandler(handler: (event: socketModels.ServerMessage) => void, addAsListener: boolean = true): {wrappedHandler: (event: MessageEvent) => void, removeHandler: () => void} {
         const socket = BackendWebSocket.socket;
 
         if (!socket) throw new Error("Tried to register message handler but WebSocket is not connected.");
@@ -93,7 +61,7 @@ export class BackendWebSocket {
         }
 
         
-        const removeListener = () => {
+        const removeHandler = () => {
             socket.removeEventListener("message", wrappedHandler);
         }
         
@@ -102,8 +70,10 @@ export class BackendWebSocket {
 
 
         
-        return [wrappedHandler, removeListener];
+        return {wrappedHandler, removeHandler};
     }
+
+
 
     static defaultOnMessage = (message: socketModels.ServerMessage) => {
         console.log("WebSocket message received:", message.payload.value);
@@ -129,11 +99,17 @@ export class BackendWebSocket {
         onError = undefined}: Partial<WebSocketHandlers> = {}): WebSocket {
         
         if (this.currentSocket) {
+            if (this.currentSocket.page === page) {
+                console.warn("Connecting to a new websocket on the same page. Closing the existing connection first. Check whether that is intended.");
+            } else {
+                console.log(`Closing existing WebSocket for ${this.currentSocket.page} connection before opening a new one for ${page}.`);
+            }
+
             this.currentSocket.socket.close();
             this.currentSocket = null;
         }
 
-        const newSocket = new WebSocket(`ws://${BACKEND_ORIGIN}/games/ws/${gameId}/${page}?playerId=${playerId}`);
+        const newSocket = new WebSocket(`ws://${window.BACKEND_ORIGIN}/games/ws/${gameId}/${page}?playerId=${playerId}`);
         newSocket.binaryType = "arraybuffer";
         
         this.currentSocket = {
@@ -156,14 +132,12 @@ export class BackendWebSocket {
             this.defaultOnClose(e);
         }
 
-        newSocket.onmessage =  this.createMessageHandler(async (message) => {
+        newSocket.onmessage = this.createMessageHandler(async (message) => {
             this.defaultOnMessage(message);
             await onMessage?.(message);
-        }, false)[0];
+        }, false).wrappedHandler;
 
         
-
-
         return this.currentSocket.socket;
     }
 }

@@ -1,5 +1,5 @@
-import { makeAutoObservable, makeObservable } from "mobx";
-import { ShipGrid, ShipPosition, Orientation, apiModels, socketModels } from "../../../base";
+import { makeAutoObservable } from "mobx";
+import { ShipGrid, ShipPosition, socketModels } from "../../../base";
 import HitGrid from "../HitGrid/HitGrid.js";
 import ActiveShip from "../ActiveShip.js";
 import FleetDisplay from "../FleetDisplay/FleetDisplay.js";
@@ -62,7 +62,7 @@ export class GameGrid {
         const shipAtPosition = this.shipGrid.shipCells[row][col];
         
         if (shipAtPosition) {
-            const shipIdx = shipAtPosition.orientation === Orientation.HORIZONTAL ? col - shipAtPosition.headCol : row - shipAtPosition.headRow;
+            const shipIdx = shipAtPosition.orientation === socketModels.Orientation.HORIZONTAL ? col - shipAtPosition.headCol : row - shipAtPosition.headRow;
             shipAtPosition.hit(shipIdx);
         }
     }
