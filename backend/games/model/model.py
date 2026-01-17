@@ -41,6 +41,9 @@ class ActiveShipLogic(Base):
         if not self.hits:
             self.hits = [False for _ in range(self.length)]
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def is_sunk(self) -> bool:
         return self.hits.count(True) >= self.length
     
@@ -67,7 +70,7 @@ class ActiveShipLogic(Base):
         
         return cls(
             length=ship.length,
-            orientation=Orientation(ship.orientation),
+            orientation=Orientation(ship.orientation.value),
             head_row=ship.head_row,
             head_col=ship.head_col,
             hits=hits,
@@ -89,14 +92,13 @@ class CellInfo(BaseModel):
     was_shot: bool = False
 
 
-class ShipGrid(BaseModel):
-    __pydantic_custom_init__ = True
+class ShipGrid():
 
     cells: list[list[CellInfo]]  # [Ship on cell, was shot?]
 
     @property
-    def ships(self) -> list[ActiveShipLogic]:
-        return [cellInfo.ship for row in self.cells for cellInfo in row if cellInfo.ship is not None]
+    def ships(self) -> set[ActiveShipLogic]:
+        return {cellInfo.ship for row in self.cells for cellInfo in row if cellInfo.ship is not None}
     
     @property
     def sunk_ships(self) -> list[ActiveShipLogic]:
@@ -104,20 +106,20 @@ class ShipGrid(BaseModel):
     
 
     def __init__(self, ships: Collection[Ship] | Collection[DBShip], rows: int, cols: int):
-        cells = [[None for _ in range(cols)] for _ in range(rows)]
-        super().__init__(cells=cells)
-
+        cells: list[list[CellInfo]] = [[CellInfo(ship=None, was_shot=False) for _ in range(cols)] for _ in range(rows)]
+    
         for _ship in ships:
             
             ship = ActiveShipLogic.from_protobuf(_ship)
-            self.ships.append(ship)
             
             if ship.orientation == Orientation.HORIZONTAL:
                 for c in range(ship.head_col, ship.head_col + ship.length):
-                    self.cells[ship.head_row][c] = CellInfo(ship=ship, was_shot=False)
+                    cells[ship.head_row][c].ship = ship
             else:
                 for r in range(ship.head_row, ship.head_row + ship.length):
-                    self.cells[r][ship.head_col] = CellInfo(ship=ship, was_shot=False)
+                    cells[r][ship.head_col].ship = ship
+
+        self.cells = cells
 
 
     @property
@@ -136,8 +138,6 @@ class ShipGrid(BaseModel):
             ship_idx = (col - ship.head_col) if ship.orientation == Orientation.HORIZONTAL else (row - ship.head_row)
             ship.hit(ship_idx)
 
-            if ship.is_sunk():
-                self.sunk_ships.append(ship)
             return True, ship if ship.is_sunk() else None
         else:
             return False, None

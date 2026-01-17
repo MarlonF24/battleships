@@ -38,8 +38,8 @@ export class WebSocketStore {
         this.WS = BackendWebSocket.connect(page, gameId, playerId, {
             onMessage: this.handleServerMessage,
             onClose: () => {
-                console.log(`WebSocket connection for ${page} closed`);
-                this.navigation(Page.ERROR, gameId, `Websocket connection for ${page} lost.`);
+                console.log(`WebSocket connection for ${page} lost/closed by server.`);
+                this.navigation(Page.ERROR, gameId, `Websocket connection for ${page} lost/closed by server.`);
             }
         });
     }

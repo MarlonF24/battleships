@@ -71,6 +71,8 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
         
         return self.players[player_id].websocket.client_state == websockets.WebSocketState.CONNECTED
         
+
+        
     
     def initially_connected(self, player_id: UUID) -> bool:
         """Check if player was connected at some time."""

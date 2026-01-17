@@ -1,5 +1,7 @@
 import { Ship, socketModels, toggle_orientation, ShipPosition } from "../../../base";
 
+import "./DynamicShip.css";
+
 type Orientation = socketModels.Orientation;
 
 abstract class DynamicShip  {

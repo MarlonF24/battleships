@@ -1,5 +1,5 @@
 from fastapi import WebSocket
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +19,6 @@ class PregamePlayerConnection(PlayerConnection):
 
 @dataclass
 class PregameGameConnections(GameConnections[PregamePlayerConnection]):
-    players: dict[UUID, PregamePlayerConnection] = field(default_factory=dict) # type: ignore
     
 
     def num_ready_players(self) -> int:
@@ -68,12 +67,16 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
     async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         await super().clean_up(game, player, websocket, session)
 
+        
         game_conns = self.get_game_connections(game)
-        game_conns.remove_player(player.id)
+        
+        if game_conns.num_players() == 2:
+            game_conns.remove_player(player.id)
+            logger.info(f"Player {player.id} disconnected from pregame in game {game.id}")
 
-        if not game_conns.players:
-            del self.active_connections[game.id]
-            logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")
+            if not game_conns.players:
+                del self.active_connections[game.id]
+                logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")
 
 
     

@@ -20,7 +20,6 @@ class GamePlayerConnection(PlayerConnection):
 
 @dataclass
 class GameGameConnections(GameConnections[GamePlayerConnection]):
-    players: dict[UUID, GamePlayerConnection] = field(default_factory=dict) # type: ignore
     first_to_shoot: UUID | None = None
     turn_player_id: UUID | None = None
     _started: bool = field(default=False, init=False)
@@ -49,11 +48,9 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
         self._ended = True
 
     
-    def get_game_state(self, player_id: UUID) -> GameServerStateMessage:
+    def get_game_state(self, player_id: UUID) -> GameServerStateMessage:  
         player_connection = self.players[player_id]
-        opponent_connection = next(
-            conn for pid, conn in self.players.items() if pid != player_id
-        )
+        opponent_connection = self.get_opponent_connection(player_id, raise_on_missing="Trying to get game state even though opponent has NEVER INITIALLY connected.")
 
         return GameServerStateMessage(
             own_grid=player_connection.ship_grid.get_own_view(),
@@ -116,10 +113,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         game_connections = self.get_game_connections(game)
-        
-        await self.send_personal_message(game, player, GameServerMessage(game_state=game_connections.get_game_state(player.id)))
-
-
+    
 
         if not game_connections.started:   
             if opponent := game_connections.get_opponent_id(player.id, raise_on_missing=None):
@@ -128,6 +122,11 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
                 if opponent_currently_connected:
                     logger.info(f"Both players connected in game {game.id}.")
                     game_connections.start_battle()
+
+                    # broadcast game state to both players
+                    await self.broadcast(game, None, lambda player_id: GameServerMessage(game_state=game_connections.get_game_state(player_id)))
+                    
+                    # notify first turn player
                     await self.send_turn_message(game, session)
 
 

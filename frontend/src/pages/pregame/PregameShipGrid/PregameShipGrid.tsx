@@ -3,10 +3,11 @@ import { useRef, useEffect } from "react";
 import { makeObservable } from "mobx";
 
 
-import { Ship, ShipPosition, ShipGrid, Grid } from "../../base/index.js";
-import { Dragger } from "./DragDrop/drag.js";
+import { Ship, ShipPosition, ShipGrid } from "../../../base";
+import { Dragger } from "../DragDrop/drag.js";
 import { observer } from "mobx-react-lite";
 
+import "./PregameShipGrid.css";
 
 export abstract class PregameShipGrid  {
 	abstract readonly shipInHandler: EventListener;
@@ -49,7 +50,7 @@ export abstract class PregameShipGrid  {
 		}, [this.shipInHandler]);
 		
 		return (
-			<div className={this.styleClassName}>
+			<div className={`${this.styleClassName} pregame-ship-grid`}>
 				<this.shipGrid.Renderer ref={shipGridRef} mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
 			</div>
 		);

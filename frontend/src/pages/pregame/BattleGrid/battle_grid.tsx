@@ -1,7 +1,7 @@
 import { override, makeObservable } from "mobx";
 
 import { Ship, ShipPosition, ShipLike, socketModels } from "../../../base";
-import { PregameShipGrid } from "../PregameShipGrid.js";
+import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
 import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
 
 import {

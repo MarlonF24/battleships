@@ -20,33 +20,4 @@
 }
 
 
-.ship:hover {
-  cursor: grab;
-  background: var(--ship-highlight-bg);
-  border-color: #1b5e20;
-  transform: scale(1.05);
-  transition: transform 0.1s, background 0.1s, border-color 0.1s;
-}
 
-.ship.clone {
-  z-index: 1000;
-  /* Keep width/height constant for clone */
-  transition: transform 0.2s, background 0.1s, border-color 0.1s;
-  transform: rotate(var(--rotation-angle, 0deg));
-  transform-origin: center;
-}
-
-.ship.clone:hover {
-  cursor: grabbing;
-}
-
-.ship.suggestion {
-  background: #fbc02d;
-  border-color: #f9a825;
-  opacity: 0.7;
-}
-
-.ship.dragged {
-  opacity: 0.7 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
