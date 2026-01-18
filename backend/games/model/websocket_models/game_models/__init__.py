@@ -17,6 +17,20 @@ from pydantic.dataclasses import rebuild_dataclass
 from .. import root_models as _root_models__
 
 
+class ShipGridViewHitState(betterproto.Enum):
+    UNKNOWN = 0
+    UNTOUCHED = 1
+    MISS = 2
+    HIT = 3
+    IMPOSSIBLE = 4
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        from pydantic_core import core_schema
+
+        return core_schema.int_schema(ge=0)
+
+
 @dataclass(eq=False, repr=False)
 class ShipGridView(betterproto.Message):
     hit_grid: "list[ShipGridViewRow]" = betterproto.message_field(1)
@@ -25,7 +39,7 @@ class ShipGridView(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ShipGridViewRow(betterproto.Message):
-    cells: "list[bool]" = betterproto.bool_field(1)
+    cells: "list[ShipGridViewHitState]" = betterproto.enum_field(1)
 
 
 @dataclass(eq=False, repr=False)
@@ -38,4 +52,5 @@ class ActiveShip(betterproto.Message):
 
 
 rebuild_dataclass(ShipGridView)  # type: ignore
+rebuild_dataclass(ShipGridViewRow)  # type: ignore
 rebuild_dataclass(ActiveShip)  # type: ignore

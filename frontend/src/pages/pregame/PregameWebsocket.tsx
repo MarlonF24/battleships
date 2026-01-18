@@ -1,10 +1,13 @@
-import { WebSocketStore, ExcludeTypeField, socketModels } from "../../base/index.js";
-import { useSwitchView, Page } from "../../routing/switch_view.js";
-import { action, makeObservable, observable } from "mobx";
+import { WebSocketStore, ExcludeMessageTypeField, socketModels, MessagePayload,  } from "../../base";
+import { Page, useSwitchView } from "../../routing/switch_view.js";
+import { makeObservable, observable } from "mobx";
+import { create } from "@bufbuild/protobuf";
+
+
 
 
 export class PregameWebSocketStore extends WebSocketStore {
-  public readonly readyState: ExcludeTypeField<socketModels.PregameServerReadyStateMessage> = {
+  public readonly readyState: ExcludeMessageTypeField<socketModels.PregameServerReadyStateMessage> = {
     numReadyPlayers: 0,
     selfReady: false,
   };
@@ -39,10 +42,20 @@ export class PregameWebSocketStore extends WebSocketStore {
       if (this.readyState.numReadyPlayers === 2) {
           console.log("Both players are ready!, Switching to game view...");
           setTimeout(() => {
-            this.intentionalDisconnect();
+            // WS disconnection is handled by unmounting of the websocket context
             this.navigation(Page.GAME, this.gameId);
           }, 1500); // slight delay to allow players to see both are ready
       } 
   }
+
+
+
+    sendPregamePlayerMessage = <T extends MessagePayload<socketModels.PregamePlayerMessage>>(message: T): void => {
+        const wrappedMessage = create(socketModels.PregamePlayerMessageSchema, {
+            payload: message
+        });
+        console.log("Sending pregame player message:", message);
+        this.sendPlayerMessage({case: "pregameMessage", value: wrappedMessage});
+    }
 
 }

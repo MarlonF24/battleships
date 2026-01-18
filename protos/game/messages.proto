@@ -22,7 +22,8 @@ message GameServerMessage {
   oneof payload {
     GameServerStateMessage game_state = 1;
     GameServerShotResultMessage shot_result = 2;
-    GameServerTurnMessage turn = 3;
+    GameServerShotMessage shot = 3;
+    GameServerTurnMessage turn = 4;
   }
 }
 
@@ -32,10 +33,14 @@ message GameServerStateMessage {
 }
 
 message GameServerShotResultMessage {
-    int32 row = 1;
-    int32 column = 2;
+    GameServerShotMessage shot = 1;
     bool is_hit = 3;
     optional game_models.ActiveShip sunk_ship = 4;
+}
+
+message GameServerShotMessage {
+    int32 row = 1;
+    int32 column = 2;
 }
 
 message GameServerTurnMessage {

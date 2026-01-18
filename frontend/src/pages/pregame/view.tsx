@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 
 import { Ship, GameId, apiModels, socketModels, WebSocketProvider } from "../../base";
 
@@ -6,7 +6,7 @@ import { BattleGrid } from "./BattleGrid/battle_grid.js";
 import { ShipGarage } from "./Garage/garage.js";
 import { useLoaderData } from "react-router-dom";
 import { PregameWebSocketStore } from "./PregameWebsocket.js";
-import { Page, useSwitchView } from "../../routing/switch_view.js";
+import { useSwitchView } from "../../routing/switch_view.js";
 import PregameActionArea from "./ActionArea.js";
 
 import "./pregame.css";
@@ -49,19 +49,13 @@ const PreGameView: React.FC = () => {
 		throw new Error("Too many ships for the game grid");
 	}
 
-	const [WS] = useState<PregameWebSocketStore>(() => new PregameWebSocketStore(gameId, switchView));
 
-	useEffect(() => {
-		return () => {
-			WS.intentionalDisconnect();
-		};
-	}, [gameId]);
 
 	
 	return (
 		<>
 			<GameId gameId={gameId} />
-			<WebSocketProvider store={WS}>	
+			<WebSocketProvider storeClass={PregameWebSocketStore} args={[gameId, switchView]}>	
 				<PregameActionArea battleGrid={battleGrid} shipGarage={shipGarage}/>
 			</WebSocketProvider>
 		</>

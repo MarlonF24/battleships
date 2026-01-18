@@ -1,13 +1,13 @@
 
 import { action, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { Ship, ShipPosition } from "../ship/ship.js";
-import { Grid } from "../grid/grid.js";
+import { Ship, ShipPosition } from "../Ship/Ship.js";
+import { Grid } from "../Grid/Grid.js";
 
 
-import "./ship_grid.css";
+import "./ShipGrid.css";
 import { forwardRef } from "react";
-import { socketModels } from "../../../api";
+import { socketModels } from "../../../api/index.js";
 
 type mouseDownHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
 
@@ -26,7 +26,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
     ships: Map<ShipType, ShipPosition>;
     shipCells: (ShipType | null)[][];   
 
-    constructor(readonly size: {rows: number; cols: number}, ships?: Map<ShipType, ShipPosition>) {
+    constructor(readonly size: {rows: number; cols: number}, ships?: Map<ShipType, ShipPosition>, protected readonly requireGaps: boolean = true) {
         this.ships = ships ?? new Map();
         this.shipCells = Array.from({ length: size.rows }, () => Array(size.cols).fill(null));
 
@@ -52,6 +52,8 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 		ship: ShipLike,
 		{headRow, headCol }: ShipPosition = {headRow: 0, headCol: 0}
 	): boolean {
+        if (headRow < 0 || headCol < 0) return false;
+
 		if (ship.orientation === socketModels.Orientation.HORIZONTAL) {
 			return headCol + ship.length <= this.size.cols;
 		} else {
@@ -60,16 +62,65 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 	}
 
 
-    canPlaceShip(ship: ShipLike, {headRow, headCol}: ShipPosition): boolean {
-		// basic bounds
-		if (headRow < 0 || headCol < 0) return false;
-
+    canPlaceShip(ship: ShipLike, {headRow, headCol}: ShipPosition, disregard?: Ship): boolean {
 		if (!this.shipFitsBounds(ship, {headRow, headCol})) return false;
 
-		if (!this.shipHasNoOverlap(ship, {headRow, headCol})) return false;
+		if (!this.shipHasNoOverlap(ship, {headRow, headCol}, disregard)) return false;
+
+        if (this.requireGaps) {
+            if (this.getShipSurroundingCoords(ship, {headRow, headCol}).some(({row, col}) => {
+                return this.shipCells[row][col] !== null && this.shipCells[row][col] !== disregard;
+            })) {
+                return false;
+            }
+        }
 
 		return true;
 	}
+
+    private static shipCoordRanges(
+        ship: ShipLike,
+        {headRow, headCol}: ShipPosition
+    ) {
+        return ship.orientation === socketModels.Orientation.HORIZONTAL
+        ? {row: [headRow, headRow], col: [headCol, headCol + ship.length - 1]}
+        : {row: [headRow, headRow + ship.length - 1], col: [headCol, headCol]}
+        ;
+    }
+
+    shipCoords(ship: ShipLike,position: ShipPosition) {
+        return new Set(Array.from({length: ship.length}, (_, i) => {
+            return ship.orientation === socketModels.Orientation.HORIZONTAL
+                ? {row: position.headRow, col: position.headCol + i}
+                : {row: position.headRow + i, col: position.headCol};
+        }));
+    }
+    
+    getShipSurroundingCoords(ship: ShipLike, {headRow, headCol}: ShipPosition) {
+        const shipCoordRanges = ShipGrid.shipCoordRanges(ship, {headRow, headCol});
+        const shipCoords = this.shipCoords(ship, {headRow, headCol});
+
+        const coords = [];
+
+        for (let row = shipCoordRanges.row[0] - 1; row <= shipCoordRanges.row[1] + 1; row++) {
+            
+            for (let col = shipCoordRanges.col[0] - 1; col <= shipCoordRanges.col[1] + 1; col++) {
+    
+                // boundary check
+                if (row < 0 || row >= this.size.rows || col < 0 || col >= this.size.cols) {
+                    continue;
+                }
+
+                if (shipCoords.has({row, col})) {
+                    continue;
+                }
+
+                
+                coords.push({row, col});
+            }
+        }
+        return coords;
+    }
 
 	shipHasNoOverlap(
 		ship: ShipLike,
@@ -144,7 +195,7 @@ export class ShipGrid<ShipType extends Ship = Ship> {
             <section className="ship-grid" ref={ref}>
                 <Grid rows={this.size.rows} cols={this.size.cols}/>
                 {Array.from(this.ships.entries()).map(([ship, position]) => (
-                    <ship.Renderer position={position} onMouseDown={mouseDownHandlerFactory ? mouseDownHandlerFactory(ship) : undefined} />
+                    <ship.Renderer key={position.headRow + "-" + position.headCol} position={position} onMouseDown={mouseDownHandlerFactory ? mouseDownHandlerFactory(ship) : undefined} />
                 ))} 
                 {children}
             </section>

@@ -1,12 +1,14 @@
 import { useCallback } from "react";
 import { observer } from "mobx-react-lite";
-import sendGamePlayerMessage from "../sendGamePlayerMessage";
 import { create } from "@bufbuild/protobuf";
 import { socketModels } from "../../../base/api";
 import { useWebSocketStore } from "../../../base";
 import GameWebsocketStore from "../GameWebsocket";
 
-export const HitGrid =  observer(({grid, shootable}: {grid: boolean[][], shootable: boolean}) => {
+export type HitStateType = socketModels.ShipGridView_HitState;
+export const HitState = socketModels.ShipGridView_HitState;
+
+export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], shootable: boolean}) => {
     
     const WSStore = useWebSocketStore(GameWebsocketStore);
 
@@ -14,9 +16,11 @@ export const HitGrid =  observer(({grid, shootable}: {grid: boolean[][], shootab
         
         const shotMessage = create(socketModels.GamePlayerShotMessageSchema, {row, column});
 
-        console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage);
+        console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
         
-        sendGamePlayerMessage({case: "shot", value: shotMessage});
+        WSStore.hasTurn = false; 
+        
+        WSStore.sendGamePlayerMessage({case: "shot", value: shotMessage});
     }, []);
     
     return (
@@ -25,8 +29,8 @@ export const HitGrid =  observer(({grid, shootable}: {grid: boolean[][], shootab
                     {grid.map((row, r) => (
                         <tr key={r}>
                             {row.map((cell, c) => (
-                                <td key={`${r}-${c}`} className="cell" onClick={shootable && !cell ? () => sendShotMessage(r, c) : undefined} >
-                                    {cell && <HitCross />}
+                                <td key={`${r}-${c}`} className="cell" onClick={shootable && cell === HitState.UNTOUCHED ? () => sendShotMessage(r, c) : undefined} style={shootable && cell === HitState.UNTOUCHED ? {cursor:"pointer"} : undefined}>
+                                    <HitGridCellContent key={`${r}-${c}`} hitState={cell} />
                                 </td>
                             ))}
                         </tr>
@@ -39,9 +43,32 @@ export const HitGrid =  observer(({grid, shootable}: {grid: boolean[][], shootab
 
 export default HitGrid;
 
+
+const HitGridCellContent = ({hitState}: {hitState: HitStateType}) => {
+    switch (hitState) {
+        case HitState.HIT:
+            return <HitCross />;
+        case HitState.MISS:
+            return <MissDot />;
+        case HitState.IMPOSSIBLE:
+            return <ImpossibleDot />;
+        default:
+            return null;
+    }
+};
+
 const HitCross = () => (
     <svg className="red-X" viewBox={`0 0 24 24`}>
         <line x1="0" y1="0" x2={24} y2={24} stroke="red" strokeWidth={24 / 12} />
         <line x1={24} y1="0" x2="0" y2={24} stroke="red" strokeWidth={24 / 12} />
     </svg>
 );
+
+const Dot = ({opacity}: {opacity: number}) => (
+    <svg className="miss-dot" viewBox={`0 0 24 24`} style={{opacity}}>
+        <circle cx={12} cy={12} r={6} fill="blue" />
+    </svg>
+);
+
+const MissDot = () => <Dot opacity={0.8} />;
+const ImpossibleDot = () => <Dot opacity={0.4} />;

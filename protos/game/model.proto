@@ -6,8 +6,17 @@ package game_models;
 
 
 message ShipGridView {
+    enum HitState {
+        UNKNOWN = 0;
+        UNTOUCHED = 1;
+        MISS = 2;
+        HIT = 3;
+        IMPOSSIBLE = 4;
+    }
+    
+    
     message Row {
-        repeated bool cells = 1;
+        repeated HitState cells = 1;
     }
     repeated Row hit_grid = 1;
     repeated ActiveShip ships = 2;

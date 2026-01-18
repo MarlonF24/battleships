@@ -8,6 +8,7 @@ export enum Page {
     BACK = "back"
 }
 
+
 export function useSwitchView() {
     const navigate = useNavigate();
 
@@ -37,6 +38,7 @@ export function useSwitchView() {
             default:
                 throw new Error(`Unknown Page: ${page}`);
         }
-    };
+    } ;
+
 }
 

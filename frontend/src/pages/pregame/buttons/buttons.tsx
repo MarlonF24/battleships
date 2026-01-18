@@ -5,7 +5,6 @@ import {  PregameWebSocketStore } from "../PregameWebsocket.js";
 import { BattleGrid } from "../BattleGrid/battle_grid.js";
 import { ShipGarage } from "../Garage/garage.js";
 import { useWebSocketStore, Tooltip, TooltipPosition, Ship, socketModels } from "../../../base";
-import sendPregamePlayerMessage from "../sendPregamePlayerMessage.js";
 
 
 
@@ -60,7 +59,7 @@ export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, ba
 		let WSMessage: socketModels.PregamePlayerSetReadyStateMessage = create(socketModels.PregamePlayerSetReadyStateMessageSchema, {ships: ships});
 
 		console.log("Sending ready message to backend:", WSMessage);
-		sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
+		store.sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
 		
 		console.log("Player is ready!");
 	}, [battleGrid, shipGarage]);

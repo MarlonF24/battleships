@@ -8,8 +8,8 @@
 "use strict";
 
 import { Ship, ShipPosition } from "../../../base";
-import { ShipDragClone, ShipSuggestion } from "./dynamic_ship.js";
-import { PregameShipGrid } from "../PregameShipGrid.js";
+import { ShipDragClone, ShipSuggestion } from "./DynamicShip.js";
+import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
 
 
 export interface EquatorCrossEventDetail {
@@ -64,7 +64,7 @@ export interface BaseSuggestionState {
 	originalShip: Ship;
 	currentSuggestion: {
 		ship: ShipSuggestion;
-		positon: ShipPosition;
+		position: ShipPosition;
 	};
 }
 
@@ -92,7 +92,7 @@ export abstract class BaseSuggestionHandler {
 		this.state.currentSuggestion.ship.remove();
 		this.targetShipGrid.shipGrid.placeShip(
 			this.state.currentSuggestion.ship.instantiate(),
-			this.state.currentSuggestion.positon
+			this.state.currentSuggestion.position
 		);
 		this.state.currentSuggestion = undefined;
 	}

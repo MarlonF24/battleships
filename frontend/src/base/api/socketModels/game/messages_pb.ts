@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file game/messages.proto.
  */
 export const file_game_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChNnYW1lL21lc3NhZ2VzLnByb3RvEg1nYW1lX21lc3NhZ2VzIlQKEUdhbWVQbGF5ZXJNZXNzYWdlEjQKBHNob3QYASABKAsyJC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJTaG90TWVzc2FnZUgAQgkKB3BheWxvYWQiNAoVR2FtZVBsYXllclNob3RNZXNzYWdlEgsKA3JvdxgBIAEoBRIOCgZjb2x1bW4YAiABKAUi1AEKEUdhbWVTZXJ2ZXJNZXNzYWdlEjsKCmdhbWVfc3RhdGUYASABKAsyJS5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJTdGF0ZU1lc3NhZ2VIABJBCgtzaG90X3Jlc3VsdBgCIAEoCzIqLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RSZXN1bHRNZXNzYWdlSAASNAoEdHVybhgDIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclR1cm5NZXNzYWdlSABCCQoHcGF5bG9hZCJ3ChZHYW1lU2VydmVyU3RhdGVNZXNzYWdlEisKCG93bl9ncmlkGAEgASgLMhkuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3EjAKDW9wcG9uZW50X2dyaWQYAiABKAsyGS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXciiQEKG0dhbWVTZXJ2ZXJTaG90UmVzdWx0TWVzc2FnZRILCgNyb3cYASABKAUSDgoGY29sdW1uGAIgASgFEg4KBmlzX2hpdBgDIAEoCBIvCglzdW5rX3NoaXAYBCABKAsyFy5nYW1lX21vZGVscy5BY3RpdmVTaGlwSACIAQFCDAoKX3N1bmtfc2hpcCIXChVHYW1lU2VydmVyVHVybk1lc3NhZ2VCcgoRY29tLmdhbWVfbWVzc2FnZXNCDU1lc3NhZ2VzUHJvdG9QAaICA0dYWKoCDEdhbWVNZXNzYWdlc8oCDEdhbWVNZXNzYWdlc+ICGEdhbWVNZXNzYWdlc1xHUEJNZXRhZGF0YeoCDEdhbWVNZXNzYWdlc2IGcHJvdG8z", [file_game_model]);
+  fileDesc("ChNnYW1lL21lc3NhZ2VzLnByb3RvEg1nYW1lX21lc3NhZ2VzIlQKEUdhbWVQbGF5ZXJNZXNzYWdlEjQKBHNob3QYASABKAsyJC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJTaG90TWVzc2FnZUgAQgkKB3BheWxvYWQiNAoVR2FtZVBsYXllclNob3RNZXNzYWdlEgsKA3JvdxgBIAEoBRIOCgZjb2x1bW4YAiABKAUiigIKEUdhbWVTZXJ2ZXJNZXNzYWdlEjsKCmdhbWVfc3RhdGUYASABKAsyJS5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJTdGF0ZU1lc3NhZ2VIABJBCgtzaG90X3Jlc3VsdBgCIAEoCzIqLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RSZXN1bHRNZXNzYWdlSAASNAoEc2hvdBgDIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RNZXNzYWdlSAASNAoEdHVybhgEIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclR1cm5NZXNzYWdlSABCCQoHcGF5bG9hZCJ3ChZHYW1lU2VydmVyU3RhdGVNZXNzYWdlEisKCG93bl9ncmlkGAEgASgLMhkuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3EjAKDW9wcG9uZW50X2dyaWQYAiABKAsyGS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXcioAEKG0dhbWVTZXJ2ZXJTaG90UmVzdWx0TWVzc2FnZRIyCgRzaG90GAEgASgLMiQuZ2FtZV9tZXNzYWdlcy5HYW1lU2VydmVyU2hvdE1lc3NhZ2USDgoGaXNfaGl0GAMgASgIEi8KCXN1bmtfc2hpcBgEIAEoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXBIAIgBAUIMCgpfc3Vua19zaGlwIjQKFUdhbWVTZXJ2ZXJTaG90TWVzc2FnZRILCgNyb3cYASABKAUSDgoGY29sdW1uGAIgASgFIhcKFUdhbWVTZXJ2ZXJUdXJuTWVzc2FnZUJyChFjb20uZ2FtZV9tZXNzYWdlc0INTWVzc2FnZXNQcm90b1ABogIDR1hYqgIMR2FtZU1lc3NhZ2VzygIMR2FtZU1lc3NhZ2Vz4gIYR2FtZU1lc3NhZ2VzXEdQQk1ldGFkYXRh6gIMR2FtZU1lc3NhZ2VzYgZwcm90bzM", [file_game_model]);
 
 /**
  * @generated from message game_messages.GamePlayerMessage
@@ -80,7 +80,13 @@ export type GameServerMessage = Message<"game_messages.GameServerMessage"> & {
     case: "shotResult";
   } | {
     /**
-     * @generated from field: game_messages.GameServerTurnMessage turn = 3;
+     * @generated from field: game_messages.GameServerShotMessage shot = 3;
+     */
+    value: GameServerShotMessage;
+    case: "shot";
+  } | {
+    /**
+     * @generated from field: game_messages.GameServerTurnMessage turn = 4;
      */
     value: GameServerTurnMessage;
     case: "turn";
@@ -121,14 +127,9 @@ export const GameServerStateMessageSchema: GenMessage<GameServerStateMessage> = 
  */
 export type GameServerShotResultMessage = Message<"game_messages.GameServerShotResultMessage"> & {
   /**
-   * @generated from field: int32 row = 1;
+   * @generated from field: game_messages.GameServerShotMessage shot = 1;
    */
-  row: number;
-
-  /**
-   * @generated from field: int32 column = 2;
-   */
-  column: number;
+  shot?: GameServerShotMessage;
 
   /**
    * @generated from field: bool is_hit = 3;
@@ -149,6 +150,28 @@ export const GameServerShotResultMessageSchema: GenMessage<GameServerShotResultM
   messageDesc(file_game_messages, 4);
 
 /**
+ * @generated from message game_messages.GameServerShotMessage
+ */
+export type GameServerShotMessage = Message<"game_messages.GameServerShotMessage"> & {
+  /**
+   * @generated from field: int32 row = 1;
+   */
+  row: number;
+
+  /**
+   * @generated from field: int32 column = 2;
+   */
+  column: number;
+};
+
+/**
+ * Describes the message game_messages.GameServerShotMessage.
+ * Use `create(GameServerShotMessageSchema)` to create a new message.
+ */
+export const GameServerShotMessageSchema: GenMessage<GameServerShotMessage> = /*@__PURE__*/
+  messageDesc(file_game_messages, 5);
+
+/**
  * @generated from message game_messages.GameServerTurnMessage
  */
 export type GameServerTurnMessage = Message<"game_messages.GameServerTurnMessage"> & {
@@ -159,5 +182,5 @@ export type GameServerTurnMessage = Message<"game_messages.GameServerTurnMessage
  * Use `create(GameServerTurnMessageSchema)` to create a new message.
  */
 export const GameServerTurnMessageSchema: GenMessage<GameServerTurnMessage> = /*@__PURE__*/
-  messageDesc(file_game_messages, 5);
+  messageDesc(file_game_messages, 6);
 

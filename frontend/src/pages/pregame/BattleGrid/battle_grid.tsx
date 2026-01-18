@@ -2,7 +2,7 @@ import { override, makeObservable } from "mobx";
 
 import { Ship, ShipPosition, ShipLike, socketModels } from "../../../base";
 import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
-import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
+import { ShipSuggestion } from "../DragDrop/DynamicShip.js";
 
 import {
 	BaseSuggestionHandler,
@@ -83,9 +83,6 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 		// clone the clone to be the suggestion ship
 		let suggestionShip = new ShipSuggestion(detail.clone);
 
-		// initial bounds check
-		if (!this.battleGrid.shipGrid.shipFitsBounds(suggestionShip)) return;
-
 
 		let headPosition =
 			BattleGridSuggestionHandler.closestInBoundsPosition(
@@ -96,7 +93,7 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 			);
 
 		if (
-			this.battleGrid.shipGrid.shipHasNoOverlap(
+			this.battleGrid.shipGrid.canPlaceShip(
 				suggestionShip,
 				headPosition,
 				detail.originalShip // disregard the original ship to allow moving ships on their old position
@@ -105,7 +102,7 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 			suggestionShip.suggest(this.targetShipGridHTML!, headPosition);
 			this.state.currentSuggestion = {
 				ship: suggestionShip,
-				positon: headPosition,
+				position: headPosition,
 			};
 
 			this.state.currentCell.element.addEventListener("ship-out", this.removeSuggestion);
@@ -167,6 +164,7 @@ export class BattleGridSuggestionHandler extends BaseSuggestionHandler {
 		this.state.currentCell!.element.removeEventListener("ship-rotate", this.rotateSuggestion);
 		this.state.currentCell!.element.removeEventListener("ship-placed", this.placeSuggestion);
 	}
+
 
 	static closestInBoundsPosition(
 		battleGrid: BattleGrid,

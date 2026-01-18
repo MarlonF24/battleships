@@ -1,7 +1,7 @@
-import { action, computed, makeObservable, observable } from "mobx";
+import { makeObservable, observable } from "mobx";
 import { Ship, socketModels, ShipPosition } from "../../base";
 
-class ActiveShip extends Ship  {
+class ActiveShipLogic extends Ship  {
     readonly headRow: number;
     readonly headCol: number;
     
@@ -17,8 +17,8 @@ class ActiveShip extends Ship  {
         });
     }
 
-    static fromSocketModel(model: socketModels.ActiveShip): ActiveShip {
-        return new ActiveShip(
+    static fromSocketModel(model: socketModels.ActiveShip): ActiveShipLogic {
+        return new this(
             model.length,
             model.orientation,
             {headRow: model.headRow, headCol: model.headCol},
@@ -44,4 +44,4 @@ class ActiveShip extends Ship  {
     }
 }
 
-export default ActiveShip;
+export default ActiveShipLogic;

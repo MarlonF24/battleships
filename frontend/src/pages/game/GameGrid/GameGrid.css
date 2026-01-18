@@ -1,3 +1,21 @@
 .game-grid {
-  position: grid;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 0.5rem; /* Add a small gap between fleet and grid */
+}
+
+.game-grid .fleet-display:first-child {
+  grid-column: 1;
+  justify-self: start;
+}
+
+.game-grid .fleet-display:last-child {
+  grid-column: 3;
+  justify-self: end;
+}
+
+.game-grid .ship-grid {
+  grid-column: 2;
+  justify-self: center;
 }

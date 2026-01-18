@@ -43,8 +43,11 @@ class GameServerMessage(betterproto.Message):
     shot_result: "GameServerShotResultMessage | None" = betterproto.message_field(
         2, optional=True, group="payload"
     )
-    turn: "GameServerTurnMessage | None" = betterproto.message_field(
+    shot: "GameServerShotMessage | None" = betterproto.message_field(
         3, optional=True, group="payload"
+    )
+    turn: "GameServerTurnMessage | None" = betterproto.message_field(
+        4, optional=True, group="payload"
     )
 
     @model_validator(mode="after")
@@ -60,12 +63,17 @@ class GameServerStateMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class GameServerShotResultMessage(betterproto.Message):
-    row: int = betterproto.int32_field(1)
-    column: int = betterproto.int32_field(2)
+    shot: "GameServerShotMessage" = betterproto.message_field(1)
     is_hit: bool = betterproto.bool_field(3)
     sunk_ship: "_game_models__.ActiveShip | None" = betterproto.message_field(
         4, optional=True
     )
+
+
+@dataclass(eq=False, repr=False)
+class GameServerShotMessage(betterproto.Message):
+    row: int = betterproto.int32_field(1)
+    column: int = betterproto.int32_field(2)
 
 
 @dataclass(eq=False, repr=False)

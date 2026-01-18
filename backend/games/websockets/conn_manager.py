@@ -67,7 +67,7 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
         try:
             self.validate_player_in_game(player_id)
         except WebSocketException:
-            raise WebSocketException(code=1002, reason="Trying to check connection status of a player not in the game.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Trying to check connection status of a player not in the game.")
         
         return self.players[player_id].websocket.client_state == websockets.WebSocketState.CONNECTED
         
@@ -128,11 +128,14 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         return self.get_game_connections(game).players[player.id]
     
     @abstractmethod
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        ...
+
+    
     async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        
         await websocket.accept() 
         logger.info(f"WebSocket connection accepted for game {game.id}, player {player.id}")
-
+        await self.add_player_connection(game, player, websocket, session)
        
 
 
@@ -149,7 +152,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
     async def send_server_message(self, websocket: WebSocket, message: ServerMessageType | GeneralServerMessage):
         if websocket.client_state != websockets.WebSocketState.CONNECTED:
-            raise WebSocketException(code=1002, reason="Attempting to send message on closed WebSocket.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Attempting to send message on closed WebSocket.")
         
         message = ServerMessage(**{self.server_message_payload_map[type(message)]: message}) # type: ignore
 
@@ -172,7 +175,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             
             if connection.websocket.client_state != websockets.WebSocketState.CONNECTED:
                 if raise_on_closed_socket is not None:
-                    raise WebSocketException(code=1002, reason=raise_on_closed_socket)
+                    raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
             else:
                 await self.send_server_message(connection.websocket, message_instance)
 
@@ -212,7 +215,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
     @abstractmethod
     async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         if game.id not in self.active_connections:
-            raise WebSocketException(code=1002, reason="Game connections not found during cleanup.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Game connections not found during cleanup.")
         
         await self.inform_opponent_about_own_connection(game, player)
         await self.disconnect(game, player)
@@ -225,6 +228,9 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             await self.start_up(game, player, websocket, session)
             
             yield
+
+        except WebSocketException as wse:
+            await websocket.close(code=wse.code, reason=wse.reason)
 
         finally:
             logger.info(f"Cleaning up WebSocket lifecycle for game {game.id}, player {player.id}")

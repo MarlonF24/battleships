@@ -1,9 +1,9 @@
 import React from "react";
 
 import { Ship, socketModels } from "../../../base";
-import { ShipDragClone } from "./dynamic_ship.js";
+import { ShipDragClone } from "./DynamicShip.js";
 import { ShipInEvent, ShipOutEvent, ShipPlacedEvent, ShipRotatedEvent, EquatorCrossEvent } from "./suggestion_handler.js";
-import { PregameShipGrid } from "../PregameShipGrid.js";
+import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
 
 // Interface for drag state
 interface DragState {

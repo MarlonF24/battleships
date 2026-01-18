@@ -1,6 +1,6 @@
-import asyncio
+import asyncio, betterproto
 from uuid import UUID
-import betterproto
+from collections import defaultdict
 from fastapi import WebSocket
 from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +10,7 @@ from backend.games.relations import Player
 
 from .conn_manager import *
 
-from ..model import ActiveShipLogic, GameServerStateMessage, GameServerMessage, GamePlayerShotMessage, GamePlayerMessage, ShipGrid, GameServerShotResultMessage, GameServerTurnMessage
+from ..model import ActiveShipLogic, GameServerShotMessage, GameServerStateMessage, GameServerMessage, GamePlayerShotMessage, GamePlayerMessage, ShipGrid, GameServerShotResultMessage, GameServerTurnMessage
 from ..relations import Game, GamePhase, Ship
 
 
@@ -68,9 +68,11 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
 
 class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage, GamePlayerMessage]):
     
-    async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await super().connect(game, player, websocket, session)
+    def __init__(self):
+        super().__init__()
+        self.shot_locks: dict[UUID, asyncio.Lock] = defaultdict(asyncio.Lock)  # game_id -> lock
 
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         if game.id not in self.active_connections:
             self.active_connections[game.id] = GameGameConnections()
             logger.info(f"Created new GameConnections for game {game.id}")
@@ -93,25 +95,10 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         
 
 
-    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        game_connections = self.get_game_connections(game)
-        if game_connections.started and game_connections.turn_player_id == player.id:
-            logger.info(f"Player {player.id} disconnected during their turn in game {game.id}, taking random shot for them.")
-            await self.take_random_shot_for_player(game, player, session)
 
-        await super().clean_up(game, player, websocket, session)
-
-        raise NotImplementedError("Implement how active connections are eventually removed from self.active_connections in subclasses.")
-
-
-    async def end_battle(self, game: Game, session: AsyncSession):
-        game_connections = self.get_game_connections(game)
-        game_connections.end_battle()
-        game.phase = GamePhase.COMPLETED
-        await session.commit()
-
-
-    async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await super().start_up(game, player, websocket, session)
+        
         game_connections = self.get_game_connections(game)
     
 
@@ -128,7 +115,13 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
                     
                     # notify first turn player
                     await self.send_turn_message(game, session)
+        else:
+            await self.send_personal_message(game, player, GameServerMessage(game_state=game_connections.get_game_state(player.id)))
 
+
+    
+    async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        game_connections = self.get_game_connections(game)
 
         async for message in self.message_generator(websocket, game, player):
             
@@ -145,17 +138,42 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
             match payload:
                 case GamePlayerShotMessage() as shot_msg:
-                    await self.handle_shot_message(game, player, shot_msg, session)
+                    if self.shot_locks[game.id].locked():
+                        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Player tried to submit shot while previous shot is still being processed. He couldnt have gotten his turn message yet.")
+                    
+                    # lock to prevent multiple shots being processed simultaneously
+                    async with self.shot_locks[game.id]:
+                        await self.handle_shot_message(game, player, shot_msg, session)
+
                 case _:
-                    logger.warning(f"Unhandled message type received in game {game.id}: {payload}")
-                    continue
+                    logger.error(f"Unhandled message type received in game {game.id}: {payload}")
+                    raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR, reason="Unknown message payload in GamePlayerMessage.")
 
     
+    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        # game_connections = self.get_game_connections(game)
+        # if game_connections.started and game_connections.turn_player_id == player.id:
+        #     logger.info(f"Player {player.id} disconnected during their turn in game {game.id}, taking random shot for them.")
+        #     await self.take_random_shot_for_player(game, player, session)
+
+        await super().clean_up(game, player, websocket, session)
+
+        raise NotImplementedError("Implement how active connections are eventually removed from self.active_connections in subclasses.")
+    
+
+    async def end_battle(self, game: Game, session: AsyncSession):
+        game_connections = self.get_game_connections(game)
+        game_connections.end_battle()
+        game.phase = GamePhase.COMPLETED
+        await session.commit()
+
+
     async def handle_shot_message(self, game: Game, player: Player, shot_msg: GamePlayerShotMessage, session: AsyncSession):
         game_connections = self.get_game_connections(game)
         
+        
         if game_connections.turn_player_id != player.id:
-            raise WebSocketException(code=1002, reason=f"Player {player.id} tried to shoot out of turn.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Player {player.id} tried to shoot out of turn.")
 
 
         opponent_connection = game_connections.get_opponent_connection(player.id, raise_on_missing="Trying to shot at grid even though opponent has NEVER INITIALLY connected.")
@@ -166,8 +184,28 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         if sunk_ship:
             sunk_ship = ActiveShipLogic.to_protobuf(sunk_ship)
 
+        server_shot_msg = GameServerShotMessage(row=shot_msg.row, column=shot_msg.column)
 
-        await self.broadcast(game, player, GameServerMessage(shot_result=GameServerShotResultMessage(row=shot_msg.row, column=shot_msg.column, is_hit=hit, sunk_ship=sunk_ship)))
+
+        asyncio.gather(
+            self.send_personal_message(
+                game, 
+                player, 
+                GameServerMessage(shot=server_shot_msg)
+            ),
+
+            self.broadcast(
+                game, 
+                player, 
+                GameServerMessage(
+                               shot_result=GameServerShotResultMessage(
+                                   shot=server_shot_msg, 
+                                   is_hit=hit, 
+                                   sunk_ship=sunk_ship
+                                   )
+                                ), only_opponent=True)
+            )
+
 
         if opponent_ship_grid.all_ships_sunk:
             logger.info(f"Player {player.id} has won game {game.id}!")
@@ -175,6 +213,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
             return
 
         game_connections.swap_turn()
+        
 
         await self.send_turn_message(game, session)
 
@@ -185,7 +224,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         
         
         if not turn_player_id:
-            raise WebSocketException(code=1002, reason="Trying to send turn message even though turn player is not set.")
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Trying to send turn message even though turn player is not set.")
         
         # if current turn player is not connected, give them some time to reconnect
         if not game_connections.currently_connected(turn_player_id): 

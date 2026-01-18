@@ -34,9 +34,7 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
 class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage, PregamePlayerMessage]):
     
 
-    async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await super().connect(game, player, websocket, session=session)
-
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         if game.id not in self.active_connections:
             self.active_connections[game.id] = PregameGameConnections()
             logger.info(f"Created new GameConnections for game {game.id}")
@@ -64,20 +62,14 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)))
         
 
-    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await super().clean_up(game, player, websocket, session)
 
-        
-        game_conns = self.get_game_connections(game)
-        
-        if game_conns.num_players() == 2:
-            game_conns.remove_player(player.id)
-            logger.info(f"Player {player.id} disconnected from pregame in game {game.id}")
+    async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await super().start_up(game, player, websocket, session)
 
-            if not game_conns.players:
-                del self.active_connections[game.id]
-                logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")
+        # initial send of current ready count
+        game_connection = self.get_game_connections(game)
 
+        await self.send_personal_message(game, player, PregameServerMessage(ready_state=game_connection.get_ready_state(player.id)))
 
     
     async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
@@ -85,13 +77,10 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         # initial send of current ready count
         game_connection = self.get_game_connections(game)
         
-        await self.send_personal_message(game, player, PregameServerMessage(ready_state=game_connection.get_ready_state(player.id)))
-
-        both_ready = False
 
         async for message in self.message_generator(websocket, game, player):
             
-            if both_ready:
+            if game_connection.num_ready_players() == 2:
                 logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring message: {message}")
                 continue    
             
@@ -108,12 +97,25 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
                     if game_connection.num_ready_players() == 2:
                         logger.info(f"Both players ready in game {game.id}.")
                         await self.end_pregame(game, session)
-                        both_ready = True
 
                 case _:
-                    logger.warning(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
+                    logger.error(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
+                    raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR, reason="Unknown message payload in PregamePlayerMessage.")
+              
                 
-               
+    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+        await super().clean_up(game, player, websocket, session)
+
+        
+        game_conns = self.get_game_connections(game)
+        
+        if game_conns.num_players() == 2:
+            game_conns.remove_player(player.id)
+            logger.info(f"Player {player.id} disconnected from pregame in game {game.id}")
+
+            if not game_conns.players:
+                del self.active_connections[game.id]
+                logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")    
                 
 
     async def handle_player_ready_message(self, game: Game, player: Player, message: PregamePlayerSetReadyStateMessage, session: AsyncSession):

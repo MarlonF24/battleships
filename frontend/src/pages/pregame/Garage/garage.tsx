@@ -1,7 +1,7 @@
 import { override, makeObservable } from "mobx";
 
 import { Ship, ShipLike, socketModels, ShipGrid } from "../../../base";
-import { ShipSuggestion } from "../DragDrop/dynamic_ship.js";
+import { ShipSuggestion } from "../DragDrop/DynamicShip.js";
 import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
 
 import "./garage.css";
@@ -21,6 +21,7 @@ export class ShipGarage extends PregameShipGrid {
 				{rows: ships.length,
 				cols: Math.max(...ships.map((s) => (typeof s === 'number' ? s : s.length)), 1)}
 				, initialShips
+				, false
 		);
 
 		makeObservable(this, {
@@ -135,7 +136,7 @@ class GarageSuggestionHandler extends BaseSuggestionHandler {
 				source: detail.source,
 				currentSuggestion: {
 					ship: suggestionShip,
-					positon: { headRow: freeRow, headCol: 0}
+					position: { headRow: freeRow, headCol: 0}
 				},
 				currentRow: {
 					rowIdx: freeRow,

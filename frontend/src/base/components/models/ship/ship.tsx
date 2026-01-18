@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
 import { socketModels } from "../../../api";
-import "./ship.css";
+import "./Ship.css";
 
 
 
@@ -28,6 +28,7 @@ export class Ship {
 		}
 	}
 
+	
 
 	public readonly Renderer = observer(({ position, onMouseDown }: { position: ShipPosition, onMouseDown?: React.MouseEventHandler<HTMLDivElement> }) => {
 		

@@ -69,7 +69,7 @@ export class RandomBattleGridGenerator {
 							{headRow: actualPerp, headCol: candidateParallelIdx};
 
 
-						RandomBattleGridGenerator.placeShip(cloneSolution, shipToPlace, shipPosition, candidatePerpOffset,candidateGapIdx);
+						RandomBattleGridGenerator.placeShip(cloneSolution, shipToPlace, shipPosition, {perpOffset: candidatePerpOffset, gapIdx: candidateGapIdx});
 
 						// recursive call
 						const result = this.DFS(cloneSolution, shipsToPlace.slice(1));
@@ -100,42 +100,92 @@ export class RandomBattleGridGenerator {
 	}
 
 
-	static placeShip(battleGridInfo: BattleGridInfo, ship: Ship, position: ShipPosition, perpOffset?: number, gapIdx?: number): void {
+	static placeShip(battleGridInfo: BattleGridInfo, ship: Ship, position: ShipPosition, {perpOffset, gapIdx}: {perpOffset?: number, gapIdx?: number} = {}): void {
 
 		let {headRow, headCol} = position;
 
 		const [parallelGaps, perpGaps, parallelIdx, perpIdx] = ship.orientation == socketModels.Orientation.HORIZONTAL ? [battleGridInfo.rowGaps, battleGridInfo.colGaps, headRow, headCol] : [battleGridInfo.colGaps, battleGridInfo.rowGaps, headCol, headRow];
 
-		gapIdx = gapIdx ?? RandomBattleGridGenerator.findGapIdxContainingCoord(parallelGaps[parallelIdx], perpIdx);
+		let currentGapIdxs;
+
+		// update gaps also left and right (parallel to the long side) of the ships to account for required gaps in battleship game
+		for (let parallelOffset = -1; parallelOffset <= 1; parallelOffset++) {
+			
+			// skip if out of bounds
+			if (parallelIdx + parallelOffset < 0 || parallelIdx + parallelOffset >= parallelGaps.length) continue;
+			
+			const adjustedParallelIdx = parallelIdx + parallelOffset;
+		
+			if (gapIdx !== undefined && parallelOffset === 0) currentGapIdxs = [gapIdx];
+			else {
+				currentGapIdxs = RandomBattleGridGenerator.findGapIdxsForRange(parallelGaps[adjustedParallelIdx], perpIdx - 1, perpIdx + ship.length);
+			}
+
+			currentGapIdxs.sort((a, b) => b - a); // sort desc to avoid messing up indices when splicing
+
+			for (let currentGapIdx of currentGapIdxs) {
+				const currentGap = parallelGaps[adjustedParallelIdx].gaps[currentGapIdx];
+				let adjustedPerpOffset;
+
+				if (perpOffset === undefined || parallelOffset !== 0) {
+					// how far into the gap the ship starts?
+					adjustedPerpOffset = perpIdx - currentGap.coord;
+				} else {
+					adjustedPerpOffset = perpOffset;
+				}
+
+				// -1 and +1 on ends (the function caps to the actual gap in case of out of bounds) to account for required gaps for battleship game
+				RandomBattleGridGenerator.updateSplitGap(parallelGaps[adjustedParallelIdx], currentGapIdx, adjustedPerpOffset - 1, adjustedPerpOffset + ship.length) 
 
 
-		if (!perpOffset) {
-			perpOffset = perpIdx - parallelGaps[parallelIdx].gaps[gapIdx].coord
-		}
+				// again -1 and +1 to account for required gaps
+				const desiredStart = perpIdx - 1;
+				const desiredEnd = perpIdx + ship.length; 
 
-		RandomBattleGridGenerator.updateSplitGap(parallelGaps[parallelIdx], gapIdx, perpOffset, perpOffset + ship.length - 1)
+				const currentGapEnd = currentGap.coord + currentGap.size - 1;
 
-		// update split gaps in crossed perps
-		for (let perp of perpGaps.slice(perpIdx, perpIdx + ship.length)) {
-			let hitGapIdx = RandomBattleGridGenerator.findGapIdxContainingCoord(perp, parallelIdx);
-			const relativeParrallelIdx = parallelIdx - perp.gaps[hitGapIdx].coord
+				let gapStart = Math.max(currentGap.coord, desiredStart);
+				let gapEnd = Math.min(currentGapEnd, desiredEnd);
+				
+				
+				for (let perp of perpGaps.slice(gapStart, gapEnd + 1)) {
+					let hitGapIdxs = RandomBattleGridGenerator.findGapIdxsForRange(perp, adjustedParallelIdx, adjustedParallelIdx);
 
-			RandomBattleGridGenerator.updateSplitGap(perp, hitGapIdx, relativeParrallelIdx, relativeParrallelIdx);
+					if (hitGapIdxs.length === 0) throw new Error("Inconsistent gap data structure detected in RandomBattleGridGenerator.placeShip. No gap found even though one must exist here, as we are currently at the same spot as a parallel gap on the same spot before this placement.");
+					
+					if (hitGapIdxs.length > 1) throw new Error("Inconsistent gap data structure detected in RandomBattleGridGenerator.placeShip. Multiple gaps found overlapping the same coordinate. Should only be able to find one gap when handing in findGapIdxs(.., x, x).");
+
+					const relativeParrallelIdx = adjustedParallelIdx - perp.gaps[hitGapIdxs[0]].coord;
+					
+					// here no -1 and +1 since we're cutting out exactly the ship's space in the crossed perp gaps the -1 and +1 will be done across the iterations of the outer most loop
+					RandomBattleGridGenerator.updateSplitGap(perp, hitGapIdxs[0], relativeParrallelIdx, relativeParrallelIdx);
+				}
+			}
 		}
 
 		battleGridInfo.shipPositions.set(ship, position);
 	}
 
-
-	static findGapIdxContainingCoord(gapsInfo: GapsInfo, coord: number): number {
-		let hitGapIdx = gapsInfo.gaps.findIndex((gap) => gap.coord > coord);
-		return hitGapIdx === -1 ? gapsInfo.gaps.length - 1 : hitGapIdx - 1; // found -> go one back, not-found -> last element
+	// returns all gap idcx that contain at least a part of the range start-end (inclusive)
+	static findGapIdxsForRange(gapsInfo: GapsInfo, start: number, end: number): number[] {
+		return gapsInfo.gaps.reduce((acc, gap, idx) => {
+			const gapEnd = gap.coord + gap.size - 1;
+			
+			if (!(end < gap.coord || start > gapEnd)) {
+				acc.push(idx);
+			}
+			return acc;
+		}, [] as number[]);
 	}
 
 
 	//inclusive end idx for the piece thats cut out
-	static updateSplitGap(gapsInfo: GapsInfo, gapToSplitIdx: number, startIdx: number, endIdx: number): void {
+	static updateSplitGap(gapsInfo: GapsInfo, gapToSplitIdx: number, startIdx: number, endIdx: number, ): void {
 		const gap = gapsInfo.gaps[gapToSplitIdx];
+
+		// cap to gap boundaries
+		startIdx = Math.max(0, startIdx);
+		endIdx = Math.min(gap.size - 1, endIdx);
 
 		const splits =  [ // get two new resulting gaps from placement in chosen gap
 							{size: startIdx, coord: gap.coord},

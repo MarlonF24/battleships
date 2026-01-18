@@ -1,13 +1,13 @@
 import { observer } from "mobx-react-lite";
-import ActiveShip from "../ActiveShip.js";
+import ActiveShip from "../ActiveShipLogic.js";
 import { makeObservable, observable } from "mobx";
 
-
+import "./FleetDisplay.css";
 
 class FleetDisplay  {
     readonly shipDF: (ActiveShip | null)[][];
     private readonly lengthToRow: Map<number, number[]>
-    static readonly MAX_ROW_LENGTH = 8;
+    static readonly MAX_ROW_LENGTH = 10;
 
     constructor(readonly shipLengths: Map<number, number>, activeShips: ActiveShip[]) {
         const [lengthToRow, shipDF] = this.buildEmptyDF();
@@ -28,28 +28,35 @@ class FleetDisplay  {
     buildEmptyDF(): [Map<number, number[]>, (ActiveShip | null)[][]] {
         const lengthToRow = new Map<number, number[]>();
         const shipDF: (ActiveShip | null)[][] = [];
+
+        const pushRow = (row: (ActiveShip | null)[], length: number) => {
+            if (!lengthToRow.has(length)) {
+                lengthToRow.set(length, []);
+            }
+
+            lengthToRow.get(length)!.push(shipDF.length)
+                    
+            shipDF.push(row)
+        }
         
         for (const [length, count] of this.shipLengths.entries()) {
             var row = []; 
             for (let i = 0; i < count; i++) {
-                if (FleetDisplay.rowLength(row.length, length, true) > FleetDisplay.MAX_ROW_LENGTH || i === count - 1) {
-                    
-                    if (!lengthToRow.has(length)) {
-                        lengthToRow.set(length, []);
-                    }
-
-                    lengthToRow.get(length)!.push(shipDF.length)
-                    
-                    shipDF.push(row)
+                if (FleetDisplay.rowLength(row.length, length, true) > FleetDisplay.MAX_ROW_LENGTH) {
+                    pushRow(row, length);
                     row = []     
                 }
 
                 row.push(null)
             }
+
+            if (row.length > 0) pushRow(row, length);
         }
         return [lengthToRow, shipDF];
     
     }
+
+    
 
     static rowLength(numSpots: number, shipLength: number, accountForAdditional: boolean) {
         return (numSpots + (accountForAdditional ? 1 : 0)) * (shipLength + 1) - 1 
@@ -78,7 +85,7 @@ class FleetDisplay  {
                         return (
                             <>
                                 <this.FleetBlock key={`fleet-block-${length}`} shipLength={length}/>
-                                {index < array.length - 1 && <tr className="spacer"/>}
+                                {index < array.length - 1 && <tr key={`spacer-row-${length}`} className="spacer"/>}
                             </>
                         )
                     })}
@@ -95,8 +102,8 @@ class FleetDisplay  {
                         {this.shipDF[rowIdx].map((ship, index, array) => {
                             return (
                                 <>
-                                    <this.FleetShip key={`fleet-ship-${rowIdx}-${index}`} ship={ship} fallBackLength={shipLength}/>
-                                    {index < array.length - 1 && <td className="spacer"/>}
+                                    <this.FleetShip key={`fleet-ship-${rowIdx}-${index}`} ship={ship} fallBackLength={shipLength} rowIdx={rowIdx} />
+                                    {index < array.length - 1 && <td key={`spacer-cell-${rowIdx}-${index}`} className="spacer"/>}
                                 </>
                             )
                         })}
@@ -107,12 +114,12 @@ class FleetDisplay  {
         )
     })
 
-    readonly FleetShip = observer(({ship, fallBackLength}: {ship: ActiveShip | null, fallBackLength: number}) => {
+    readonly FleetShip = observer(({ship, fallBackLength, rowIdx}: {ship: ActiveShip | null, fallBackLength: number, rowIdx: number}) => {
         return (
             <>
-                {Array.from({length: ship ? ship.length : fallBackLength}).map((_, index) => {
+                {Array.from({length: ship ? ship.length : fallBackLength}).map((_,index) => {
                     return (
-                        <td className={`ship-cell ${ship ? ship.hits[index] ? "hit" : "" : ""}`}/>
+                        <td key={`ship-cell-${rowIdx}-${index}`} className={`ship-cell ${ship ? ship.hits[index] ? "hit" : "" : ""}`}/>
                     )
                 } )}       
             </>

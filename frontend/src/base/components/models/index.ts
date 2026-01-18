@@ -1,3 +1,3 @@
-export * from "./grid/grid.js";
-export * from "./ship_grid/ship_grid.js";
-export * from "./ship/ship.js";
+export * from "./Grid/Grid.js";
+export * from "./ShipGrid/ShipGrid.js";
+export * from "./Ship/Ship.js";

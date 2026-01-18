@@ -16,8 +16,8 @@ export const OpponentConnection: React.FC = observer(() => {
     }
 
     return (
-        <span style={{ fontStyle: "italic", color: "var(--secondary-text-color)" }}>
+        <div style={{ fontStyle: "italic", color: "var(--secondary-text-color)" }}>
             {statusMessage}
-        </span>
+        </div>
     );
 })

@@ -16,7 +16,7 @@ export const CreateGameButton: React.FC = () => {
         // TODO: Allow user to customize these settings before creating the game in some form where this is the submit button and have validation 
         const battleGridRows: number = 10;
         const battleGridCols: number = 10;
-        const shipLengths: Map<number, number> = new Map([[6, 1], [5, 2], [4, 2], [3, 2], [2, 1]]);
+        const shipLengths: Map<number, number> = new Map([[5, 1], [4, 2], [3, 3], [2, 4]]); // length -> count
 
         const gameId = await api.createGameGamesCreatePost({
             playerId,

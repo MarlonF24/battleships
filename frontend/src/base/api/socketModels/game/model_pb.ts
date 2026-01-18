@@ -2,8 +2,8 @@
 // @generated from file game/model.proto (package game_models, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Orientation } from "../root/model_pb";
 import { file_root_model } from "../root/model_pb";
 import type { Message } from "@bufbuild/protobuf";
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file game/model.proto.
  */
 export const file_game_model: GenFile = /*@__PURE__*/
-  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyJ9CgxTaGlwR3JpZFZpZXcSLwoIaGl0X2dyaWQYASADKAsyHS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXcuUm93EiYKBXNoaXBzGAIgAygLMhcuZ2FtZV9tb2RlbHMuQWN0aXZlU2hpcBoUCgNSb3cSDQoFY2VsbHMYASADKAgifQoKQWN0aXZlU2hpcBIOCgZsZW5ndGgYASABKAUSLQoLb3JpZW50YXRpb24YAiABKA4yGC5yb290X21vZGVscy5PcmllbnRhdGlvbhIQCghoZWFkX3JvdxgDIAEoBRIQCghoZWFkX2NvbBgEIAEoBRIMCgRoaXRzGAUgAygIQmUKD2NvbS5nYW1lX21vZGVsc0IKTW9kZWxQcm90b1ABogIDR1hYqgIKR2FtZU1vZGVsc8oCCkdhbWVNb2RlbHPiAhZHYW1lTW9kZWxzXEdQQk1ldGFkYXRh6gIKR2FtZU1vZGVsc2IGcHJvdG8z", [file_root_model]);
+  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyLsAQoMU2hpcEdyaWRWaWV3Ei8KCGhpdF9ncmlkGAEgAygLMh0uZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LlJvdxImCgVzaGlwcxgCIAMoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXAaOAoDUm93EjEKBWNlbGxzGAEgAygOMiIuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LkhpdFN0YXRlIkkKCEhpdFN0YXRlEgsKB1VOS05PV04QABINCglVTlRPVUNIRUQQARIICgRNSVNTEAISBwoDSElUEAMSDgoKSU1QT1NTSUJMRRAEIn0KCkFjdGl2ZVNoaXASDgoGbGVuZ3RoGAEgASgFEi0KC29yaWVudGF0aW9uGAIgASgOMhgucm9vdF9tb2RlbHMuT3JpZW50YXRpb24SEAoIaGVhZF9yb3cYAyABKAUSEAoIaGVhZF9jb2wYBCABKAUSDAoEaGl0cxgFIAMoCEJlCg9jb20uZ2FtZV9tb2RlbHNCCk1vZGVsUHJvdG9QAaICA0dYWKoCCkdhbWVNb2RlbHPKAgpHYW1lTW9kZWxz4gIWR2FtZU1vZGVsc1xHUEJNZXRhZGF0YeoCCkdhbWVNb2RlbHNiBnByb3RvMw", [file_root_model]);
 
 /**
  * @generated from message game_models.ShipGridView
@@ -41,9 +41,9 @@ export const ShipGridViewSchema: GenMessage<ShipGridView> = /*@__PURE__*/
  */
 export type ShipGridView_Row = Message<"game_models.ShipGridView.Row"> & {
   /**
-   * @generated from field: repeated bool cells = 1;
+   * @generated from field: repeated game_models.ShipGridView.HitState cells = 1;
    */
-  cells: boolean[];
+  cells: ShipGridView_HitState[];
 };
 
 /**
@@ -52,6 +52,42 @@ export type ShipGridView_Row = Message<"game_models.ShipGridView.Row"> & {
  */
 export const ShipGridView_RowSchema: GenMessage<ShipGridView_Row> = /*@__PURE__*/
   messageDesc(file_game_model, 0, 0);
+
+/**
+ * @generated from enum game_models.ShipGridView.HitState
+ */
+export enum ShipGridView_HitState {
+  /**
+   * @generated from enum value: UNKNOWN = 0;
+   */
+  UNKNOWN = 0,
+
+  /**
+   * @generated from enum value: UNTOUCHED = 1;
+   */
+  UNTOUCHED = 1,
+
+  /**
+   * @generated from enum value: MISS = 2;
+   */
+  MISS = 2,
+
+  /**
+   * @generated from enum value: HIT = 3;
+   */
+  HIT = 3,
+
+  /**
+   * @generated from enum value: IMPOSSIBLE = 4;
+   */
+  IMPOSSIBLE = 4,
+}
+
+/**
+ * Describes the enum game_models.ShipGridView.HitState.
+ */
+export const ShipGridView_HitStateSchema: GenEnum<ShipGridView_HitState> = /*@__PURE__*/
+  enumDesc(file_game_model, 0, 0);
 
 /**
  * @generated from message game_models.ActiveShip

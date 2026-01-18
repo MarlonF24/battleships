@@ -1,7 +1,7 @@
 import { create, fromBinary, toBinary } from "@bufbuild/protobuf";
 
-import * as socketModels from "./socketModels";
-import { Page } from "../../routing/switch_view";
+import * as socketModels from "../socketModels";
+import { Page } from "../../../routing/switch_view";
 
 interface CurrentSocket {
     readonly socket: WebSocket;
@@ -17,9 +17,6 @@ interface WebSocketHandlers {
 
 
 
-type PlayerMessagePayload = Exclude<socketModels.PlayerMessage["payload"], {case: undefined, value?: undefined}>;
-
-
 
 export class BackendWebSocket {
     private static currentSocket: CurrentSocket | null = null;
@@ -33,17 +30,14 @@ export class BackendWebSocket {
 
     
     
-    static sendPlayerMessage(message: PlayerMessagePayload): void {
-        const wrappedMessage = create(socketModels.PlayerMessageSchema, {
-            payload: message
-        });
-        console.log("Sending player message:", wrappedMessage);
-        BackendWebSocket.socket.send(toBinary(socketModels.PlayerMessageSchema, wrappedMessage));
+    static sendPlayerMessage(ws: WebSocket, message: socketModels.PlayerMessage): void {
+        console.log("Sending player message:", message);
+        ws.send(toBinary(socketModels.PlayerMessageSchema, message));
     }
 
 
     private static createMessageHandler(handler: (event: socketModels.ServerMessage) => void, addAsListener: boolean = true): {wrappedHandler: (event: MessageEvent) => void, removeHandler: () => void} {
-        const socket = BackendWebSocket.socket;
+        const socket = this.socket;
 
         if (!socket) throw new Error("Tried to register message handler but WebSocket is not connected.");
 

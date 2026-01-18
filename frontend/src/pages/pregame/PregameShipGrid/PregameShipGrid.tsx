@@ -14,8 +14,8 @@ export abstract class PregameShipGrid  {
 	abstract readonly styleClassName: string;
 	readonly shipGrid: ShipGrid;
 
-	constructor(size: {rows: number; cols: number}, ships?: Map<Ship, ShipPosition>) {
-		this.shipGrid = new ShipGrid(size, ships);
+	constructor(size: {rows: number; cols: number}, ships?: Map<Ship, ShipPosition>, requireGaps: boolean = true) {
+		this.shipGrid = new ShipGrid(size, ships, requireGaps);
 		makeObservable(this, {
 			reset: true,
 		});
