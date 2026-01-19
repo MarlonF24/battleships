@@ -5,6 +5,9 @@ import { socketModels } from "../../../base/api";
 import { useWebSocketStore } from "../../../base";
 import GameWebsocketStore from "../GameWebsocket";
 
+import "./HitGrid.css";
+
+
 export type HitStateType = socketModels.ShipGridView_HitState;
 export const HitState = socketModels.ShipGridView_HitState;
 
@@ -30,7 +33,7 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
                         <tr key={r}>
                             {row.map((cell, c) => (
                                 <td key={`${r}-${c}`} className="cell" onClick={shootable && cell === HitState.UNTOUCHED ? () => sendShotMessage(r, c) : undefined} style={shootable && cell === HitState.UNTOUCHED ? {cursor:"pointer"} : undefined}>
-                                    <HitGridCellContent key={`${r}-${c}`} hitState={cell} />
+                                    <HitGridCellContent hitState={cell} />
                                 </td>
                             ))}
                         </tr>
@@ -66,7 +69,7 @@ const HitCross = () => (
 
 const Dot = ({opacity}: {opacity: number}) => (
     <svg className="miss-dot" viewBox={`0 0 24 24`} style={{opacity}}>
-        <circle cx={12} cy={12} r={6} fill="blue" />
+        <circle cx={12} cy={12} r={3} fill="blue" />
     </svg>
 );
 

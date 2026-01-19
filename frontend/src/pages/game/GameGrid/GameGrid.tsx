@@ -1,4 +1,4 @@
-import { makeAutoObservable } from "mobx";
+import { makeObservable } from "mobx";
 import { ShipGrid, ShipPosition, socketModels, useWebSocketStore } from "../../../base";
 import HitGrid, {HitState, HitStateType} from "../HitGrid/HitGrid.js";
 import ActiveShipLogic from "../ActiveShipLogic.js";
@@ -9,7 +9,7 @@ import GameWebsocketStore from "../GameWebsocket.js";
 import { Constructor } from "protobufjs";
 
 
-type ShipLengthsType = Map<number, number> | {[length: number]: number};
+export type ShipLengthsType = Map<number, number> | {[length: number]: number};
 
 class GameGrid {
     protected readonly shipGrid: ShipGrid<ActiveShipLogic>;
@@ -39,7 +39,10 @@ class GameGrid {
             activeShips
         );
 
-        makeAutoObservable(this);
+        makeObservable<GameGrid, "hitGrid">(this,{
+            hitGrid: true,
+            hit: true,
+        });
     } 
     
     static fromSocketModel<T extends GameGrid>(this: Constructor<T>, size: {rows: number; cols: number}, shipLengths: ShipLengthsType, view: socketModels.ShipGridView): T {
@@ -71,13 +74,9 @@ class GameGrid {
         if (shipAtPosition) {
             this.hitGrid[row][col] = HitState.HIT;
             
-            // If the opponent shot at our grid, we need to mark the ship as hit,
-            // if we shot the opponent, we dont know yet 
-            if (shipAtPosition) {
-                const shipIdx = shipAtPosition.orientation === socketModels.Orientation.HORIZONTAL ? col - shipAtPosition.headCol : row - shipAtPosition.headRow;
-                shipAtPosition.hit(shipIdx);
-            }
-
+            const shipIdx = shipAtPosition.orientation === socketModels.Orientation.HORIZONTAL ? col - shipAtPosition.headCol : row - shipAtPosition.headRow;
+            shipAtPosition.hit(shipIdx);
+           
         } else {
             this.hitGrid[row][col] = HitState.MISS;
         }

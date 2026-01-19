@@ -1,3 +1,4 @@
+import React from "react";
 import { observer } from "mobx-react-lite";
 import ActiveShip from "../ActiveShipLogic.js";
 import { makeObservable, observable } from "mobx";
@@ -7,7 +8,7 @@ import "./FleetDisplay.css";
 class FleetDisplay  {
     readonly shipDF: (ActiveShip | null)[][];
     private readonly lengthToRow: Map<number, number[]>
-    static readonly MAX_ROW_LENGTH = 10;
+    static readonly MAX_ROW_LENGTH = 15;
 
     constructor(readonly shipLengths: Map<number, number>, activeShips: ActiveShip[]) {
         const [lengthToRow, shipDF] = this.buildEmptyDF();
@@ -20,7 +21,8 @@ class FleetDisplay  {
         }
 
         makeObservable(this, {
-            shipDF: observable.shallow
+            shipDF: observable,
+            addActiveShip: true,
         });
     }
 
@@ -83,10 +85,10 @@ class FleetDisplay  {
                 <tbody>
                     {Array.from(this.lengthToRow.keys()).sort((a, b) => b - a).map((length, index, array) => { // Sort lengths descending
                         return (
-                            <>
-                                <this.FleetBlock key={`fleet-block-${length}`} shipLength={length}/>
-                                {index < array.length - 1 && <tr key={`spacer-row-${length}`} className="spacer"/>}
-                            </>
+                            <React.Fragment key={`fleet-group-${length}`}>
+                                <this.FleetBlock shipLength={length}/>
+                                {index < array.length - 1 && <tr className="spacer"/>}
+                            </React.Fragment>
                         )
                     })}
                 </tbody>
@@ -101,10 +103,14 @@ class FleetDisplay  {
                     <tr key={`fleet-display-row${rowIdx}-length${shipLength}`}>
                         {this.shipDF[rowIdx].map((ship, index, array) => {
                             return (
-                                <>
-                                    <this.FleetShip key={`fleet-ship-${rowIdx}-${index}`} ship={ship} fallBackLength={shipLength} rowIdx={rowIdx} />
-                                    {index < array.length - 1 && <td key={`spacer-cell-${rowIdx}-${index}`} className="spacer"/>}
-                                </>
+                                <React.Fragment key={`ship-fragment-${rowIdx}-${index}`}>
+                                    <this.FleetShip 
+                                        ship={ship} 
+                                        fallBackLength={shipLength} 
+                                        rowIdx={rowIdx} 
+                                    />
+                                    {index < array.length - 1 && <td className="spacer"/>}
+                                </React.Fragment>
                             )
                         })}
                     

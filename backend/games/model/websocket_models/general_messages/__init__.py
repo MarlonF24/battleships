@@ -33,4 +33,9 @@ class ServerOpponentConnectionMessage(betterproto.Message):
     initially_connected: bool = betterproto.bool_field(2)
 
 
+@dataclass(eq=False, repr=False)
+class GeneralPlayerMessage(betterproto.Message):
+    pass
+
+
 rebuild_dataclass(GeneralServerMessage)  # type: ignore

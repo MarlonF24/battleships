@@ -1,9 +1,24 @@
-import GameGrid  from "./GameGrid";
-import { socketModels } from "../../../base";
-import { HitState } from "../HitGrid/HitGrid";
+import GameGrid, { ShipLengthsType } from "./GameGrid";
+import { HitState, HitStateType } from "../HitGrid/HitGrid";
 import ActiveShipLogic from "../ActiveShipLogic.js";
+import { makeObservable, override } from "mobx";
 
 class OpponentGrid extends GameGrid {
+
+    constructor(
+        size: {rows: number; cols: number}, 
+        shipLengths: ShipLengthsType, 
+        activeShips: ActiveShipLogic[], 
+        protected readonly hitGrid: HitStateType[][]
+    ) {
+        super(size, shipLengths, activeShips, hitGrid);
+
+        makeObservable(this, {
+            hit: override,
+            addShip: true,
+        })
+
+    }
 
     override hit(row: number, col: number, isHit?: boolean): void {
         if (this.hitGrid[row][col] !== HitState.UNTOUCHED) {
@@ -41,6 +56,8 @@ class OpponentGrid extends GameGrid {
         
 
         this.shipGrid.placeShip(ship, {headRow, headCol});
+
+        this.fleetDisplay.addActiveShip(ship);
     }
 
 }

@@ -39,6 +39,9 @@ class ActiveShipLogic extends Ship  {
         if (this.hits[idx]) {
             throw new Error(`Position ${idx} of ship is already hit.`);
         }
+        if (idx < 0 || idx >= this.length) {
+            throw new RangeError(`Position ${idx} is out of bounds for ship of length ${this.length}.`);
+        }
         
         this.hits[idx] = true;
     }

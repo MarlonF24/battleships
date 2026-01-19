@@ -1,6 +1,9 @@
 .fleet-display{
     --display-down-scale: 0.2;
+    border-collapse: separate; 
+    border-spacing: calc(var(--cell-size) * 0.05) calc(var(--cell-size) * 0.15); /* Add gap only between rows */
 }
+
 
 .fleet-display tr {
     height: calc(var(--cell-size) * var(--display-down-scale));
@@ -15,7 +18,7 @@
     visibility: hidden;
 }
 
-.fleet-display .hit {
+.fleet-display .ship-cell.hit {
     background-color: red;
 }
 

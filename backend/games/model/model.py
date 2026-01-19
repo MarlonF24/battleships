@@ -130,16 +130,17 @@ class ShipGrid():
         if self.cells[row][col].hit_state != ShipGridViewHitState.UNTOUCHED:
             raise ValueError(f"Position ({row}, {col}) has already been shot or is impossible to have a ship.")
         
-        self.cells[row][col].hit_state = ShipGridViewHitState.MISS
         
         ship = self.cells[row][col].ship
         
         if ship:
             ship_idx = (col - ship.head_col) if ship.orientation == Orientation.HORIZONTAL else (row - ship.head_row)
             ship.hit(ship_idx)
+            self.cells[row][col].hit_state = ShipGridViewHitState.HIT
 
             return True, ship if ship.is_sunk() else None
         else:
+            self.cells[row][col].hit_state = ShipGridViewHitState.MISS
             return False, None
     
 

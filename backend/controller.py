@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 import os, dotenv
 dotenv.load_dotenv("backend/.env")
 
@@ -23,6 +24,10 @@ async def lifespan(app: FastAPI):
         await conn.execute(text("CREATE SCHEMA public"))
         
         await conn.run_sync(Base.metadata.create_all)
+
+        # Set eager task factory for websockets
+    
+    asyncio.get_running_loop().set_task_factory(asyncio.eager_task_factory)
     
     yield
 

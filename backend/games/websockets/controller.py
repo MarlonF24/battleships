@@ -16,11 +16,13 @@ router = APIRouter(
 @router.websocket("/{gameId}/pregame")
 async def pregame_websocket(websocket: WebSocket, player_game: PlayerGameDep, session: SessionDep):
     player, game = player_game
+
     await pregame_service.handle_websocket(game, player, websocket, session)
 
 
 @router.websocket("/{gameId}/game")
 async def game_websocket(websocket: WebSocket, player_game: PlayerGameDep, session: SessionDep):
     player, game = player_game
+    
     await game_conn_manager.handle_websocket(game, player, websocket, session)
 

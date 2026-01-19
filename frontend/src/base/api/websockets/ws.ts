@@ -92,7 +92,7 @@ export class BackendWebSocket {
                 console.log(`Closing existing WebSocket for ${this.currentSocket.page} connection before opening a new one for ${page}.`);
             }
 
-            this.currentSocket.socket.close();
+            this.currentSocket.socket.close(1000, "Opening new WebSocket connection for different page");
             this.currentSocket = null;
         }
 

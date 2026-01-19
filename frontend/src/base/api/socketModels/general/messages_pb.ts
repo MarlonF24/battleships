@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file general/messages.proto.
  */
 export const file_general_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzInsKFEdlbmVyYWxTZXJ2ZXJNZXNzYWdlElgKG29wcG9uZW50X2Nvbm5lY3Rpb25fbWVzc2FnZRgBIAEoCzIxLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZUgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCEKBAQoUY29tLmdlbmVyYWxfbWVzc2FnZXNCDU1lc3NhZ2VzUHJvdG9QAaICA0dYWKoCD0dlbmVyYWxNZXNzYWdlc8oCD0dlbmVyYWxNZXNzYWdlc+ICG0dlbmVyYWxNZXNzYWdlc1xHUEJNZXRhZGF0YeoCD0dlbmVyYWxNZXNzYWdlc2IGcHJvdG8z");
+  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzInsKFEdlbmVyYWxTZXJ2ZXJNZXNzYWdlElgKG29wcG9uZW50X2Nvbm5lY3Rpb25fbWVzc2FnZRgBIAEoCzIxLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZUgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCCIWChRHZW5lcmFsUGxheWVyTWVzc2FnZUKBAQoUY29tLmdlbmVyYWxfbWVzc2FnZXNCDU1lc3NhZ2VzUHJvdG9QAaICA0dYWKoCD0dlbmVyYWxNZXNzYWdlc8oCD0dlbmVyYWxNZXNzYWdlc+ICG0dlbmVyYWxNZXNzYWdlc1xHUEJNZXRhZGF0YeoCD0dlbmVyYWxNZXNzYWdlc2IGcHJvdG8z");
 
 /**
  * @generated from message general_messages.GeneralServerMessage
@@ -56,4 +56,17 @@ export type ServerOpponentConnectionMessage = Message<"general_messages.ServerOp
  */
 export const ServerOpponentConnectionMessageSchema: GenMessage<ServerOpponentConnectionMessage> = /*@__PURE__*/
   messageDesc(file_general_messages, 1);
+
+/**
+ * @generated from message general_messages.GeneralPlayerMessage
+ */
+export type GeneralPlayerMessage = Message<"general_messages.GeneralPlayerMessage"> & {
+};
+
+/**
+ * Describes the message general_messages.GeneralPlayerMessage.
+ * Use `create(GeneralPlayerMessageSchema)` to create a new message.
+ */
+export const GeneralPlayerMessageSchema: GenMessage<GeneralPlayerMessage> = /*@__PURE__*/
+  messageDesc(file_general_messages, 2);
 

@@ -17,6 +17,7 @@ class GameWebsocketStore extends WebSocketStore {
 
         makeObservable(this, {
             gameGrids: observable.shallow,
+            hasTurn: observable,
             handleServerStateMessage: true,
             handleServerTurnMessage: true,
             handleServerShotResultMessage: true,
@@ -33,9 +34,11 @@ class GameWebsocketStore extends WebSocketStore {
             case "turn":
                 this.handleServerTurnMessage(message.payload.value);
                 break;
+            case "shot":
+                this.handleServerShotMessage(message.payload.value);
+                break;
             case "shotResult":
-                throw Error("ShotResult handling not fully implemented yet. Must write logic to disambiguate own vs opponent shot results.");
-                // this.handleServerShotResultMessage(message.payload.value);
+                this.handleServerShotResultMessage(message.payload.value);
                 break;
             default:
                 console.error(`Unhandled game server message type ${message.payload.case} message:${message}`);

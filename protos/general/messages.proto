@@ -13,4 +13,7 @@ message ServerOpponentConnectionMessage {
     bool initially_connected = 2;
 }
 
+message GeneralPlayerMessage {
+    
+}
 

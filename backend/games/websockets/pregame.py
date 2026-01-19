@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import WebSocket
 from dataclasses import dataclass
 from uuid import UUID
@@ -5,11 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.logger import logger
 
+from ...db import session_mkr
+from ..model import PregameServerMessage, PregamePlayerSetReadyStateMessage, PregameServerReadyStateMessage, PregamePlayerMessage
+from ..relations import Game, GamePhase, Player, Ship as DBShip, Orientation as DBOrientation
 from .conn_manager import *
 
-from ..model import PregameServerMessage, PregamePlayerSetReadyStateMessage, PregameServerReadyStateMessage, PregamePlayerMessage
-
-from ..relations import Game, GamePhase, Player, Ship as DBShip, Orientation as DBOrientation
 
 @dataclass
 class PregamePlayerConnection(PlayerConnection):
@@ -34,27 +36,16 @@ class PregameGameConnections(GameConnections[PregamePlayerConnection]):
 class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage, PregamePlayerMessage]):
     
 
-    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        if game.id not in self.active_connections:
-            self.active_connections[game.id] = PregameGameConnections()
-            logger.info(f"Created new GameConnections for game {game.id}")
+    async def allow_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession) -> WebSocketException | PregameGameConnections:
+        if game.phase != GamePhase.PREGAME:
+            return WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Cannot connect to WebSocket for game {game.id} which is not in PREGAME phase but {game.phase}.")
+        else:
+            return PregameGameConnections()
 
+
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         self.active_connections[game.id].add_player(player.id, PregamePlayerConnection(websocket=websocket))
         
-
-
-    async def end_pregame(self, game: Game, session: AsyncSession):
-        game.phase = GamePhase.GAME
-        session.add(game)
-        await session.commit()
-
-
-        logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
-        
-        await self.broadcast_ready_state(game)  # Notify players that pregame has ended
-        logger.info(f"Broadcasted that both players are ready in game {game.id}")
-
-
 
     async def broadcast_ready_state(self, game: Game):
         game_conns = self.get_game_connections(game)    
@@ -72,68 +63,71 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         await self.send_personal_message(game, player, PregameServerMessage(ready_state=game_connection.get_ready_state(player.id)))
 
     
-    async def _handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def type_message_consumer(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[PlayerMessageType]):
         
         # initial send of current ready count
         game_connection = self.get_game_connections(game)
         
 
-        async for message in self.message_generator(websocket, game, player):
+        async for message in self.message_generator(message_queue):
             
             if game_connection.num_ready_players() == 2:
-                logger.warning(f"Received message after both players were ready in game {game.id}. Ignoring message: {message}")
-                continue    
+                logger.warning(f"Received message after both players were ready in game {game.id}. This message was likely sent exactly between the handle_player_ready_message noticing the 2 ready players and the sockets closing. Ignoring message: {message}")
+                break  
             
               
             logger.info(f"Trying to read message as PregamePlayerMessage in game {game.id} from player {player.id}")
             
             _, payload = betterproto.which_one_of(message, "payload")
 
+
             match payload:
                 case PregamePlayerSetReadyStateMessage() as message:
                     logger.info(f"Received PregamePlayerSetReadyStateMessage from player {player.id} in game {game.id}: {message}")
-                    await self.handle_player_ready_message(game, player, message, session)
-
-                    if game_connection.num_ready_players() == 2:
-                        logger.info(f"Both players ready in game {game.id}.")
-                        await self.end_pregame(game, session)
+                    # execute the handler in the global event loop to make sure it executes fully even if the consumer is cancelled
+                    self.create_background_task(self.handle_player_ready_message(game, player, message))
 
                 case _:
                     logger.error(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
                     raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR, reason="Unknown message payload in PregamePlayerMessage.")
               
                 
-    async def clean_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await super().clean_up(game, player, websocket, session)
 
-        
-        game_conns = self.get_game_connections(game)
-        
-        if game_conns.num_players() == 2:
-            game_conns.remove_player(player.id)
-            logger.info(f"Player {player.id} disconnected from pregame in game {game.id}")
+    async def handle_player_ready_message(self, game: Game, player: Player, message: PregamePlayerSetReadyStateMessage):
+        # Use a new session for DB operations in this handler as this is run via create_task in the main event loop
+        # if something cancels the consumer that called this handler, the session will be kept alive independently
+        async with session_mkr.begin() as session:
+            
+            game_conns = self.get_game_connections(game)
+            player_conn = game_conns.players[player.id]
+            
+            # update readiness state
+            player_conn.ready = True
+            
+            ships = [DBShip(game_id=game.id, player_id=player.id, length=ship.length, head_row=ship.head_row, head_col=ship.head_col, orientation=DBOrientation(ship.orientation)) for ship in message.ships]
 
-            if not game_conns.players:
-                del self.active_connections[game.id]
-                logger.info(f"All players disconnected. Removed GameConnections for game {game.id}")    
+            session.add_all(ships)
+            
+
+            await self.broadcast_ready_state(game)
+
+
+            if game_conns.num_ready_players() == 2:
+                # both players are ready, end pregame
+                game = await session.merge(game)  # re-attach game to session
+                game.phase = GamePhase.GAME
+                session.add(game)
                 
+                # if both ready commit already before running any further logic
+                await session.commit()
 
-    async def handle_player_ready_message(self, game: Game, player: Player, message: PregamePlayerSetReadyStateMessage, session: AsyncSession):
-        player_conn = self.get_player_connection(game, player)
-        
-        # update readiness state
-        player_conn.ready = True
-        
-        ships = [DBShip(game_id=game.id, player_id=player.id, length=ship.length, head_row=ship.head_row, head_col=ship.head_col, orientation=DBOrientation(ship.orientation)) for ship in message.ships]
+                logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
 
-        session.add_all(ships)
-        
-        await session.commit()
-        # broadcast updated ready count to both players
-        await self.broadcast_ready_state(game)
-
-
+                await self.close_and_remove_game_connections(game)
     
+ 
+
+        
 
 conn_manager = PregameConnectionManager()
 

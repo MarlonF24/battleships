@@ -12,6 +12,8 @@
 .grid .cell {
   width: var(--cell-size);
   height: var(--cell-size);
+
+  
   text-align: center;
   vertical-align: middle;
   border: 1px solid #444;

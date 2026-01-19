@@ -13,21 +13,22 @@ async def create_player(session: AsyncSession, playerId: UUID | None = None) -> 
             logger.info(f"Returning already existing player with ID {existing_player.id}.")
             return existing_player.id
     
-    logger.info("Creating new player.")
-    player_instance = Player(id=playerId)  # default_factory will create new uuid if None
-    
-    session.add(player_instance)
-    
     try:
+        logger.info("Creating new player.")
+        player_instance = Player(id=playerId)  # default_factory will create new uuid if None
+        
+        session.add(player_instance)
+        
         await session.commit()
+        
         await session.refresh(player_instance)
         logger.info(f"Created player with ID: {player_instance.id}")
     
     # catch unlikely uuid collision, other exceptions will propagate
     except IntegrityError as e:
         logger.error(f"IntegrityError creating player: {e}")
-        await session.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create player")
+
 
     logger.info(f"Returning new player with ID {player_instance.id}.")
     return player_instance.id
