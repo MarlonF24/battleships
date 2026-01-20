@@ -40,6 +40,9 @@ class GameWebsocketStore extends WebSocketStore {
             case "shotResult":
                 this.handleServerShotResultMessage(message.payload.value);
                 break;
+            case "gameOver":
+                this.handleGameOver();
+                break;
             default:
                 console.error(`Unhandled game server message type ${message.payload.case} message:${message}`);
         }
@@ -92,6 +95,10 @@ class GameWebsocketStore extends WebSocketStore {
         
         this.hasTurn = true;
     };
+
+    handleGameOver = (): void => {
+        this.hasTurn = false;
+    }
 
     sendGamePlayerMessage = <T extends MessagePayload<socketModels.GamePlayerMessage>>(message: T): void => {
         const wrappedMessage = create(socketModels.GamePlayerMessageSchema, {

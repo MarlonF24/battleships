@@ -1,6 +1,6 @@
 import React from "react";
-import { CreateGameButton } from "./buttons";
-import { JoinGameInput } from "./input/inputs";
+import { CreateGameButton } from "../../base";
+import { JoinGameInput } from "./JoinGame/JoinGame";
 
 import "./welcome.css";
 

@@ -58,10 +58,6 @@ button:active {
     transform: translateY(1px);
 }
 
-/* Common Utility Classes */
-.hidden {
-    display: none !important;
-}
 
 .error-message {
     color: var(--danger-color);
@@ -99,13 +95,7 @@ button:active {
 }
 
 
-.button-bar {
-	display: flex;
-	gap: 16px;
-	margin-bottom: 24px;
-	flex-wrap: wrap;
-	justify-content: center;
-}
+
 
 .game-area {
 	display: flex;

@@ -47,13 +47,6 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         self.active_connections[game.id].add_player(player.id, PregamePlayerConnection(websocket=websocket))
         
 
-    async def broadcast_ready_state(self, game: Game):
-        game_conns = self.get_game_connections(game)    
-        
-        await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)))
-        
-
-
     async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         await super().start_up(game, player, websocket, session)
 
@@ -67,6 +60,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
         
         # initial send of current ready count
         game_connection = self.get_game_connections(game)
+        player_connection = game_connection.players[player.id]
         
 
         async for message in self.message_generator(message_queue):
@@ -74,6 +68,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
             if game_connection.num_ready_players() == 2:
                 logger.warning(f"Received message after both players were ready in game {game.id}. This message was likely sent exactly between the handle_player_ready_message noticing the 2 ready players and the sockets closing. Ignoring message: {message}")
                 break  
+
             
               
             logger.info(f"Trying to read message as PregamePlayerMessage in game {game.id} from player {player.id}")
@@ -83,9 +78,22 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
             match payload:
                 case PregamePlayerSetReadyStateMessage() as message:
+                    
+                    if player_connection.ready:
+                        logger.warning(f"Received ready message from player {player.id} in game {game.id} after they were already marked ready. Ignoring message: {message}")
+                        
+                        continue
+
+
                     logger.info(f"Received PregamePlayerSetReadyStateMessage from player {player.id} in game {game.id}: {message}")
-                    # execute the handler in the global event loop to make sure it executes fully even if the consumer is cancelled
-                    self.create_background_task(self.handle_player_ready_message(game, player, message))
+
+                    self_task = asyncio.current_task()
+
+                    # execute the handler in the global event loop to make sure it executes fully even if the consumer is cancelled as long as the server is running, still if the task crashes the consumer task shall crash too
+                    self.create_background_task(
+                        self.handle_player_ready_message(game, player, message), 
+                        name=f"handle_player_ready_message_{game.id}_{player.id}",
+                        task_to_crash_along=self_task)
 
                 case _:
                     logger.error(f"Unknown message payload received in PregamePlayerMessage {game.id}: {message}")
@@ -109,7 +117,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
             session.add_all(ships)
             
 
-            await self.broadcast_ready_state(game)
+            await self.broadcast(game, sender=None, message=lambda pid: PregameServerMessage(ready_state=game_conns.get_ready_state(pid)), raise_on_closed_socket=None)
 
 
             if game_conns.num_ready_players() == 2:
@@ -123,7 +131,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
                 logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
 
-                await self.close_and_remove_game_connections(game)
+                await self.close_player_connections(game, reason="Pregame completed.", remove_game_connection=True)
     
  
 

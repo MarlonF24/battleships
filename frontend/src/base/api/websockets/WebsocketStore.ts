@@ -84,7 +84,7 @@ export class WebSocketStore {
     }
 
     handleOpponentConnectionMessage = (message: socketModels.ServerOpponentConnectionMessage) => {
-        console.log(`Opponent connection status changed: connected=${message.opponentConnected}`);
+        console.log(`Opponent connection status changed: connected=${message.opponentConnected} (initially_connected=${message.initiallyConnected})`);
         Object.assign(this.opponentConnection, message);
     }
 

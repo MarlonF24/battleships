@@ -1,12 +1,13 @@
 import React from "react";
+import { ButtonBar } from "../../../base";
 import { PregameButtonProps, ReadyButton, ResetButton, RandomButton } from "./buttons";
 
-export const ButtonBar: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
+export const PregameButtonBar: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
     return (
-        <section id="pregame-button-bar" className="button-bar">
+        <ButtonBar>
             <ReadyButton battleGrid={battleGrid} shipGarage={shipGarage} numReadyPlayers={0} />
             <ResetButton battleGrid={battleGrid} shipGarage={shipGarage} />
             <RandomButton battleGrid={battleGrid} shipGarage={shipGarage} />
-        </section>
+        </ButtonBar>
     );
 }

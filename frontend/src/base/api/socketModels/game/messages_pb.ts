@@ -2,8 +2,8 @@
 // @generated from file game/messages.proto (package game_messages, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { ActiveShip, ShipGridView } from "./model_pb";
 import { file_game_model } from "./model_pb";
 import type { Message } from "@bufbuild/protobuf";
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file game/messages.proto.
  */
 export const file_game_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChNnYW1lL21lc3NhZ2VzLnByb3RvEg1nYW1lX21lc3NhZ2VzIlQKEUdhbWVQbGF5ZXJNZXNzYWdlEjQKBHNob3QYASABKAsyJC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJTaG90TWVzc2FnZUgAQgkKB3BheWxvYWQiNAoVR2FtZVBsYXllclNob3RNZXNzYWdlEgsKA3JvdxgBIAEoBRIOCgZjb2x1bW4YAiABKAUiigIKEUdhbWVTZXJ2ZXJNZXNzYWdlEjsKCmdhbWVfc3RhdGUYASABKAsyJS5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJTdGF0ZU1lc3NhZ2VIABJBCgtzaG90X3Jlc3VsdBgCIAEoCzIqLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RSZXN1bHRNZXNzYWdlSAASNAoEc2hvdBgDIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RNZXNzYWdlSAASNAoEdHVybhgEIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclR1cm5NZXNzYWdlSABCCQoHcGF5bG9hZCJ3ChZHYW1lU2VydmVyU3RhdGVNZXNzYWdlEisKCG93bl9ncmlkGAEgASgLMhkuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3EjAKDW9wcG9uZW50X2dyaWQYAiABKAsyGS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXcioAEKG0dhbWVTZXJ2ZXJTaG90UmVzdWx0TWVzc2FnZRIyCgRzaG90GAEgASgLMiQuZ2FtZV9tZXNzYWdlcy5HYW1lU2VydmVyU2hvdE1lc3NhZ2USDgoGaXNfaGl0GAMgASgIEi8KCXN1bmtfc2hpcBgEIAEoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXBIAIgBAUIMCgpfc3Vua19zaGlwIjQKFUdhbWVTZXJ2ZXJTaG90TWVzc2FnZRILCgNyb3cYASABKAUSDgoGY29sdW1uGAIgASgFIhcKFUdhbWVTZXJ2ZXJUdXJuTWVzc2FnZUJyChFjb20uZ2FtZV9tZXNzYWdlc0INTWVzc2FnZXNQcm90b1ABogIDR1hYqgIMR2FtZU1lc3NhZ2VzygIMR2FtZU1lc3NhZ2Vz4gIYR2FtZU1lc3NhZ2VzXEdQQk1ldGFkYXRh6gIMR2FtZU1lc3NhZ2VzYgZwcm90bzM", [file_game_model]);
+  fileDesc("ChNnYW1lL21lc3NhZ2VzLnByb3RvEg1nYW1lX21lc3NhZ2VzIlQKEUdhbWVQbGF5ZXJNZXNzYWdlEjQKBHNob3QYASABKAsyJC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJTaG90TWVzc2FnZUgAQgkKB3BheWxvYWQiNAoVR2FtZVBsYXllclNob3RNZXNzYWdlEgsKA3JvdxgBIAEoBRIOCgZjb2x1bW4YAiABKAUiyQIKEUdhbWVTZXJ2ZXJNZXNzYWdlEjsKCmdhbWVfc3RhdGUYASABKAsyJS5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJTdGF0ZU1lc3NhZ2VIABJBCgtzaG90X3Jlc3VsdBgCIAEoCzIqLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RSZXN1bHRNZXNzYWdlSAASNAoEc2hvdBgDIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclNob3RNZXNzYWdlSAASNAoEdHVybhgEIAEoCzIkLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlclR1cm5NZXNzYWdlSAASPQoJZ2FtZV9vdmVyGAUgASgLMiguZ2FtZV9tZXNzYWdlcy5HYW1lU2VydmVyR2FtZU92ZXJNZXNzYWdlSABCCQoHcGF5bG9hZCJ3ChZHYW1lU2VydmVyU3RhdGVNZXNzYWdlEisKCG93bl9ncmlkGAEgASgLMhkuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3EjAKDW9wcG9uZW50X2dyaWQYAiABKAsyGS5nYW1lX21vZGVscy5TaGlwR3JpZFZpZXcioAEKG0dhbWVTZXJ2ZXJTaG90UmVzdWx0TWVzc2FnZRIyCgRzaG90GAEgASgLMiQuZ2FtZV9tZXNzYWdlcy5HYW1lU2VydmVyU2hvdE1lc3NhZ2USDgoGaXNfaGl0GAMgASgIEi8KCXN1bmtfc2hpcBgEIAEoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXBIAIgBAUIMCgpfc3Vua19zaGlwIjQKFUdhbWVTZXJ2ZXJTaG90TWVzc2FnZRILCgNyb3cYASABKAUSDgoGY29sdW1uGAIgASgFIhcKFUdhbWVTZXJ2ZXJUdXJuTWVzc2FnZSJKChlHYW1lU2VydmVyR2FtZU92ZXJNZXNzYWdlEi0KBnJlc3VsdBgBIAEoDjIdLmdhbWVfbWVzc2FnZXMuR2FtZU92ZXJSZXN1bHQqMgoOR2FtZU92ZXJSZXN1bHQSBwoDV0lOEAASCAoETE9TUxABEg0KCVBSRU1BVFVSRRACQnIKEWNvbS5nYW1lX21lc3NhZ2VzQg1NZXNzYWdlc1Byb3RvUAGiAgNHWFiqAgxHYW1lTWVzc2FnZXPKAgxHYW1lTWVzc2FnZXPiAhhHYW1lTWVzc2FnZXNcR1BCTWV0YWRhdGHqAgxHYW1lTWVzc2FnZXNiBnByb3RvMw", [file_game_model]);
 
 /**
  * @generated from message game_messages.GamePlayerMessage
@@ -90,6 +90,12 @@ export type GameServerMessage = Message<"game_messages.GameServerMessage"> & {
      */
     value: GameServerTurnMessage;
     case: "turn";
+  } | {
+    /**
+     * @generated from field: game_messages.GameServerGameOverMessage game_over = 5;
+     */
+    value: GameServerGameOverMessage;
+    case: "gameOver";
   } | { case: undefined; value?: undefined };
 };
 
@@ -183,4 +189,47 @@ export type GameServerTurnMessage = Message<"game_messages.GameServerTurnMessage
  */
 export const GameServerTurnMessageSchema: GenMessage<GameServerTurnMessage> = /*@__PURE__*/
   messageDesc(file_game_messages, 6);
+
+/**
+ * @generated from message game_messages.GameServerGameOverMessage
+ */
+export type GameServerGameOverMessage = Message<"game_messages.GameServerGameOverMessage"> & {
+  /**
+   * @generated from field: game_messages.GameOverResult result = 1;
+   */
+  result: GameOverResult;
+};
+
+/**
+ * Describes the message game_messages.GameServerGameOverMessage.
+ * Use `create(GameServerGameOverMessageSchema)` to create a new message.
+ */
+export const GameServerGameOverMessageSchema: GenMessage<GameServerGameOverMessage> = /*@__PURE__*/
+  messageDesc(file_game_messages, 7);
+
+/**
+ * @generated from enum game_messages.GameOverResult
+ */
+export enum GameOverResult {
+  /**
+   * @generated from enum value: WIN = 0;
+   */
+  WIN = 0,
+
+  /**
+   * @generated from enum value: LOSS = 1;
+   */
+  LOSS = 1,
+
+  /**
+   * @generated from enum value: PREMATURE = 2;
+   */
+  PREMATURE = 2,
+}
+
+/**
+ * Describes the enum game_messages.GameOverResult.
+ */
+export const GameOverResultSchema: GenEnum<GameOverResult> = /*@__PURE__*/
+  enumDesc(file_game_messages, 0);
 

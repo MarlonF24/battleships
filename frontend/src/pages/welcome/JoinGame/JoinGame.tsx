@@ -1,6 +1,6 @@
 import { useSwitchView, Page } from "../../../routing/switch_view";
 import { useApi, api } from "../../../base";
-import "./inputs.css";
+import "./JoinGame.css";
 
 
 export const JoinGameInput: React.FC = () => {

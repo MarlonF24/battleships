@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import WebSocket, WebSocketException, websockets, status
 from unittest.mock import patch
 
+
 from backend.logger import logger
 from ..model import GamePlayerMessage, GeneralPlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, ServerMessage, GeneralServerMessage, PregamePlayerMessage
 from ..relations import Game, Player
@@ -123,16 +124,35 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         }
         self.background_tasks: set[asyncio.Task[Any]] = set()
 
-    def create_background_task(self, coro: Coroutine[Any, Any, Any]) :
+    def create_background_task(self, coro: Coroutine[Any, Any, Any], name: str, task_to_crash_along: asyncio.Task[Any] | None = None) -> None:
         """
-        Let a coroutine be executed in the global event loop as a background task, by being stored in the connection manager's background tasks set garbage collection is prevented.
+        Let a coroutine be executed in the global event loop as a background task, by being stored in the connection manager's background tasks set garbage collection is prevented. If the parent task is still running when the background task crashes, the parent task is cancelled as well.
+        
+        Args:
+            coro: The coroutine to execute as a background task.
+            task_to_crash_along: The parent task that wants to schedule the coro.
         """
-        task = asyncio.create_task(coro)
+
+        task = asyncio.create_task(coro, name=name)
         self.background_tasks.add(task)
 
         def task_done_callback(t: asyncio.Task[Any]):
             self.background_tasks.discard(t)
-
+            
+            try:
+                if exc := t.exception():
+                    logger.error(f"Background task {t.get_name()} CRASHED: {exc}", exc_info=exc)
+                    
+                    if task_to_crash_along and not task_to_crash_along.done():
+                        logger.critical(f"Killing parent consumer {task_to_crash_along.get_name()} due to background failure.")
+                        
+                        # kill parent consumer
+                        task_to_crash_along.cancel() 
+                        
+            # raised by .exception() if the task was cancelled
+            except asyncio.CancelledError:
+                logger.info(f"Background task {t.get_name()} was cancelled.")
+            
         task.add_done_callback(task_done_callback)
      
 
@@ -217,32 +237,38 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
     
 
 
-    async def close_and_remove_game_connections(self, game: Game):
+    async def close_player_connections(self, game: Game, reason: str, remove_game_connection: bool = False):
         """Close all player connections in a game and remove the game from active connections."""
         game_conns = self.get_game_connections(game)
 
-        await asyncio.gather(*(self.disconnect(game, Player(id=player_id)) for player_id in game_conns.players))
+        await asyncio.gather(*(self.disconnect(game, Player(id=player_id), reason=reason) for player_id in game_conns.players))
+        
+        if remove_game_connection:
+            del self.active_connections[game.id]
 
-        del self.active_connections[game.id]
 
 
-
-    async def send_server_message(self, websocket: WebSocket, message: ServerMessageType | GeneralServerMessage, raise_on_closed_socket: str | None = None):
+    async def send_server_message(self, websocket: WebSocket, message: ServerMessageType | GeneralServerMessage, raise_on_closed_socket: str | None = "Attempted to send message on closed WebSocket."):
         """
         Send a server message over the websocket. Wraps the message into the appropriate envelope.
         Args:
             raise_on_closed_socket: If set, raises a WebSocketException with this reason when the socket is closed.
         """
-        if websocket.client_state == websockets.WebSocketState.CONNECTED:
+        try:
             message = ServerMessage(**{self.server_message_payload_map[type(message)]: message}) # type: ignore
 
             await websocket.send_bytes(bytes(message))
         
-        elif raise_on_closed_socket:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Attempted to send message on closed WebSocket.")
+        except RuntimeError:
+            if raise_on_closed_socket:
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
         
 
-    async def broadcast(self, game: Game, sender: Player | None, message: ServerMessageType | GeneralServerMessage | MessageFactory, only_opponent: bool = False, raise_on_closed_socket: str | None = None):
+    async def broadcast(
+        self, game: Game, sender: Player | None, 
+        message: ServerMessageType | GeneralServerMessage | MessageFactory, only_opponent: bool = False, raise_on_closed_socket: str | None = "Attempted to broadcast message but one of the desired recipients has a closed WebSocket."
+    ):
+
         """Broadcast a message to all players in a game, optionally excluding the sender."""
 
         if not sender and only_opponent:
@@ -260,17 +286,24 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 message_instance = message
     
             
-            if connection.websocket.client_state != websockets.WebSocketState.CONNECTED:
-                if raise_on_closed_socket is not None:
-                    raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
+            if connection.websocket.client_state != websockets.WebSocketState.CONNECTED and raise_on_closed_socket is not None:
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
             else:
                 coroutines.append(self.send_server_message(connection.websocket, message_instance))
 
-        await asyncio.gather(*coroutines)
+       
+        result = await asyncio.gather(*coroutines, return_exceptions=True)
+        
+        for res in result:
+            if isinstance(res, WebSocketException):
+                if raise_on_closed_socket:
+                    raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
+            elif isinstance(res, Exception):
+                raise res
 
 
 
-    async def send_personal_message(self, game: Game, player: Player, message: ServerMessageType | GeneralServerMessage, raise_on_closed_socket: str | None = None):    
+    async def send_personal_message(self, game: Game, player: Player, message: ServerMessageType | GeneralServerMessage, raise_on_closed_socket: str | None = "Tried to send personal message on closed WebSocket."):    
         """
         Send a personal message to a specific player in a game. Mainly meant for the player who ultimately initialised this call.
         
@@ -289,7 +322,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             
             message = game_conns.get_connection_message(sender.id)
             
-            await self.broadcast(game, sender, message, only_opponent=True) 
+            await self.broadcast(game, sender, message, only_opponent=True, raise_on_closed_socket=None) 
             
             logger.info(f"Informed opponent of player {sender.id} in game {game.id} about connection status.")
 
@@ -338,6 +371,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             wse: The WebSocketException instance to send in the closure if one occurred. Defaults to None.
         """
         if game.id in self.active_connections:
+            logger.info(f"Cleaning up connection for game {game.id}, player {player.id}...")
             await self.inform_opponent_about_own_connection(game, player)
             if wse:
                 code = wse.code
@@ -348,7 +382,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 
             await self.disconnect(game, player, code=code, reason=reason)
 
-        logger.warning(f"Trying to clean up connection for game {game.id}, player {player.id} but no active connection found. Either it has already been removed or was never established. Please check whether this is intended.")
+        logger.warning(f"Tried to clean up connection for game {game.id}, player {player.id} but no active connection found. Either it has already been removed or was never established. Please check whether this is intended.")
 
 
 
@@ -387,6 +421,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         except Exception as e:
             wse = WebSocketException(code=status.WS_1011_INTERNAL_ERROR, reason="WebSocket closed due to internal error.")
             logger.error(f"Exception caught in lifecycle for game {game.id}, player {player.id}: {e}")
+            logger.error("Traceback:", exc_info=True)
 
         finally:
             logger.info(f"Cleaning up WebSocket lifecycle for game {game.id}, player {player.id}")
@@ -432,7 +467,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 queue.task_done()
 
             except asyncio.QueueShutDown:
-                raise StopAsyncIteration
+                return
 
 
     async def general_type_message_consumer(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession, general_queue: asyncio.Queue[GeneralPlayerMessage]):
@@ -482,6 +517,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         
         finally:    
             # socket closed -> generator exhausted -> wait for consumers to finish
+            logger.info(f"Draining and shutting down message queues for game {game.id}, player {player.id}")
             await asyncio.gather(
                 self.drain_and_shutdown_queue(general_queue),
                 self.drain_and_shutdown_queue(type_queue)

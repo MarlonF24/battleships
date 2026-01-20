@@ -4,7 +4,7 @@ import { BattleGrid } from "./BattleGrid/battle_grid"
 import { ShipGarage } from "./Garage/garage"
 import { useWebSocketStore } from "../../base"
 import { PregameWebSocketStore } from "./PregameWebsocket"
-import { ButtonBar } from "./buttons/button_bar"
+import { PregameButtonBar } from "./buttons/button_bar"
 
 const PregameActionArea: React.FC<{battleGrid: BattleGrid, shipGarage: ShipGarage}> = observer(({battleGrid, shipGarage}) => {
 
@@ -13,7 +13,7 @@ const PregameActionArea: React.FC<{battleGrid: BattleGrid, shipGarage: ShipGarag
     
     return (
         <div className="action-area" inert={WS.readyState.selfReady}>
-            <ButtonBar battleGrid={battleGrid} shipGarage={shipGarage}/>
+            <PregameButtonBar battleGrid={battleGrid} shipGarage={shipGarage}/>
             <section className="game-area">
                 <battleGrid.Renderer/>
                 <shipGarage.Renderer/>

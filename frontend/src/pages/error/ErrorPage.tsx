@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useRouteError, isRouteErrorResponse, useLocation } from 'react-router-dom';
 import { Page, useSwitchView } from '../../routing/switch_view';
+import { ButtonBar, ToWelcomeBtn } from '../../base';
 
 
 
@@ -48,16 +49,14 @@ const ErrorPage: React.FC = () => {
             <div className="error-message">
                 <i>{errorMessage}</i>
             </div>
-            <div className="button-bar">
+            <ButtonBar>
                 <button onClick={() => switchView(Page.BACK)} className="btn-danger">
                     Reload Previous Page
                 </button>
                 
-                 <button onClick={() => switchView(Page.WELCOME)} className="btn-primary">
-                    Go to Welcome
-                </button>
+                <ToWelcomeBtn/>
                 
-            </div>
+            </ButtonBar>
         </div>
     );
 }

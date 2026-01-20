@@ -24,6 +24,7 @@ message GameServerMessage {
     GameServerShotResultMessage shot_result = 2;
     GameServerShotMessage shot = 3;
     GameServerTurnMessage turn = 4;
+    GameServerGameOverMessage game_over = 5;
   }
 }
 
@@ -44,4 +45,14 @@ message GameServerShotMessage {
 }
 
 message GameServerTurnMessage {
+}
+enum GameOverResult {
+  WIN = 0;
+  LOSS = 1;
+  PREMATURE = 2;  
+}  
+
+message GameServerGameOverMessage {
+  
+  GameOverResult result = 1;
 }

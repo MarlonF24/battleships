@@ -18,6 +18,18 @@ from pydantic.dataclasses import rebuild_dataclass
 from .. import game_models as _game_models__
 
 
+class GameOverResult(betterproto.Enum):
+    WIN = 0
+    LOSS = 1
+    PREMATURE = 2
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        from pydantic_core import core_schema
+
+        return core_schema.int_schema(ge=0)
+
+
 @dataclass(eq=False, repr=False)
 class GamePlayerMessage(betterproto.Message):
     shot: "GamePlayerShotMessage | None" = betterproto.message_field(
@@ -48,6 +60,9 @@ class GameServerMessage(betterproto.Message):
     )
     turn: "GameServerTurnMessage | None" = betterproto.message_field(
         4, optional=True, group="payload"
+    )
+    game_over: "GameServerGameOverMessage | None" = betterproto.message_field(
+        5, optional=True, group="payload"
     )
 
     @model_validator(mode="after")
@@ -81,7 +96,13 @@ class GameServerTurnMessage(betterproto.Message):
     pass
 
 
+@dataclass(eq=False, repr=False)
+class GameServerGameOverMessage(betterproto.Message):
+    result: "GameOverResult" = betterproto.enum_field(1)
+
+
 rebuild_dataclass(GamePlayerMessage)  # type: ignore
 rebuild_dataclass(GameServerMessage)  # type: ignore
 rebuild_dataclass(GameServerStateMessage)  # type: ignore
 rebuild_dataclass(GameServerShotResultMessage)  # type: ignore
+rebuild_dataclass(GameServerGameOverMessage)  # type: ignore

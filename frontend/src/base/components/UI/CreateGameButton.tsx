@@ -1,7 +1,7 @@
 import React from "react";
 
-import { useApi, api } from "../../base";
-import { useSwitchView, Page } from "../../routing/switch_view";
+import { useApi, api } from "../..";
+import { useSwitchView, Page } from "../../../routing/switch_view";
 
 
 
@@ -37,4 +37,5 @@ export const CreateGameButton: React.FC = () => {
         </>
     )
 }
+
 
