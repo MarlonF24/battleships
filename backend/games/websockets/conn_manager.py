@@ -2,7 +2,6 @@ import betterproto, asyncio
 from collections.abc import AsyncGenerator, Coroutine
 from contextlib import asynccontextmanager
 from uuid import UUID
-from dataclasses import dataclass, field
 from typing import Generic, Literal, TypeVar, Any, Callable, overload
 from abc import ABC, abstractmethod
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,99 +13,9 @@ from backend.logger import logger
 from ..model import GamePlayerMessage, GeneralPlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, ServerMessage, GeneralServerMessage, PregamePlayerMessage
 from ..relations import Game, Player
 
+from .connection import PlayerConnectionType, GameConnections
 
-@dataclass
-class PlayerConnection():
-    websocket: WebSocket
 
-PlayerConnectionType = TypeVar('PlayerConnectionType', bound=PlayerConnection)
-
-@dataclass
-class GameConnections(ABC, Generic[PlayerConnectionType]):
-    players: dict[UUID, PlayerConnectionType] = field(default_factory=dict) # type: ignore
-    
-    def add_player(self, player_id: UUID, connection: PlayerConnectionType):
-        if player_id not in self.players and len(self.players) >= 2:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Attempted to add third player to game connections.")
-        
-        if player_id not in self.players:
-            logger.info(f"Added player {player_id} to PregameGameConnections.")
-            self.players[player_id] = connection
-        else:
-            logger.info(f"Player {player_id} reconnected. Updating connection.")
-            self.players[player_id].websocket = connection.websocket
-            
-    
-    def num_players(self) -> int:
-        return len(self.players)
-    
-    def validate_player_in_game(self, player_id: UUID):
-        if player_id not in self.players:
-            
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Requested game connections data with foreign player ID. {player_id} not found in {list(self.players.keys())}.")
-
-    def __iter__(self):
-        return iter(self.players.items())
-
-    @overload
-    def get_opponent_id(self, own_id: UUID, raise_on_missing: str) -> UUID: ...
-    @overload
-    def get_opponent_id(self, own_id: UUID, raise_on_missing: None) -> UUID | None: ...
-    def get_opponent_id(self, own_id: UUID, raise_on_missing: str | None = None) -> UUID | None:
-        self.validate_player_in_game(own_id)
-        
-        for player_id in self.players.keys():
-            if player_id != own_id:
-                return player_id
-        
-        if raise_on_missing is not None:
-            raise ValueError("Opponent ID not found.")
-        
-        return None
-    
-    def num_of_currently_connected(self) -> int:
-        return sum(1 for conn in self.players.values() if conn.websocket.client_state == websockets.WebSocketState.CONNECTED)
-    
-    def currently_connected(self, player_id: UUID) -> bool:
-        """Check if player is currently connected."""
-        try:
-            self.validate_player_in_game(player_id)
-        except WebSocketException:
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Trying to check connection status of a player not in the game.")
-        
-        return self.players[player_id].websocket.client_state == websockets.WebSocketState.CONNECTED
-            
-    
-    def initially_connected(self, player_id: UUID) -> bool:
-        """Check if player was connected at some time."""
-        return player_id in self.players
-    
-
-    def get_connection_message(self, player_id: UUID) -> GeneralServerMessage:
-        self.validate_player_in_game(player_id)
-        
-        return GeneralServerMessage(opponent_connection_message=ServerOpponentConnectionMessage(
-            opponent_connected=self.currently_connected(player_id),
-            initially_connected=self.initially_connected(player_id)
-        ))
-    
-    @overload
-    def get_opponent_connection(self, own_id: UUID, raise_on_missing: str) -> PlayerConnectionType: ...
-    @overload
-    def get_opponent_connection(self, own_id: UUID, raise_on_missing: None) -> PlayerConnectionType | None: ...
-    def get_opponent_connection(self, own_id: UUID, raise_on_missing: str | None = None) -> PlayerConnectionType | None:
-        opponent_id = self.get_opponent_id(own_id, raise_on_missing=raise_on_missing)
-        
-        if opponent_id:
-            return self.players[opponent_id]
-        
-        return None
-    
-    def remove_player(self, player_id: UUID):
-        self.validate_player_in_game(player_id)
-        
-        del self.players[player_id]
-        logger.info(f"Removed player {player_id} from GameConnections.")
     
 
 GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])
@@ -291,15 +200,18 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             else:
                 coroutines.append(self.send_server_message(connection.websocket, message_instance))
 
-       
-        result = await asyncio.gather(*coroutines, return_exceptions=True)
+        if not raise_on_closed_socket:
+            await asyncio.gather(*coroutines, return_exceptions=True) # return exceptions to avoid cancelling
         
-        for res in result:
-            if isinstance(res, WebSocketException):
-                if raise_on_closed_socket:
-                    raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket)
-            elif isinstance(res, Exception):
-                raise res
+        else:
+            try:
+                # Using a TaskGroup to cancel on first failure
+                async with asyncio.TaskGroup() as tg:
+                    for coroutine in coroutines:
+                        tg.create_task(coroutine)
+
+            except* WebSocketException as wse:
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="One or more WebSocketExceptions raised during broadcast.") from wse
 
 
 
@@ -316,8 +228,8 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         await self.send_server_message(player_connection.websocket, message, raise_on_closed_socket=raise_on_closed_socket)
 
 
-    async def inform_opponent_about_own_connection(self, game: Game, sender: Player):
-        """Notify the opponent about the sender's connection status. If connected is True"""
+    async def inform_opponent_about_own_connection_if_present(self, game: Game, sender: Player):
+        """Notify the opponent about the sender's connection status. If no opponent is connected, does nothing."""
         if game_conns := self.get_game_connections(game, raise_on_missing=False):
             
             message = game_conns.get_connection_message(sender.id)
@@ -343,6 +255,8 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         await self.send_personal_message(game, player, message) # type: ignore
         logger.info(f"Informed player {player.id} in game {game.id} about opponent's connection status.")
 
+
+
     async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
         """
         Start up the websocket connection lifecycle for a player in a game.
@@ -355,7 +269,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         """
         await self.connect(game, player, websocket, session)
         await asyncio.gather(
-            self.inform_opponent_about_own_connection(game, player),
+            self.inform_opponent_about_own_connection_if_present(game, player),
             self.inform_self_about_opponent_connection(game, player)
             )
   
@@ -372,7 +286,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         """
         if game.id in self.active_connections:
             logger.info(f"Cleaning up connection for game {game.id}, player {player.id}...")
-            await self.inform_opponent_about_own_connection(game, player)
+            await self.inform_opponent_about_own_connection_if_present(game, player)
             if wse:
                 code = wse.code
                 reason = wse.reason
@@ -406,12 +320,10 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         try:
             logger.info(f"Starting WebSocket lifecycle for game {game.id}, player {player.id}")
             await self.start_up(game, player, websocket, session)
-
-            general_message_queue = asyncio.Queue[GeneralPlayerMessage](maxsize=10)
-            message_type_queue = asyncio.Queue[PlayerMessageType](maxsize=10)
-
             
-            yield general_message_queue, message_type_queue
+            
+            yield
+
 
        
         except WebSocketException as e:
@@ -445,38 +357,60 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
         """
         
-        async with self.websocket_lifecycle(game, player, websocket, session) as (general_message_queue, message_type_queue):
+        async with self.websocket_lifecycle(game, player, websocket, session):
             async with asyncio.TaskGroup() as tg:
-                
+                general_message_queue = asyncio.Queue[GeneralPlayerMessage](maxsize=10)
+                message_type_queue = asyncio.Queue[PlayerMessageType](maxsize=10)
 
-                tg.create_task(self.message_producer(websocket, game, player, general_message_queue, message_type_queue))
+                tg.create_task(self.player_message_router(websocket, game, player, general_message_queue, message_type_queue))
 
-                # tg.create_task(self.general_type_message_consumer(game, player, websocket, session, general_message_queue))
+                # tg.create_task(self.handle_general_messages(game, player, websocket, session, general_message_queue))
 
-                tg.create_task(self.type_message_consumer(game, player, session, message_type_queue))
-
-
-    T = TypeVar('T')
-
-    @staticmethod
-    async def message_generator(queue: asyncio.Queue[T]) -> AsyncGenerator[T, None]:
-        while True:
-            try:
-                message = await queue.get()
-                yield message
-                queue.task_done()
-
-            except asyncio.QueueShutDown:
-                return
+                tg.create_task(self.handle_type_messages(game, player, session, message_type_queue))
 
 
-    async def general_type_message_consumer(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession, general_queue: asyncio.Queue[GeneralPlayerMessage]):
-        pass
+    
+    @asynccontextmanager
+    async def router_lifecycle(self, game: Game, player: Player, input_queue: asyncio.Queue[Any] | Literal["Websocket"], output_queues: set[asyncio.Queue[Any]]) :
+        try:
+        
+            yield 
+
+        
+        except Exception as e:
+            logger.error(f"Exception raised in message producer for {output_queues} from {input_queue} for game {game.id}, player {player.id}: {e}")
+        
+        finally:
+            
+            # check if the current task was cancelled by a consumer (to avoid deadlocks)
+            if current_task := asyncio.current_task():
+                if current_task.cancelled():
+                    logger.info(f"Message producer was cancelled (Likely due to a consumer in the task group crashing). Exiting immediately without draining queues.")
+
+                    for queue in output_queues:
+                        queue.shutdown()
+                    
+                    return
+
+            # normal websocket closure or exception in producer
+            # wait for consumers to finish
+            logger.info(f"Producer was not cancelled. Draining and then shutting down message queues...")
+            
+            await asyncio.gather(*(self.drain_and_shutdown_queue(queue) for queue in output_queues))
     
 
-    async def message_producer(self, websocket: WebSocket, game: Game, player: Player, general_queue: asyncio.Queue[GeneralPlayerMessage], type_queue: asyncio.Queue[PlayerMessageType]):
+
+    async def drain_and_shutdown_queue(self, queue: asyncio.Queue[Any]):
+        # wait till consumers have processed all messages
+        await queue.join()
+        # then shut down the queue to stop the generator for the consumers for them to finish
+        queue.shutdown()
+    
+
+
+    async def player_message_router(self, websocket: WebSocket, game: Game, player: Player, general_queue: asyncio.Queue[GeneralPlayerMessage], type_queue: asyncio.Queue[PlayerMessageType]):
         """
-        _summary_
+        Top-level message producer that reads messages from the websocket and enqueues them into the appropriate queues.
 
         Args:
             websocket: The FastAPI WebSocket instance
@@ -489,13 +423,14 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             This producer reads messages from the websocket and enqueues them into the appropriate queues based on their type.
             Upon socket closure, it ensures that the queues are drained and shut down properly to allow consumers to finish. Upon exception in the producer itself, the same cleanup is performed.
         """
-        try:
+        async with self.router_lifecycle(game, player, "Websocket", {general_queue, type_queue}):
+            
             async for message in websocket.iter_bytes():
             
                 # For some reason betterproto works like that Message().parse(bytes) but pydantic checks before we parse then, thus we circumvent validation like this:
                 with patch.object(betterproto.Message, "_validate_field_groups", side_effect=lambda _: None): # type: ignore
                     message_obj = PlayerMessage() 
-                    message_obj.parse(message) 
+                    message_obj.parse(message)
 
                 logger.info(f"Received WebSocket message in game {game.id} from player {player.id}")
 
@@ -512,26 +447,27 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                         await type_queue.put(payload) # type: ignore
                         logger.info(f"Enqueued PlayerMessage from player {player.id} in game {game.id} to phase-specific queue: {payload}")
         
-        except Exception as e:
-            logger.info(f"Exiting message producer for game {game.id}, player {player.id} due to exception: {e}")
         
-        finally:    
-            # socket closed -> generator exhausted -> wait for consumers to finish
-            logger.info(f"Draining and shutting down message queues for game {game.id}, player {player.id}")
-            await asyncio.gather(
-                self.drain_and_shutdown_queue(general_queue),
-                self.drain_and_shutdown_queue(type_queue)
-            )
-            
 
-    async def drain_and_shutdown_queue(self, queue: asyncio.Queue[Any]):
-        # wait till consumers have processed all messages
-        await queue.join()
-        # then shut down the queue to stop the generator for the consumers for them to finish
-        queue.shutdown()
+    T = TypeVar('T')
+
+    @staticmethod
+    async def message_generator(queue: asyncio.Queue[T]) -> AsyncGenerator[T, None]:
+        while True:
+            try:
+                message = await queue.get()
+                yield message
+                queue.task_done()
+
+            except asyncio.QueueShutDown:
+                return
    
+
+    async def handle_general_messages(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession, general_queue: asyncio.Queue[GeneralPlayerMessage]):
+        pass
+
     @abstractmethod
-    async def type_message_consumer(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[PlayerMessageType]):
+    async def handle_type_messages(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[PlayerMessageType]):
         ...
 
 if __name__ == "__main__":

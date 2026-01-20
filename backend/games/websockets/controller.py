@@ -4,8 +4,8 @@ from fastapi import APIRouter, WebSocket
 
 from ..dependencies import PlayerGameDep
 from ...db import SessionDep
-from .game import conn_manager as game_conn_manager
-from .pregame import conn_manager as pregame_service
+from .game.conn_manager import conn_manager as game_conn_manager
+from .pregame.conn_manager import conn_manager as pregame_service
 
 
 router = APIRouter(

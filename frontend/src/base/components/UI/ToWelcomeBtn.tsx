@@ -4,8 +4,8 @@ const ToWelcomeBtn = () => {
     const switchView = useSwitchView();
     
     return (
-        <button onClick={() => switchView(Page.BACK)} className="btn-danger">
-                Reload Previous Page
+        <button onClick={() => switchView(Page.WELCOME)} className="btn-primary">
+                Back to Welcome Page
         </button>
     )
 }

@@ -1,75 +1,18 @@
 import asyncio, betterproto
 from uuid import UUID
 from fastapi import WebSocket
-from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from backend.games.relations import Player
 
-from .conn_manager import *
+from ..conn_manager import *
 
-from ...db import session_mkr
-from ..model import GameServerMessage, GamePlayerMessage, GameServerStateMessage, GameServerShotMessage, GameServerShotResultMessage, GameServerTurnMessage, GameServerGameOverMessage, GamePlayerShotMessage, ShipGrid, ActiveShipLogic, GameOverResult
+from ....db import session_mkr
+from ...model import GameServerMessage, GamePlayerMessage, GameServerShotMessage, GameServerShotResultMessage, GameServerTurnMessage, GameServerGameOverMessage, GamePlayerShotMessage, ShipGrid, ActiveShipLogic, GameOverResult
 
-from ..relations import Game, GamePhase, Ship
-
-
-@dataclass
-class GamePlayerConnection(PlayerConnection):
-    ship_grid: ShipGrid
-
-@dataclass
-class GameGameConnections(GameConnections[GamePlayerConnection]):
-    first_to_shoot: UUID | None = None
-    turn_player_id: UUID | None = None
-    _started: bool = field(default=False, init=False)
-    _ended: bool = field(default=False, init=False)
-    shot_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
-    reconnect_event: asyncio.Event = field(default_factory=asyncio.Event, init=False)
-
-    def add_player(self, player_id: UUID, connection: GamePlayerConnection):
-        super().add_player(player_id, connection)
-        
-        if not self.first_to_shoot:
-            self.first_to_shoot = player_id
-
-    @property
-    def started(self) -> bool:
-        return self._started
-    
-
-    def start_battle(self):
-        self.turn_player_id = self.first_to_shoot
-        self._started = True
-
-    @property
-    def ended(self) -> bool:
-        return self._ended
-    
-    def end_battle(self):
-        self._ended = True
-
-    @property
-    def running(self) -> bool:
-        return self.started and not self.ended
-    
-    def get_game_state(self, player_id: UUID) -> GameServerStateMessage:  
-        player_connection = self.players[player_id]
-        opponent_connection = self.get_opponent_connection(player_id, raise_on_missing="Trying to get game state even though opponent has NEVER INITIALLY connected.")
-
-        return GameServerStateMessage(
-            own_grid=player_connection.ship_grid.get_own_view(),
-            opponent_grid=opponent_connection.ship_grid.get_opponent_view(),
-        )
-    
-    def swap_turn(self):
-        if not self.turn_player_id:
-            self.turn_player_id = self.first_to_shoot
-        else:
-            next_turn_player_id = self.get_opponent_id(self.turn_player_id, raise_on_missing="Cannot swap turn, next turn player not in game.")            
-            self.turn_player_id = next_turn_player_id
-    
+from ...relations import Game, GamePhase, Ship
+from .connection import GameGameConnections, GamePlayerConnection
 
 
 class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerConnection, GameServerMessage, GamePlayerMessage]):
@@ -126,45 +69,6 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
                 game_connections.reconnect_event.set()  # signal that player has reconnected during their turn
 
 
-    
-    async def type_message_consumer(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[GamePlayerMessage]):
-
-        game_connections = self.get_game_connections(game)
-
-        async for message in self.message_generator(message_queue):
-            
-            if not game_connections.started:
-                logger.warning(f"Received message in game {game.id} before both players connected: {message}")
-                continue
-
-            if game_connections.ended:
-                logger.warning(f"Received message in game {game.id} after game has ended: {message}")
-                continue
-
-
-            _, payload = betterproto.which_one_of(message, "payload")
-
-            match payload:
-                case GamePlayerShotMessage() as shot_msg:
-                    if game_connections.shot_lock.locked():
-                        raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Player {player.id} tried to submit shot in game {game.id} while previous shot is still being processed. He couldnt have gotten his turn message yet.")
-                    
-                    # lock to prevent multiple shots being processed simultaneously, the lock will only be released after the next ever turn message is sent (see below)
-                    await game_connections.shot_lock.acquire()
-
-                    self_task = asyncio.current_task()
-                    
-                    self.create_background_task(
-                        self.handle_shot_message(game, player, shot_msg), 
-                        f"handle_shot_message_{game.id}_{player.id}",
-                            task_to_crash_along=self_task
-                            )
-
-                case _:
-                    logger.error(f"Unhandled message type received in game {game.id}: {payload}")
-                    raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR, reason="Unknown message payload in GamePlayerMessage.")
-
-    
     async def clean_up(self, game: Game, player: Player, session: AsyncSession, wse: WebSocketException | None = None) -> None:
        
         if game_connections := self.get_game_connections(game, raise_on_missing=False):
@@ -186,35 +90,72 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
             await super().clean_up(game, player, session, wse=wse)
 
-    
 
-    async def end_battle(self, game: Game, premature: bool = False):
-        logger.info(f"Ending battle in game {game.id}.")
-        
+
+    async def handle_type_messages(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[GamePlayerMessage]):
+
+        shot_message_queue: asyncio.Queue[GamePlayerShotMessage] = asyncio.Queue()
+
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(
+                self.type_player_message_router(
+                    game, player, message_queue, shot_message_queue
+                    ), 
+                    name="game_message_type_router"
+                )
+            tg.create_task(
+                self.shot_message_consumer(
+                    game, player, shot_message_queue
+                    ), 
+                    name="game_shot_consumer"
+                )
+
+
+
+    async def type_player_message_router(self, game: Game, player: Player, input_queue: asyncio.Queue[GamePlayerMessage], shot_message_queue: asyncio.Queue[GamePlayerShotMessage]):
+        async with self.router_lifecycle(game, player, input_queue, output_queues={shot_message_queue}):
+            
+            game_connections = self.get_game_connections(game)
+
+            async for message in self.message_generator(input_queue):
+                
+                if not game_connections.started:
+                    logger.warning(f"Received message in game {game.id} before both players connected (skipping): {message}")
+                    continue
+
+                if game_connections.ended:
+                    logger.warning(f"Received message in game {game.id} after game has ended (skipping): {message}")
+                    continue
+
+                _, payload = betterproto.which_one_of(message, "payload")
+
+                match payload:
+                    case GamePlayerShotMessage():
+                        await shot_message_queue.put(payload)
+
+                    case _:
+                        logger.error(f"Unhandled message type received in game {game.id}: {payload}")
+                        raise WebSocketException(code=status.WS_1002_PROTOCOL_ERROR, reason="Unknown message payload in GamePlayerMessage.")
+
+
+    async def shot_message_consumer(self, game: Game, player: Player, message_queue: asyncio.Queue[GamePlayerShotMessage]):
         game_connections = self.get_game_connections(game)
-        game_connections.end_battle()
-        
-        async with session_mkr.begin() as session:
-            # get the game object into the new session
-            game = await session.merge(game)
-            game.phase = GamePhase.COMPLETED
 
-        lambda_result: Callable[[UUID], GameOverResult] = lambda pid: (
-            GameOverResult.PREMATURE if premature else
-            GameOverResult.LOSS if game_connections.players[pid].ship_grid.all_ships_sunk else
-            GameOverResult.WIN
-        )
+        async for message in self.message_generator(message_queue):
+            if game_connections.shot_lock.locked():
+                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Player {player.id} tried to submit shot in game {game.id} while previous shot is still being processed. He couldnt have gotten his turn message yet.")
+            
+            # lock to prevent multiple shots being processed simultaneously, the lock will only be released after the next ever turn message is sent (see below)
+            await game_connections.shot_lock.acquire()
 
-        await self.broadcast(game, None, 
-                             lambda pid: GameServerMessage(
-                                 game_over=GameServerGameOverMessage(
-                                     result = lambda_result(pid)
-                                     )
-                                ),
-                                raise_on_closed_socket=None
-                            )
-        
-        await self.close_player_connections(game, reason="Game completed.", remove_game_connection=True)
+            self_task = asyncio.current_task()
+            
+            self.create_background_task(
+                self.handle_shot_message(game, player, message), 
+                f"handle_shot_message_{game.id}_{player.id}",
+                    task_to_crash_along=self_task
+                    )
+
 
 
     async def handle_shot_message(self, game: Game, player: Player, shot_msg: GamePlayerShotMessage):
@@ -353,6 +294,36 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
         random_shot = opponents_connection.ship_grid.random_shot()
 
         await self.handle_shot_message(game, player, GamePlayerShotMessage(*random_shot))
+
+
+
+    async def end_battle(self, game: Game, premature: bool = False):
+        logger.info(f"Ending battle in game {game.id}.")
+        
+        game_connections = self.get_game_connections(game)
+        game_connections.end_battle()
+        
+        async with session_mkr.begin() as session:
+            # get the game object into the new session
+            game = await session.merge(game)
+            game.phase = GamePhase.COMPLETED
+
+        lambda_result: Callable[[UUID], GameOverResult] = lambda pid: (
+            GameOverResult.PREMATURE if premature else
+            GameOverResult.LOSS if game_connections.players[pid].ship_grid.all_ships_sunk else
+            GameOverResult.WIN
+        )
+
+        await self.broadcast(game, None, 
+                             lambda pid: GameServerMessage(
+                                 game_over=GameServerGameOverMessage(
+                                     result = lambda_result(pid)
+                                     )
+                                ),
+                                raise_on_closed_socket=None
+                            )
+        
+        await self.close_player_connections(game, reason="Game completed.", remove_game_connection=True)
 
 
 
