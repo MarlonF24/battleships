@@ -7,9 +7,16 @@ import GameGrid from "./GameGrid/GameGrid";
 import OpponentGrid from "./GameGrid/OpponentGrid";
 import ActiveShipLogic from "./ActiveShipLogic";
 
+export enum TurnStatus {
+    WAITING = "waiting",
+    YOUR_TURN = "your_turn",
+    OPPONENT_TURN = "opponent_turn"
+}
+
+
 class GameWebsocketStore extends WebSocketStore {
     gameGrids: {ownGameGrid: GameGrid, opponentGameGrid: OpponentGrid} | null = null;
-    hasTurn: boolean = false; 
+    hasTurn: TurnStatus = TurnStatus.WAITING;
     gameOverStatus: socketModels.GameOverResult | null = null;
 
     constructor(gameId: string, navigation: ReturnType<typeof useSwitchView>, protected readonly gameParams: apiModels.GameParams) {
@@ -23,6 +30,7 @@ class GameWebsocketStore extends WebSocketStore {
             handleServerStateMessage: true,
             handleServerTurnMessage: true,
             handleServerShotResultMessage: true,
+            handleGameOver: true,
         });
     }
 
@@ -93,9 +101,9 @@ class GameWebsocketStore extends WebSocketStore {
     }
         
     handleServerTurnMessage = (message: socketModels.GameServerTurnMessage) => {
-        if (this.hasTurn) throw new Error("Received turn message but it's already player's turn.");
+        if (this.hasTurn === TurnStatus.YOUR_TURN && !message.opponentsTurn) throw new Error("Received turn message but it's already player's turn.");
         
-        this.hasTurn = true;
+        this.hasTurn = message.opponentsTurn ? TurnStatus.OPPONENT_TURN : TurnStatus.YOUR_TURN;
     };
 
     handleGameOver = (message: socketModels.GameServerGameOverMessage): void => {

@@ -25,7 +25,8 @@ const PreGameView: React.FC = () => {
 	
 	const garageShips: Ship[] = [];
 	
-	if (gameParams.shipLengths) {
+	// only if the ships were not submitted already, create them from ship lengths for the garage
+	if (gameParams.ownShips.length === 0) {
 		Object.entries(gameParams.shipLengths).reduce((acc, [lengthStr, count]) => {
 			const length = parseInt(lengthStr);
 			for (let i = 0; i < count; i++) {

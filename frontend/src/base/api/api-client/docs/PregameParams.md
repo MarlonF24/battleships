@@ -9,6 +9,7 @@ Name | Type
 `battleGridRows` | number
 `battleGridCols` | number
 `shipLengths` | { [key: string]: number; }
+`mode` | [GameMode](GameMode.md)
 
 ## Example
 
@@ -20,6 +21,7 @@ const example = {
   "battleGridRows": null,
   "battleGridCols": null,
   "shipLengths": null,
+  "mode": null,
 } satisfies PregameParams
 
 console.log(example)

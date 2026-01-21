@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { observer } from "mobx-react-lite";
 import { create } from "@bufbuild/protobuf";
 import { socketModels, StyledGrid, useWebSocketStore } from "../../base";
-import GameWebsocketStore from "./GameWebsocket";
+import GameWebsocketStore, { TurnStatus } from "./GameWebsocket";
 
 import styled from "styled-components";
 
@@ -37,13 +37,13 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
 
         console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
         
-        WSStore.hasTurn = false; 
+        WSStore.hasTurn = TurnStatus.WAITING; 
         
         WSStore.sendGamePlayerMessage({case: "shot", value: shotMessage});
     }, []);
     
     return (
-            <StyledHitGrid inert={!WSStore.hasTurn}>
+            <StyledHitGrid inert={WSStore.hasTurn !== TurnStatus.YOUR_TURN}>
                 <tbody>
                     {grid.map((row, r) => (
                         <tr key={r}>
@@ -89,5 +89,5 @@ const Dot = ({opacity}: {opacity: number}) => (
     </svg>
 );
 
-const MissDot = () => <Dot opacity={0.8} />;
+const MissDot = () => <Dot opacity={0.9} />;
 const ImpossibleDot = () => <Dot opacity={0.4} />;

@@ -1,5 +1,5 @@
 import React from "react";
-import { CreateGameButton } from "../../base";
+import { CreateGameForm } from "../../base";
 import { JoinGameInput } from "./JoinGame";
 
 import styled from "styled-components";
@@ -13,7 +13,7 @@ const WelcomeSection = styled.section.attrs({ className: "welcome-section" })({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "2rem",
+    gap: "1rem",
 });
 
 
@@ -30,11 +30,10 @@ const WelcomeView: React.FC = () => {
     
         <WelcomeSection>
             <WelcomeHeader>Welcome to Battleships!</WelcomeHeader>
-            <CreateGameButton />
+            <CreateGameForm />
             <JoinGameInput />
         </WelcomeSection>
     
- 
     )
 }
 

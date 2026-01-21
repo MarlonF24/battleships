@@ -7,6 +7,7 @@ All URIs are relative to *http://localhost*
 | [**createGameGamesCreatePost**](DefaultApi.md#creategamegamescreatepost) | **POST** /games/create | Create Game |
 | [**createPlayerPlayersCreatePost**](DefaultApi.md#createplayerplayerscreatepost) | **POST** /players/create | Create Player |
 | [**getGameParamsGamesGameIdParamsGet**](DefaultApi.md#getgameparamsgamesgameidparamsget) | **GET** /games/{gameId}/params | Get Game Params |
+| [**getGamePhaseGamesGameIdPhaseGet**](DefaultApi.md#getgamephasegamesgameidphaseget) | **GET** /games/{gameId}/phase | Get Game Phase |
 | [**joinGameGamesGameIdJoinPost**](DefaultApi.md#joingamegamesgameidjoinpost) | **POST** /games/{gameId}/join | Join Game |
 | [**welcomeFullPathGet**](DefaultApi.md#welcomefullpathget) | **GET** /{full_path} | Welcome |
 
@@ -216,9 +217,78 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
+## getGamePhaseGamesGameIdPhaseGet
+
+> GamePhase getGamePhaseGamesGameIdPhaseGet(gameId, playerId)
+
+Get Game Phase
+
+### Example
+
+```ts
+import {
+  Configuration,
+  DefaultApi,
+} from '';
+import type { GetGamePhaseGamesGameIdPhaseGetRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const api = new DefaultApi();
+
+  const body = {
+    // string
+    gameId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    playerId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+  } satisfies GetGamePhaseGamesGameIdPhaseGetRequest;
+
+  try {
+    const data = await api.getGamePhaseGamesGameIdPhaseGet(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **gameId** | `string` |  | [Defaults to `undefined`] |
+| **playerId** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+[**GamePhase**](GamePhase.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | Successful Response |  -  |
+| **422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
 ## joinGameGamesGameIdJoinPost
 
-> joinGameGamesGameIdJoinPost(gameId, playerId)
+> GamePhase joinGameGamesGameIdJoinPost(gameId, playerId)
 
 Join Game
 
@@ -264,7 +334,7 @@ example().catch(console.error);
 
 ### Return type
 
-`void` (Empty response body)
+[**GamePhase**](GamePhase.md)
 
 ### Authorization
 
@@ -279,7 +349,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-| **204** | Successful Response |  -  |
+| **200** | Successful Response |  -  |
 | **422** | Validation Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)

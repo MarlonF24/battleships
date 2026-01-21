@@ -1,16 +1,36 @@
 import { useLoaderData } from "react-router-dom";
+import { observer } from "mobx-react-lite";
 
 import { ShipGrid, Ship, ShipPosition, GameArea as StyledGameArea } from "../../base";
 import { useWebSocketStore } from "../../base";
 import { GameViewLoaderData } from "../pregame/view";
-import GameWebsocketStore from "./GameWebsocket";
-import { observer } from "mobx-react-lite";
-
+import GameWebsocketStore, { TurnStatus } from "./GameWebsocket";
+import { GameOverPopup } from "./GameOverPopup";
 
 
 const GameArea = observer(() => {
     const { gameParams } = useLoaderData<GameViewLoaderData>();
     const WS = useWebSocketStore(GameWebsocketStore);
+
+    let turnMessage;
+    let colour;
+    switch (WS.hasTurn) {
+        case TurnStatus.YOUR_TURN:
+            turnMessage = "Your turn";
+            colour = "green";
+            break;
+        case TurnStatus.OPPONENT_TURN:
+            turnMessage = "Opponent's turn";
+            colour = "red";
+            break;
+        case TurnStatus.WAITING:
+            turnMessage = "Waiting...";
+            colour = "black";
+            break;
+        default:
+            throw new Error(`Unknown turn status: ${WS.hasTurn}`);
+    }
+
 
     let gameArea = <></>;
     if (!WS.gameGrids) {
@@ -29,21 +49,24 @@ const GameArea = observer(() => {
 
     } else {
         gameArea = (
-            <StyledGameArea>
-                <div style={{ color: WS.hasTurn ? "green" : "red" }}>{WS.hasTurn ? "Your turn" : "Opponent's turn"}</div>
-                <br/>
+            <>            
+                {WS.gameOverStatus && <GameOverPopup result={WS.gameOverStatus} />}
                 <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                     <WS.gameGrids.ownGameGrid.Renderer fleetPosition="left" opponent={false} />
                     <WS.gameGrids.opponentGameGrid.Renderer fleetPosition="right" opponent={true} />
                 </div>
-            </StyledGameArea>
+            </>
         );
     } 
 
     return (
-        <StyledGameArea>
-            {gameArea}
-        </StyledGameArea>
+        <>
+            <div style={{ color: colour }}>{turnMessage}</div>
+            <br/>
+            <StyledGameArea inert={WS.gameOverStatus !== null}>
+                {gameArea}
+            </StyledGameArea>
+        </>
     )  
 
 })

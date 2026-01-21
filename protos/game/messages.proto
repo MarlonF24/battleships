@@ -45,11 +45,14 @@ message GameServerShotMessage {
 }
 
 message GameServerTurnMessage {
+  bool opponents_turn = 1;
 }
+
 enum GameOverResult {
-  WIN = 0;
-  LOSS = 1;
-  PREMATURE = 2;  
+  UNKNOWN = 0;
+  WIN = 1;
+  LOSS = 2;
+  PREMATURE = 3;  
 }  
 
 message GameServerGameOverMessage {

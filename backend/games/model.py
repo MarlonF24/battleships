@@ -2,9 +2,8 @@ import random
 from pydantic import BaseModel
 from typing import Any, Collection
 
-
-from ..relations import Ship as DBShip
-from .websocket_models import Ship, ActiveShip, Orientation, ShipGridView, ShipGridViewRow, ShipGridViewHitState
+from .websocket_models import *
+from .relations import GameMode, Ship as DBShip
 
 def to_camel(string: str) -> str:
     parts = string.split('_')
@@ -23,6 +22,7 @@ class PregameParams(Base):
     battle_grid_rows: int
     battle_grid_cols: int
     ship_lengths: dict[int, int]  # length -> count
+    mode: GameMode = GameMode.SINGLESHOT
 
   
 

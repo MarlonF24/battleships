@@ -19,9 +19,10 @@ from .. import game_models as _game_models__
 
 
 class GameOverResult(betterproto.Enum):
-    WIN = 0
-    LOSS = 1
-    PREMATURE = 2
+    UNKNOWN = 0
+    WIN = 1
+    LOSS = 2
+    PREMATURE = 3
 
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
@@ -93,7 +94,7 @@ class GameServerShotMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class GameServerTurnMessage(betterproto.Message):
-    pass
+    opponents_turn: bool = betterproto.bool_field(1)
 
 
 @dataclass(eq=False, repr=False)

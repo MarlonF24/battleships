@@ -1,7 +1,6 @@
 import asyncio
 
-from fastapi import WebSocket
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import WebSocket, WebSocketException
 
 from backend.logger import logger
 
@@ -17,35 +16,49 @@ from .connection import PregameGameConnections, PregamePlayerConnection
 class PregameConnectionManager(ConnectionManager[PregameGameConnections, PregamePlayerConnection, PregameServerMessage, PregamePlayerMessage]):
     
 
-    async def allow_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession) -> WebSocketException | PregameGameConnections:
+    async def allow_connection(self, game: Game, player: Player, websocket: WebSocket) -> WebSocketException | PregameGameConnections:
         if game.phase != GamePhase.PREGAME:
             return WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Cannot connect to WebSocket for game {game.id} which is not in PREGAME phase but {game.phase}.")
         else:
             return PregameGameConnections()
 
 
-    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket):
         self.active_connections[game.id].add_player(player.id, PregamePlayerConnection(websocket=websocket))
         
 
-    async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
-        await super().start_up(game, player, websocket, session)
+    async def start_up(self, game: Game, player: Player, websocket: WebSocket):
+        await super().start_up(game, player, websocket)
 
         # initial send of current ready count
         game_connection = self.get_game_connections(game)
 
         await self.send_personal_message(game, player, PregameServerMessage(ready_state=game_connection.get_ready_state(player.id)))
 
-              
+    async def clean_up(self, game: Game, player: Player, wse: WebSocketException | None = None):
+        if game_conns := self.get_game_connections(game, raise_on_missing=False):
 
-    async def handle_type_messages(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[PregamePlayerMessage]):
+            if game_conns.num_initially_connected() <= 1 and game_conns.num_ready_players() == 0:
+                logger.info(f"Only initially connected player {player.id} disconnected from pregame of game {game.id} before he was ready. Closing game connections and deleting game.")
+
+                asyncio.create_task(self.delete_game_from_db(game))
+
+                asyncio.create_task(self.close_player_connections(game, reason="A player disconnected before both players were ready.", remove_game_connection=True))
+
+
+            return await super().clean_up(game, player, wse)
+        else:
+            logger.warning(f"Tried to clean up connection for player {player.id} in game {game.id}, but no game connections found. Maybe it was already removed earlier? Check whether this was intended.")
+
+
+    async def handle_type_messages(self, game: Game, player: Player, message_queue: asyncio.Queue[PregamePlayerMessage]):
 
         player_ready_queue: asyncio.Queue[PregamePlayerSetReadyStateMessage] = asyncio.Queue()
 
         async with asyncio.TaskGroup() as tg:
             tg.create_task(
                 self.type_player_message_router(
-                    game, player, session, message_queue, player_ready_queue
+                    game, player, message_queue, player_ready_queue
                     ), 
                     name="pregame_message_type_router"
                 )
@@ -58,7 +71,7 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
 
 
-    async def type_player_message_router(self, game: Game, player: Player, session: AsyncSession, input_queue: asyncio.Queue[PlayerMessageType], ready_message_queue: asyncio.Queue[PregamePlayerSetReadyStateMessage]):
+    async def type_player_message_router(self, game: Game, player: Player, input_queue: asyncio.Queue[PlayerMessageType], ready_message_queue: asyncio.Queue[PregamePlayerSetReadyStateMessage]):
         
         async with self.router_lifecycle(game, player, input_queue, {ready_message_queue}):
             

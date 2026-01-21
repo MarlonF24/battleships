@@ -18,12 +18,16 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
     _ended: bool = field(default=False, init=False)
     shot_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
     reconnect_event: asyncio.Event = field(default_factory=asyncio.Event, init=False)
+    salvo_shots_remaining: int = field(default=3, init=False)
 
     def add_player(self, player_id: UUID, connection: GamePlayerConnection):
         super().add_player(player_id, connection)
         
         if not self.first_to_shoot:
             self.first_to_shoot = player_id
+
+    def reset_salvo_shots(self):
+        self.salvo_shots_remaining = 3
 
     @property
     def started(self) -> bool:

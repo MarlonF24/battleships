@@ -29,6 +29,5 @@ export const ButtonBar = styled.div.attrs({ className: 'button-bar' })({
 
   "& > button": {
     flex: "0 1 auto",
-    minWidth: "100px",
   }
 });

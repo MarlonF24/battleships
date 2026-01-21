@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { GameMode } from './GameMode';
+import {
+    GameModeFromJSON,
+    GameModeFromJSONTyped,
+    GameModeToJSON,
+    GameModeToJSONTyped,
+} from './GameMode';
 import type { Ship } from './Ship';
 import {
     ShipFromJSON,
@@ -47,11 +54,19 @@ export interface GameParams {
     shipLengths: { [key: string]: number; };
     /**
      * 
+     * @type {GameMode}
+     * @memberof GameParams
+     */
+    mode?: GameMode;
+    /**
+     * 
      * @type {Array<Ship>}
      * @memberof GameParams
      */
     ownShips: Array<Ship>;
 }
+
+
 
 /**
  * Check if a given object implements the GameParams interface.
@@ -77,6 +92,7 @@ export function GameParamsFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'battleGridRows': json['battleGridRows'],
         'battleGridCols': json['battleGridCols'],
         'shipLengths': json['shipLengths'],
+        'mode': json['mode'] == null ? undefined : GameModeFromJSON(json['mode']),
         'ownShips': ((json['ownShips'] as Array<any>).map(ShipFromJSON)),
     };
 }
@@ -95,6 +111,7 @@ export function GameParamsToJSONTyped(value?: GameParams | null, ignoreDiscrimin
         'battleGridRows': value['battleGridRows'],
         'battleGridCols': value['battleGridCols'],
         'shipLengths': value['shipLengths'],
+        'mode': GameModeToJSON(value['mode']),
         'ownShips': ((value['ownShips'] as Array<any>).map(ShipToJSON)),
     };
 }

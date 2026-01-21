@@ -51,8 +51,21 @@ export const JoinGameInput: React.FC = () => {
     if (!gameId) return;
 
     const playerId = sessionStorage.getItem("playerId")!;
-    await api.joinGameGamesGameIdJoinPost({ gameId, playerId });
-    switchView(Page.PREGAME, gameId);
+    
+    const gamePhase = await api.joinGameGamesGameIdJoinPost({ gameId, playerId }); // check whether player 
+
+    switch(gamePhase) {
+      case "PREGAME":
+        switchView(Page.PREGAME, gameId);
+        break;
+      case "GAME":
+        switchView(Page.GAME, gameId);
+        break;
+      case "COMPLETED":
+        throw new Error("Cannot join a completed game");
+      default:
+        throw new Error("Unknown game phase received from server");
+    }
   });
 
   return (

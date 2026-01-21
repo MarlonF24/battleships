@@ -8,6 +8,7 @@ from ..db import SessionDep
 from .dependencies import PlayerDep, GameDep, PlayerGameDep, ShipsDep
 from .model import PregameParams, GameParams
 from .websockets import router as games_ws_router
+from .relations import GamePhase
 
 router = APIRouter(
     prefix="/games"
@@ -21,9 +22,15 @@ async def create_game(request: PregameParams, session: SessionDep, player: Playe
     
 
 
-@router.post("/{gameId}/join", status_code=status.HTTP_204_NO_CONTENT)
-async def join_game(player: PlayerDep, game: GameDep, session: SessionDep):
+@router.post("/{gameId}/join", status_code=status.HTTP_200_OK)
+async def join_game(player: PlayerDep, game: GameDep, session: SessionDep) -> GamePhase:
     return await service.join_game(player, game, session)
+    
+
+@router.get("/{gameId}/phase", status_code=status.HTTP_200_OK)
+async def get_game_phase(player_game: PlayerGameDep) -> GamePhase:
+    game = player_game[1]
+    return game.phase
     
 
 

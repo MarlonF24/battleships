@@ -63,7 +63,7 @@ gen_api() {
 gen_proto() {
     echo "Generating Protos..."
     buf generate
-    index_python "./backend/games/model/websocket_models"
+    index_python "./backend/games/websocket_models"
     index_typescript "./frontend/src/base/api/socketModels"
 }
 

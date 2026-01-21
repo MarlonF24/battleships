@@ -1,9 +1,21 @@
 import React, { useEffect } from 'react';
 import { useRouteError, isRouteErrorResponse, useLocation } from 'react-router-dom';
 import { Page, useSwitchView } from '../../routing/switch_view';
-import { ButtonBar, ErrorMessage, Button } from '../../base';
-import ToWelcomeButton from '../../base/components/UI/ToWelcomeButton';
+import { ButtonBar, ErrorMessage, Button, ToWelcomeButton } from '../../base';
 
+import styled from 'styled-components';
+
+
+const ErrorContainer = styled.div.attrs({ className: "error-container" })({
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: "200px",
+    fontSize: "1.2rem",
+    color: "var(--text-color)",
+    flexDirection: "column",
+    gap: "1rem",
+})
 
 
 const ErrorPage: React.FC = () => {
@@ -44,7 +56,7 @@ const ErrorPage: React.FC = () => {
     
 
     return (
-        <div className="error-container">
+        <ErrorContainer>
             <h2 style={{color: 'var(--danger-color)'}}>Oops!</h2>
             <p>Sorry, an unexpected error has occurred.</p>
             <ErrorMessage errorMessage={errorMessage} />
@@ -56,7 +68,7 @@ const ErrorPage: React.FC = () => {
                 <ToWelcomeButton />
                 
             </ButtonBar>
-        </div>
+        </ErrorContainer>
     );
 }
 

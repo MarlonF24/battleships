@@ -41,7 +41,7 @@ export class WebSocketStore {
                     return;
                 }
 
-                const message = `WebSocket connection for ${page} lost abnormally. Code: ${e.code}, Reason: ${e.reason}`
+                const message = `WebSocket connection for ${page} lost abnormally. ${e.code ? `Code: ${e.code}` : ""}  ${e.reason ? `Reason: ${e.reason}` : ""}`;
                 console.error(message);
                 this.navigation(Page.ERROR, gameId, message);
             }

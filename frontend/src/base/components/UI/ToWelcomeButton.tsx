@@ -1,14 +1,13 @@
 import { Page, useSwitchView } from "../../../routing/switch_view"
 import { Button } from "./Button";
 
-const ToWelcomeButton = () => {
+export const ToWelcomeButton = ({ style }: { style?: React.CSSProperties }) => {
     const switchView = useSwitchView();
     
     return (
-        <Button $type="primary" onClick={() => switchView(Page.WELCOME)}>
+        <Button $type="primary" onClick={() => switchView(Page.WELCOME)} style={style}>
                 Back to Welcome Page
         </Button>
     )
 }
 
-export default ToWelcomeButton;

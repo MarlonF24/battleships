@@ -2,12 +2,12 @@ from uuid import UUID
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from sqlalchemy import select
+
 
 from ..db import SessionDep
 from ..players import PlayerDep
-from .relations import Game, Player, Ship as DBShip
-from .model.model import Ship
+from .relations import Game, Player, GamePlayerLink
+from .model import Ship
 
 
 async def validate_game(gameId: UUID, session: SessionDep) -> Game:
@@ -42,11 +42,12 @@ async def get_ships_for_player_in_game(
     session: SessionDep,
 ) -> list[Ship]:
 
-    result = await session.scalars(
-        select(DBShip).where(DBShip.game_id == game.id, DBShip.player_id == player.id)
-    )
- 
-    test = [Ship(**ship.__dict__) for ship in result.all()]
+    link = await session.get_one(GamePlayerLink, (game.id, player.id))
+    
+    result = await link.awaitable_attrs.ships
+
+    test = [Ship(**ship.__dict__) for ship in result]
+    
     return test
 
 ShipsDep = Annotated[list[Ship], Depends(get_ships_for_player_in_game)]

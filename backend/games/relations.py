@@ -5,11 +5,17 @@ from sqlalchemy import CheckConstraint, UniqueConstraint, Integer, ForeignKey, F
 
 from ..db import Base
 from ..players import Player
+from .websocket_models import Orientation, GameOverResult
 
 class GamePhase(enum.Enum):
-    PREGAME = "pregame"
-    GAME = "game"
-    COMPLETED = "completed"
+    PREGAME = "PREGAME"
+    GAME = "GAME"
+    COMPLETED = "COMPLETED"
+
+class GameMode(enum.Enum):
+    SINGLESHOT = "SINGLESHOT" # 1 shot per turn
+    SALVO = "SALVO" # 3 shots per turn
+    STREAK = "STREAK" # until miss
 
 class Game(Base):
     __tablename__ = "game"
@@ -20,26 +26,24 @@ class Game(Base):
     battle_grid_cols: Mapped[int] = mapped_column()
     ship_lengths: Mapped[dict[int, int]] = mapped_column(JSON)  # e.g., [5, 4, 3, 3, 2]
     phase: Mapped[GamePhase] = mapped_column(Enum(GamePhase), default=GamePhase.PREGAME)
-  
+    mode: Mapped[GameMode] = mapped_column(Enum(GameMode), default=GameMode.SINGLESHOT)
   
 class GamePlayerLink(Base):
     __tablename__ = "game_player_link"
 
     game_id: Mapped[str] = mapped_column(ForeignKey("game.id"), primary_key=True)
     player_id: Mapped[str] = mapped_column(ForeignKey("player.id"), primary_key=True)
-    player_slot: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    player_slot: Mapped[int] = mapped_column(Integer, default=1)
 
     ships: Mapped[list["Ship"]] = relationship(back_populates="game_player_link", cascade="all, delete-orphan")
 
+    outcome: Mapped[GameOverResult | None] = mapped_column(Enum(GameOverResult), nullable=True)
+
     __table_args__ = (
     CheckConstraint('player_slot IN (1, 2)', name='check_player_slot'),
-    UniqueConstraint('game_id', 'player_slot', name='unique_game_player_slot'),
-    UniqueConstraint('game_id', 'player_id', name='different_players_per_game')
+    UniqueConstraint('game_id', 'player_slot', name='unique_game_player_slot')
     )
 
-class Orientation(enum.Enum):
-    HORIZONTAL = 1
-    VERTICAL = 2
 
 
 class Ship(Base):

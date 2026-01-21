@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { GameMode } from './GameMode';
+import {
+    GameModeFromJSON,
+    GameModeFromJSONTyped,
+    GameModeToJSON,
+    GameModeToJSONTyped,
+} from './GameMode';
+
 /**
  * 
  * @export
@@ -37,7 +45,15 @@ export interface PregameParams {
      * @memberof PregameParams
      */
     shipLengths: { [key: string]: number; };
+    /**
+     * 
+     * @type {GameMode}
+     * @memberof PregameParams
+     */
+    mode?: GameMode;
 }
+
+
 
 /**
  * Check if a given object implements the PregameParams interface.
@@ -62,6 +78,7 @@ export function PregameParamsFromJSONTyped(json: any, ignoreDiscriminator: boole
         'battleGridRows': json['battleGridRows'],
         'battleGridCols': json['battleGridCols'],
         'shipLengths': json['shipLengths'],
+        'mode': json['mode'] == null ? undefined : GameModeFromJSON(json['mode']),
     };
 }
 
@@ -79,6 +96,7 @@ export function PregameParamsToJSONTyped(value?: PregameParams | null, ignoreDis
         'battleGridRows': value['battleGridRows'],
         'battleGridCols': value['battleGridCols'],
         'shipLengths': value['shipLengths'],
+        'mode': GameModeToJSON(value['mode']),
     };
 }
 

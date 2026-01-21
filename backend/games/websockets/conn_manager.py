@@ -4,21 +4,21 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 from typing import Generic, Literal, TypeVar, Any, Callable, overload
 from abc import ABC, abstractmethod
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import WebSocket, WebSocketException, websockets, status
 from unittest.mock import patch
 
 
 from backend.logger import logger
+
+from ...db import session_mkr
 from ..model import GamePlayerMessage, GeneralPlayerMessage, PregameServerMessage, GameServerMessage, ServerOpponentConnectionMessage, PlayerMessage, ServerMessage, GeneralServerMessage, PregamePlayerMessage
 from ..relations import Game, Player
 
-from .connection import PlayerConnectionType, GameConnections
+from .connection import PlayerConnectionType, GameConnectionsType
 
 
     
 
-GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])
 
 ServerMessageType = TypeVar('ServerMessageType', PregameServerMessage, GameServerMessage)
 PlayerMessageType = TypeVar('PlayerMessageType', PregamePlayerMessage, GamePlayerMessage)
@@ -93,21 +93,21 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
     
 
     @abstractmethod
-    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def add_player_connection(self, game: Game, player: Player, websocket: WebSocket):
         """Add a player's connection to the active connections for a game."""
         ...
 
     @abstractmethod 
-    async def allow_connection(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession) -> WebSocketException | GameConnectionsType :
+    async def allow_connection(self, game: Game, player: Player, websocket: WebSocket) -> WebSocketException | GameConnectionsType :
         """
         Check whether the player is allowed to connect to the game. If yes, return a GameConnectionsType, otherwise a WebSocketException.
         """
         ...
     
-    async def connect(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def connect(self, game: Game, player: Player, websocket: WebSocket):
         """Handle the connection process for a player in a game. First checks if connection is allowed based on a method, then accepts the websocket and adds the player connection to the active connections."""
         
-        res = await self.allow_connection(game, player, websocket, session)
+        res = await self.allow_connection(game, player, websocket)
         
         if isinstance(res, WebSocketException):
             logger.info(f"Connection not allowed for game {game.id}, player {player.id}: {res.reason}")
@@ -122,7 +122,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
 
         logger.info(f"WebSocket connection accepted for game {game.id}, player {player.id}")
-        await self.add_player_connection(game, player, websocket, session)
+        await self.add_player_connection(game, player, websocket)
        
 
 
@@ -155,7 +155,17 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
         if remove_game_connection:
             del self.active_connections[game.id]
 
-
+    async def delete_game_from_db(self, game: Game, raise_on_missing: bool = True):
+        """Delete a game from the database."""
+        async with session_mkr.begin() as session:
+            _game = await session.get(Game, game.id)
+            
+            if not _game and raise_on_missing:
+                raise ValueError(f"Game {game.id} not found in database for deletion.")
+            elif _game:
+                await session.delete(_game)
+        
+        logger.info(f"Deleted game {game.id} from database.")
 
     async def send_server_message(self, websocket: WebSocket, message: ServerMessageType | GeneralServerMessage, raise_on_closed_socket: str | None = "Attempted to send message on closed WebSocket."):
         """
@@ -257,7 +267,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
 
 
-    async def start_up(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def start_up(self, game: Game, player: Player, websocket: WebSocket):
         """
         Start up the websocket connection lifecycle for a player in a game.
 
@@ -265,23 +275,21 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             game: The game instance associated with the websocket connection
             player: The player instance associated with the websocket connection
             websocket: The FastAPI WebSocket instance
-            session: The SQLAlchemy AsyncSession for database operations
         """
-        await self.connect(game, player, websocket, session)
+        await self.connect(game, player, websocket)
         await asyncio.gather(
             self.inform_opponent_about_own_connection_if_present(game, player),
             self.inform_self_about_opponent_connection(game, player)
             )
   
 
-    async def clean_up(self, game: Game, player: Player, session: AsyncSession, wse: WebSocketException | None = None):
+    async def clean_up(self, game: Game, player: Player, wse: WebSocketException | None = None):
         """
         Clean up after websocket connection ends, inform opponent and disconnect websocket.
 
         Args:
             game: The game instance associated with the websocket connection
             player: The player instance associated with the websocket connection
-            session: The SQLAlchemy AsyncSession for database operations
             wse: The WebSocketException instance to send in the closure if one occurred. Defaults to None.
         """
         if game.id in self.active_connections:
@@ -301,7 +309,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
 
     @asynccontextmanager
-    async def websocket_lifecycle(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def websocket_lifecycle(self, game: Game, player: Player, websocket: WebSocket):
         """
         Context manager handling the full lifecycle of a websocket connection for a player in a game.
 
@@ -309,7 +317,6 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             game: The game instance associated with the websocket connection
             player: The player instance associated with the websocket connection
             websocket: The FastAPI WebSocket instance
-            session: The SQLAlchemy AsyncSession for database operations
 
         Yields:
             The two message queues, general messages and phase-specific messages.
@@ -319,7 +326,7 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
         try:
             logger.info(f"Starting WebSocket lifecycle for game {game.id}, player {player.id}")
-            await self.start_up(game, player, websocket, session)
+            await self.start_up(game, player, websocket)
             
             
             yield
@@ -337,11 +344,11 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
         finally:
             logger.info(f"Cleaning up WebSocket lifecycle for game {game.id}, player {player.id}")
-            await self.clean_up(game, player, session, wse)
+            await self.clean_up(game, player, wse)
 
 
 
-    async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession):
+    async def handle_websocket(self, game: Game, player: Player, websocket: WebSocket):
         """
         Entry point for the FastAPI websocket endpoint
 
@@ -349,7 +356,6 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
             game: The game instance associated with the websocket connection
             player: The player instance associated with the websocket connection
             websocket: The FastAPI WebSocket instance
-            session: The SQLAlchemy AsyncSession for database operations
 
         Notes:
             If the connection is closed normally by the client or even the backend itself (Status 1000), the generator in the producer will exhaust, the producer will let the queues drain out and then shut them down, causing the consumers to finish as well.
@@ -357,16 +363,16 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
 
         """
         
-        async with self.websocket_lifecycle(game, player, websocket, session):
+        async with self.websocket_lifecycle(game, player, websocket):
             async with asyncio.TaskGroup() as tg:
                 general_message_queue = asyncio.Queue[GeneralPlayerMessage](maxsize=10)
                 message_type_queue = asyncio.Queue[PlayerMessageType](maxsize=10)
 
                 tg.create_task(self.player_message_router(websocket, game, player, general_message_queue, message_type_queue))
 
-                # tg.create_task(self.handle_general_messages(game, player, websocket, session, general_message_queue))
+                # tg.create_task(self.handle_general_messages(game, player, websocket, general_message_queue))
 
-                tg.create_task(self.handle_type_messages(game, player, session, message_type_queue))
+                tg.create_task(self.handle_type_messages(game, player, message_type_queue))
 
 
     
@@ -463,11 +469,11 @@ class ConnectionManager(ABC, Generic[GameConnectionsType, PlayerConnectionType, 
                 return
    
 
-    async def handle_general_messages(self, game: Game, player: Player, websocket: WebSocket, session: AsyncSession, general_queue: asyncio.Queue[GeneralPlayerMessage]):
+    async def handle_general_messages(self, game: Game, player: Player, websocket: WebSocket, general_queue: asyncio.Queue[GeneralPlayerMessage]):
         pass
 
     @abstractmethod
-    async def handle_type_messages(self, game: Game, player: Player, session: AsyncSession, message_queue: asyncio.Queue[PlayerMessageType]):
+    async def handle_type_messages(self, game: Game, player: Player, message_queue: asyncio.Queue[PlayerMessageType]):
         ...
 
 if __name__ == "__main__":

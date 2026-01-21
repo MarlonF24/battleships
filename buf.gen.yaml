@@ -6,7 +6,7 @@ managed:
 
 plugins:
   - protoc_builtin: python_betterproto
-    out: backend/games/model/websocket_models
+    out: backend/games/websocket_models
     opt:
       - pydantic_dataclasses
       - async_lib=asyncio

@@ -1,7 +1,7 @@
 
 from uuid import UUID
 from dataclasses import dataclass, field
-from typing import TypeVar, Generic, overload
+from typing import TypeVar, Generic, overload, Any
 from abc import ABC
 from fastapi import WebSocket, WebSocketException, status, websockets
 
@@ -16,6 +16,8 @@ class PlayerConnection():
     websocket: WebSocket
 
 PlayerConnectionType = TypeVar('PlayerConnectionType', bound=PlayerConnection)
+
+
 
 @dataclass
 class GameConnections(ABC, Generic[PlayerConnectionType]):
@@ -32,9 +34,6 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
             logger.info(f"Player {player_id} reconnected. Updating connection.")
             self.players[player_id].websocket = connection.websocket
             
-    
-    def num_players(self) -> int:
-        return len(self.players)
     
     def validate_player_in_game(self, player_id: UUID):
         if player_id not in self.players:
@@ -59,6 +58,9 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
             raise ValueError("Opponent ID not found.")
         
         return None
+    
+    def num_initially_connected(self) -> int:
+        return len(self.players)
     
     def num_of_currently_connected(self) -> int:
         return sum(1 for conn in self.players.values() if conn.websocket.client_state == websockets.WebSocketState.CONNECTED)
@@ -103,3 +105,6 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
         
         del self.players[player_id]
         logger.info(f"Removed player {player_id} from GameConnections.")
+
+
+GameConnectionsType = TypeVar('GameConnectionsType', bound=GameConnections[Any])

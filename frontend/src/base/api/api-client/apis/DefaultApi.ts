@@ -16,12 +16,15 @@
 import * as runtime from '../runtime';
 import type {
   GameParams,
+  GamePhase,
   HTTPValidationError,
   PregameParams,
 } from '../models/index';
 import {
     GameParamsFromJSON,
     GameParamsToJSON,
+    GamePhaseFromJSON,
+    GamePhaseToJSON,
     HTTPValidationErrorFromJSON,
     HTTPValidationErrorToJSON,
     PregameParamsFromJSON,
@@ -38,6 +41,11 @@ export interface CreatePlayerPlayersCreatePostRequest {
 }
 
 export interface GetGameParamsGamesGameIdParamsGetRequest {
+    gameId: string;
+    playerId: string;
+}
+
+export interface GetGamePhaseGamesGameIdPhaseGetRequest {
     gameId: string;
     playerId: string;
 }
@@ -196,9 +204,57 @@ export class DefaultApi extends runtime.BaseAPI {
     }
 
     /**
+     * Get Game Phase
+     */
+    async getGamePhaseGamesGameIdPhaseGetRaw(requestParameters: GetGamePhaseGamesGameIdPhaseGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GamePhase>> {
+        if (requestParameters['gameId'] == null) {
+            throw new runtime.RequiredError(
+                'gameId',
+                'Required parameter "gameId" was null or undefined when calling getGamePhaseGamesGameIdPhaseGet().'
+            );
+        }
+
+        if (requestParameters['playerId'] == null) {
+            throw new runtime.RequiredError(
+                'playerId',
+                'Required parameter "playerId" was null or undefined when calling getGamePhaseGamesGameIdPhaseGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['playerId'] != null) {
+            queryParameters['playerId'] = requestParameters['playerId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+
+        let urlPath = `/games/{gameId}/phase`;
+        urlPath = urlPath.replace(`{${"gameId"}}`, encodeURIComponent(String(requestParameters['gameId'])));
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => GamePhaseFromJSON(jsonValue));
+    }
+
+    /**
+     * Get Game Phase
+     */
+    async getGamePhaseGamesGameIdPhaseGet(requestParameters: GetGamePhaseGamesGameIdPhaseGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GamePhase> {
+        const response = await this.getGamePhaseGamesGameIdPhaseGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Join Game
      */
-    async joinGameGamesGameIdJoinPostRaw(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async joinGameGamesGameIdJoinPostRaw(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GamePhase>> {
         if (requestParameters['gameId'] == null) {
             throw new runtime.RequiredError(
                 'gameId',
@@ -232,14 +288,15 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.VoidApiResponse(response);
+        return new runtime.JSONApiResponse(response, (jsonValue) => GamePhaseFromJSON(jsonValue));
     }
 
     /**
      * Join Game
      */
-    async joinGameGamesGameIdJoinPost(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.joinGameGamesGameIdJoinPostRaw(requestParameters, initOverrides);
+    async joinGameGamesGameIdJoinPost(requestParameters: JoinGameGamesGameIdJoinPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GamePhase> {
+        const response = await this.joinGameGamesGameIdJoinPostRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**
