@@ -2,6 +2,12 @@ import { observer } from "mobx-react-lite";
 
 import { useWebSocketStore } from "../context"; 
 
+import styled from "styled-components";
+
+const StyledOpponentConnection = styled.div.attrs({className: 'opponent-connection-status'})({
+    fontStyle: "italic",
+    color: "var(--secondary-text-color)"
+});
 
 
 export const OpponentConnection: React.FC = observer(() => {
@@ -16,8 +22,8 @@ export const OpponentConnection: React.FC = observer(() => {
     }
 
     return (
-        <div style={{ fontStyle: "italic", color: "var(--secondary-text-color)" }}>
+        <StyledOpponentConnection>
             {statusMessage}
-        </div>
+        </StyledOpponentConnection>
     );
 })

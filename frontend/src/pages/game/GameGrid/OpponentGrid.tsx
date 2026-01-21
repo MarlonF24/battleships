@@ -1,7 +1,9 @@
 import GameGrid, { ShipLengthsType } from "./GameGrid";
-import { HitState, HitStateType } from "../HitGrid/HitGrid";
+import { HitState, HitStateType } from "../HitGrid.js";
 import ActiveShipLogic from "../ActiveShipLogic.js";
 import { makeObservable, override } from "mobx";
+
+import styled from "styled-components";
 
 class OpponentGrid extends GameGrid {
 
@@ -59,7 +61,6 @@ class OpponentGrid extends GameGrid {
 
         this.fleetDisplay.addActiveShip(ship);
     }
-
 }
 
 export default OpponentGrid;

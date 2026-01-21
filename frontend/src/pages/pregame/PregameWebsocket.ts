@@ -1,9 +1,7 @@
-import { WebSocketStore, ExcludeMessageTypeField, socketModels, MessagePayload,  } from "../../base";
+import { WebSocketStore, ExcludeMessageTypeField, socketModels, MessagePayload,  } from "../../base/index.js";
 import { Page, useSwitchView } from "../../routing/switch_view.js";
 import { makeObservable, observable } from "mobx";
 import { create } from "@bufbuild/protobuf";
-
-
 
 
 export class PregameWebSocketStore extends WebSocketStore {

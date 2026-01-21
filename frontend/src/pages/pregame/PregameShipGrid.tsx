@@ -2,16 +2,16 @@ import { useRef, useEffect } from "react";
 
 import { makeObservable } from "mobx";
 
-
-import { Ship, ShipPosition, ShipGrid } from "../../../base";
-import { Dragger } from "../DragDrop/drag.js";
+import { Ship, ShipPosition, ShipGrid } from "../../base/index.js";
+import { Dragger } from "./DragDrop/drag.js";
 import { observer } from "mobx-react-lite";
 
-import "./PregameShipGrid.css";
+import styled from "styled-components";
+
 
 export abstract class PregameShipGrid  {
 	abstract readonly shipInHandler: EventListener;
-	abstract readonly styleClassName: string;
+	abstract readonly className: string;
 	readonly shipGrid: ShipGrid;
 
 	constructor(size: {rows: number; cols: number}, ships?: Map<Ship, ShipPosition>, requireGaps: boolean = true) {
@@ -37,6 +37,16 @@ export abstract class PregameShipGrid  {
 	abstract reset(): void;
 
 
+	protected static StyledPregameShipGrid = styled.div.attrs({className: "pregame-ship-grid"})({
+		".ship:not(.clone):hover": {
+			cursor: "grab",
+			background: "#388e3c",
+			borderColor: "#1b5e20",
+			transform: "scale(1.05)",
+			transition: "transform 0.1s, background 0.1s, border-color 0.1s",
+		}
+	})
+
 	public readonly Renderer = observer(() => {
 		const shipGridRef = useRef<HTMLDivElement>(null);
 		
@@ -49,10 +59,11 @@ export abstract class PregameShipGrid  {
 			}
 		}, [this.shipInHandler]);
 		
+
 		return (
-			<div className={`${this.styleClassName} pregame-ship-grid`}>
+			<PregameShipGrid.StyledPregameShipGrid className={this.className} >
 				<this.shipGrid.Renderer ref={shipGridRef} mouseDownHandlerFactory={(ship) => new Dragger(ship, this).mouseDownHandler} />
-			</div>
+			</PregameShipGrid.StyledPregameShipGrid>
 		);
 	});
 }

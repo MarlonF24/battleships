@@ -166,6 +166,8 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
         if game_connections.turn_player_id != player.id:
             if game_connections.currently_connected(player.id):
+                game_connections.shot_lock.release()  # release the lock as the shot will not be processed
+                
                 raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason=f"Player {player.id} tried to shoot out of turn.")
         
         try:
@@ -297,8 +299,8 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
 
 
-    async def end_battle(self, game: Game, premature: bool = False):
-        logger.info(f"Ending battle in game {game.id}.")
+    async def end_battle(self, game: Game):
+        logger.info(f"Ending battle in game {game.id}. Broadcasting game over messages and closing connections...")
         
         game_connections = self.get_game_connections(game)
         game_connections.end_battle()
@@ -309,7 +311,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
             game.phase = GamePhase.COMPLETED
 
         lambda_result: Callable[[UUID], GameOverResult] = lambda pid: (
-            GameOverResult.PREMATURE if premature else
+            GameOverResult.PREMATURE if not any(player.ship_grid.all_ships_sunk for player in game_connections.players.values()) else
             GameOverResult.LOSS if game_connections.players[pid].ship_grid.all_ships_sunk else
             GameOverResult.WIN
         )

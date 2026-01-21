@@ -10,6 +10,7 @@ import ActiveShipLogic from "./ActiveShipLogic";
 class GameWebsocketStore extends WebSocketStore {
     gameGrids: {ownGameGrid: GameGrid, opponentGameGrid: OpponentGrid} | null = null;
     hasTurn: boolean = false; 
+    gameOverStatus: socketModels.GameOverResult | null = null;
 
     constructor(gameId: string, navigation: ReturnType<typeof useSwitchView>, protected readonly gameParams: apiModels.GameParams) {
         super(Page.GAME, gameId, navigation);
@@ -18,6 +19,7 @@ class GameWebsocketStore extends WebSocketStore {
         makeObservable(this, {
             gameGrids: observable.shallow,
             hasTurn: observable,
+            gameOverStatus: observable,
             handleServerStateMessage: true,
             handleServerTurnMessage: true,
             handleServerShotResultMessage: true,
@@ -41,7 +43,7 @@ class GameWebsocketStore extends WebSocketStore {
                 this.handleServerShotResultMessage(message.payload.value);
                 break;
             case "gameOver":
-                this.handleGameOver();
+                this.handleGameOver(message.payload.value);
                 break;
             default:
                 console.error(`Unhandled game server message type ${message.payload.case} message:${message}`);
@@ -96,8 +98,9 @@ class GameWebsocketStore extends WebSocketStore {
         this.hasTurn = true;
     };
 
-    handleGameOver = (): void => {
-        this.hasTurn = false;
+    handleGameOver = (message: socketModels.GameServerGameOverMessage): void => {
+        this.gameOverStatus = message.result;
+        this.intentionalDisconnect(); 
     }
 
     sendGamePlayerMessage = <T extends MessagePayload<socketModels.GamePlayerMessage>>(message: T): void => {

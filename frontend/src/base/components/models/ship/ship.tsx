@@ -1,6 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
 import { socketModels } from "../../../api";
+
 import "./Ship.css";
 
 
@@ -28,21 +29,16 @@ export class Ship {
 		}
 	}
 
-	
 
 	public readonly Renderer = observer(({ position, onMouseDown }: { position: ShipPosition, onMouseDown?: React.MouseEventHandler<HTMLDivElement> }) => {
-		
-		const style = {
-			"--ship-length": this.length.toString(),
-			"--row": position.headRow.toString(),
-			"--col": position.headCol.toString(),
-		} as React.CSSProperties;
-		
 		return (
-			<div className="ship"
-			data-orientation={this.orientation} 
-			style={style} 
-			onMouseDown={onMouseDown}
+			<div className="ship" data-orientation={this.orientation}
+				style={{
+					"--length": this.length.toString(),
+					"--row": position.headRow.toString(),
+					"--col": position.headCol.toString(),
+				} as React.CSSProperties}
+				onMouseDown={onMouseDown}
 			/>
 		);
 	});

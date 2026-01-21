@@ -1,3 +1,0 @@
-.ships-no-pointer .ship:not(.clone) {
-	pointer-events: none !important;
-}

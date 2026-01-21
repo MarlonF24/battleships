@@ -1,7 +1,7 @@
 import { override, makeObservable } from "mobx";
 
-import { Ship, ShipPosition, ShipLike, socketModels } from "../../../base";
-import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
+import { Ship, ShipPosition, ShipLike, socketModels } from "../../../base/index.js";
+import { PregameShipGrid } from "../PregameShipGrid.js";
 import { ShipSuggestion } from "../DragDrop/DynamicShip.js";
 
 import {
@@ -11,11 +11,11 @@ import {
 	ShipInEvent,
 } from "../DragDrop/suggestion_handler.js";
 
-import "./battle_grid.css"; 
+import "./BattleGrid.css"
 
 export class BattleGrid extends PregameShipGrid {
 	public readonly shipInHandler: EventListener = new BattleGridSuggestionHandler(this).suggestShip;
-	public readonly styleClassName: string = "battle-grid";
+	readonly className = "battle-grid";
 
 	constructor(size: {rows: number, cols: number}, ships?: Map<Ship, ShipPosition>) {
 		super(size, ships);
@@ -35,6 +35,7 @@ export class BattleGrid extends PregameShipGrid {
 			});
 		}
 	}
+
 
 }
 

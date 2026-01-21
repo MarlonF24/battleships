@@ -1,13 +1,13 @@
 
 import { action, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { Ship, ShipPosition } from "../Ship/Ship.js";
-import { Grid } from "../Grid/Grid.js";
-
-
-import "./ShipGrid.css";
 import { forwardRef } from "react";
-import { socketModels } from "../../../api/index.js";
+
+import { Ship, ShipPosition } from "./Ship/Ship.js";
+import { Grid } from "./Grid.js";
+import { socketModels } from "../../api/index.js";
+
+import styled from "styled-components";
 
 type mouseDownHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
 
@@ -187,18 +187,37 @@ export class ShipGrid<ShipType extends Ship = Ship> {
 		this.ships.forEach((_, ship) => {this.removeShip(ship);})
 	}
 
+
+    private static StyledShipGrid = styled.section.attrs({className: "ship-grid"})({
+        
+        display: "grid",
+
+        position: "relative",
+
+        ".grid": {
+            position: "relative",
+            gridColumn: "1 / 1",
+            gridRow: "1 / 1",
+        },
+
+        ".ship": {
+            position: "absolute",
+            left: "calc(var(--col) * var(--cell-size))",
+            top: "calc(var(--row) * var(--cell-size))",
+        }
+    })
     
 
     public readonly Renderer = observer(forwardRef<HTMLElement, ShipGridRendererProps>(({mouseDownHandlerFactory, children}, ref) => {
        
         return (
-            <section className="ship-grid" ref={ref}>
+            <ShipGrid.StyledShipGrid  ref={ref}>
                 <Grid rows={this.size.rows} cols={this.size.cols}/>
                 {Array.from(this.ships.entries()).map(([ship, position]) => (
                     <ship.Renderer key={position.headRow + "-" + position.headCol} position={position} onMouseDown={mouseDownHandlerFactory ? mouseDownHandlerFactory(ship) : undefined} />
                 ))} 
                 {children}
-            </section>
+            </ShipGrid.StyledShipGrid>
         );
     }));
 }

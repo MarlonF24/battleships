@@ -1,9 +1,9 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
-import ActiveShip from "../ActiveShipLogic.js";
+import ActiveShip from "./ActiveShipLogic.js";
 import { makeObservable, observable } from "mobx";
 
-import "./FleetDisplay.css";
+import styled from "styled-components";
 
 class FleetDisplay  {
     readonly shipDF: (ActiveShip | null)[][];
@@ -79,9 +79,41 @@ class FleetDisplay  {
         throw new Error("Tried to add ship to fleet display but no space available. This should be impossible.");
     }
 
+
+
+    protected static StyledFleetDisplay = styled.table.attrs({className: "fleet-display"})({
+        "--display-down-scale": 0.2,
+        borderCollapse: "separate", 
+        borderSpacing: "calc(var(--cell-size) * 0.05) calc(var(--cell-size) * 0.15)", /* Add gap only between rows */
+
+        tr: {
+            height: "calc(var(--cell-size) * var(--display-down-scale))",
+        },
+
+        td: {
+            width: "calc(var(--cell-size) * var(--display-down-scale))",
+            height: "calc(var(--cell-size) * var(--display-down-scale))",
+        },
+
+        ".spacer": {
+            visibility: "hidden",
+        },
+
+        ".ship-cell.hit": {
+            backgroundColor: "red",
+        },
+
+        ".ship-cell": {
+            border: "2px solid black",
+            backgroundColor: "lightgray",
+        }
+    })
+
+
+
     readonly Renderer: React.FC = observer(() => {
         return (
-            <table className="fleet-display">
+            <FleetDisplay.StyledFleetDisplay>
                 <tbody>
                     {Array.from(this.lengthToRow.keys()).sort((a, b) => b - a).map((length, index, array) => { // Sort lengths descending
                         return (
@@ -92,7 +124,7 @@ class FleetDisplay  {
                         )
                     })}
                 </tbody>
-            </table>)
+            </FleetDisplay.StyledFleetDisplay>)
         })
         
 

@@ -2,14 +2,13 @@ import React from "react";
 
 import { Ship, GameId, apiModels, socketModels, WebSocketProvider } from "../../base";
 
-import { BattleGrid } from "./BattleGrid/battle_grid.js";
-import { ShipGarage } from "./Garage/garage.js";
+import { BattleGrid } from "./BattleGrid/BattleGrid.js";
+import { ShipGarage } from "./Garage/Garage.js";
 import { useLoaderData } from "react-router-dom";
 import { PregameWebSocketStore } from "./PregameWebsocket.js";
 import { useSwitchView } from "../../routing/switch_view.js";
 import PregameActionArea from "./ActionArea.js";
 
-import "./pregame.css";
 
 export interface GameViewLoaderData {
 	gameParams: apiModels.GameParams;

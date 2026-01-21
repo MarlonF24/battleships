@@ -1,7 +1,8 @@
 /* Ship-specific styles extracted from main.css */
-.ship {
-  background: var(--ship-bg);
-  border: 2px solid var(--ship-border);
+.ship {  
+	border: 2px solid #145a23;
+  background: #2e7d32;
+  border: 2px solid #145a23;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
@@ -10,13 +11,13 @@
 }
 
 .ship:not(.clone)[data-orientation="1"] {
-  width: calc(var(--cell-size) * var(--ship-length));
+  width: calc(var(--cell-size) * var(--length));
   height: var(--cell-size);
 }
 
 .ship:not(.clone)[data-orientation="2"] {
   width: var(--cell-size);
-  height: calc(var(--cell-size) * var(--ship-length));
+  height: calc(var(--cell-size) * var(--length));
 }
 
 

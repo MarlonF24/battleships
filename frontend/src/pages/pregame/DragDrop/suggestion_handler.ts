@@ -9,7 +9,7 @@
 
 import { Ship, ShipPosition } from "../../../base";
 import { ShipDragClone, ShipSuggestion } from "./DynamicShip.js";
-import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
+import { PregameShipGrid } from "../PregameShipGrid.js";
 
 
 export interface EquatorCrossEventDetail {

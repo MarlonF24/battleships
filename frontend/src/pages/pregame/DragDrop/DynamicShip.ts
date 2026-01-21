@@ -19,7 +19,7 @@ abstract class DynamicShip  {
 		this._orientation = parseInt(this.html.dataset.orientation!) as Orientation;
 		
 		this.length = parseInt(
-			this.html.style.getPropertyValue("--ship-length")
+			this.html.style.getPropertyValue("--length")
 		);
 
 	}

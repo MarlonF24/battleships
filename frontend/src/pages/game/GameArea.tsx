@@ -1,10 +1,12 @@
 import { useLoaderData } from "react-router-dom";
 
-import { ShipGrid, Ship, ShipPosition } from "../../base";
+import { ShipGrid, Ship, ShipPosition, GameArea as StyledGameArea } from "../../base";
 import { useWebSocketStore } from "../../base";
 import { GameViewLoaderData } from "../pregame/view";
 import GameWebsocketStore from "./GameWebsocket";
 import { observer } from "mobx-react-lite";
+
+
 
 const GameArea = observer(() => {
     const { gameParams } = useLoaderData<GameViewLoaderData>();
@@ -27,21 +29,21 @@ const GameArea = observer(() => {
 
     } else {
         gameArea = (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>  
+            <StyledGameArea>
                 <div style={{ color: WS.hasTurn ? "green" : "red" }}>{WS.hasTurn ? "Your turn" : "Opponent's turn"}</div>
                 <br/>
                 <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                     <WS.gameGrids.ownGameGrid.Renderer fleetPosition="left" opponent={false} />
                     <WS.gameGrids.opponentGameGrid.Renderer fleetPosition="right" opponent={true} />
                 </div>
-            </div>
+            </StyledGameArea>
         );
     } 
 
     return (
-        <section className="game-area">
+        <StyledGameArea>
             {gameArea}
-        </section>
+        </StyledGameArea>
     )  
 
 })

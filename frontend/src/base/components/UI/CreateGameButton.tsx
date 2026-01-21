@@ -1,8 +1,9 @@
 import React from "react";
-
-import { useApi, api } from "../..";
+import { useApi } from "../../hooks";
+import { api } from "../../api";
+import { ErrorMessage } from "./ErrorMessage.tsx";
 import { useSwitchView, Page } from "../../../routing/switch_view";
-
+import { Button } from "./Button.tsx";
 
 
 
@@ -30,10 +31,10 @@ export const CreateGameButton: React.FC = () => {
     
     return (
         <>
-            <button onClick={clickHandler} className="btn-primary" disabled={loading}>
+            <Button $type="primary" onClick={clickHandler} disabled={loading}>
                 {loading ? "Creating..." : "Create Game"}
-            </button>
-            {error && <span className="error-message">Error: {error}</span>}
+            </Button>
+            {error && <ErrorMessage errorMessage={`Error: ${error}`} />}
         </>
     )
 }

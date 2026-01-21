@@ -1,13 +1,14 @@
 import { makeObservable } from "mobx";
 import { ShipGrid, ShipPosition, socketModels, useWebSocketStore } from "../../../base";
-import HitGrid, {HitState, HitStateType} from "../HitGrid/HitGrid.js";
+import HitGrid, {HitState, HitStateType} from "../HitGrid.js";
 import ActiveShipLogic from "../ActiveShipLogic.js";
-import FleetDisplay from "../FleetDisplay/FleetDisplay.js";
+import FleetDisplay from "../FleetDisplay.js";
 
-import "./GameGrid.css";
 import GameWebsocketStore from "../GameWebsocket.js";
 import { Constructor } from "protobufjs";
 
+
+import styled from "styled-components";
 
 export type ShipLengthsType = Map<number, number> | {[length: number]: number};
 
@@ -83,14 +84,35 @@ class GameGrid {
     }
 
    
+    protected static StyledGameGrid = styled.section.attrs({className: "game-grid"})({
+        display: "grid",
+        gridTemplateColumns: "auto minmax(0, 1fr) auto",
+        alignItems: "start",
+        columnGap: "0.5rem", /* Add a small gap between fleet and grid */
 
+
+        ".fleet-display:first-child": {
+            gridColumn: 1,
+            justifySelf: "start",
+        },
+
+        ".fleet-display:last-child": {
+            gridColumn: 3,
+            justifySelf: "end",
+        },
+
+        ".ship-grid": {
+            gridColumn: 2,
+            justifySelf: "center",
+        }
+    });
 
 
     readonly Renderer = ({fleetPosition, opponent}: {fleetPosition: "left" | "right", opponent: boolean} ) => {
         const WS = useWebSocketStore(GameWebsocketStore);
         
         return (
-            <section className="game-grid">
+            <GameGrid.StyledGameGrid>
                 {fleetPosition === "left" && <this.fleetDisplay.Renderer />}
                 
                 <div style={WS.hasTurn !== opponent ? {opacity: 0.6} : {opacity: 1}}>
@@ -100,7 +122,7 @@ class GameGrid {
                 </div>
 
                 {fleetPosition === "right" && <this.fleetDisplay.Renderer />}
-            </section>
+            </GameGrid.StyledGameGrid>
         );
     }
 

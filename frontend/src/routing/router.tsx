@@ -4,7 +4,7 @@ import PreGameView, { GameViewLoaderData } from "../pages/pregame";
 import  WelcomeView  from "../pages/welcome";
 import GameView from "../pages/game";
 import ErrorPage from "../pages/error";
-
+import { LoadingFallback } from "./LoadingFallback";
 
 const paramsLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
@@ -25,11 +25,7 @@ const paramsLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   }
 }
 
-const loadingFallbackElement = (
-  <div className="loading-container">
-    <span className="loading-indicator">Loading Game Data...</span>
-  </div>
-);
+
 
 const router = createBrowserRouter([
   {
@@ -44,14 +40,14 @@ const router = createBrowserRouter([
     path: "/games/:gameId/pregame",
     element: <PreGameView />,
     loader: paramsLoader,
-    hydrateFallbackElement: loadingFallbackElement,
+    hydrateFallbackElement: <LoadingFallback />,
     errorElement: <ErrorPage />
   },
   {
       path: "/games/:gameId/game",
     element: <GameView />,
     loader: paramsLoader,
-    hydrateFallbackElement: loadingFallbackElement,
+    hydrateFallbackElement: <LoadingFallback />,
     errorElement: <ErrorPage />
   },
   { path: "/error",

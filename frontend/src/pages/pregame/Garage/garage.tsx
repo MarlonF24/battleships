@@ -1,15 +1,15 @@
 import { override, makeObservable } from "mobx";
 
-import { Ship, ShipLike, socketModels, ShipGrid } from "../../../base";
+import { Ship, ShipLike, socketModels, ShipGrid } from "../../../base/index.js";
 import { ShipSuggestion } from "../DragDrop/DynamicShip.js";
-import { PregameShipGrid } from "../PregameShipGrid/PregameShipGrid.js";
+import { PregameShipGrid } from "../PregameShipGrid.js";
 
-import "./garage.css";
+import "./Garage.css"
+
 
 export class ShipGarage extends PregameShipGrid {
 	public readonly shipInHandler: EventListener = new GarageSuggestionHandler(this).suggestShip;
-	public readonly styleClassName = "ship-garage";
-	
+	readonly className = "ship-garage";
 
 	constructor(ships: Ship[], sort: boolean = true) {
 		
@@ -34,7 +34,7 @@ export class ShipGarage extends PregameShipGrid {
 			JSON.stringify((ships as Ship[]).map((s) => s.length))
 		);
 
-		this.shipGrid.placeShip = this.HORIZONTALCheckDecorator(this.shipGrid.placeShip);
+		this.shipGrid.placeShip = this.horizontalCheckDecorator(this.shipGrid.placeShip);
 	}
 
 	reset() { // !! only call this when removing all ships !!
@@ -70,7 +70,7 @@ export class ShipGarage extends PregameShipGrid {
 	}
 
 
-	HORIZONTALCheckDecorator(func: (this: ShipGrid, ship: Ship, position: {headRow: number, headCol: number}) => void) {
+	horizontalCheckDecorator(func: (this: ShipGrid, ship: Ship, position: {headRow: number, headCol: number}) => void) {
 		
 		function wrapper( this: ShipGrid, ship: Ship, {headRow, headCol = 0}: {headRow: number, headCol?: number} ): void {
 			if (ship.orientation != socketModels.Orientation.HORIZONTAL) throw new Error("Cannot place non-HORIZONTAL ship in garage"); 
@@ -80,6 +80,8 @@ export class ShipGarage extends PregameShipGrid {
 	
 		return wrapper;
 	}
+
+	
 }
 
 import {

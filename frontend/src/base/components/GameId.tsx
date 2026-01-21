@@ -1,9 +1,9 @@
 import React from "react";
-import { CopyButton } from "./UI/copy_button/copy_button";
+import { CopyButton } from "./UI/CopyButton";
+import styled from "styled-components";
 
 
-
-const myStyle: React.CSSProperties = {
+const GameIdSection = styled.section.attrs({className: 'game-id'})({
   fontSize: "1.2rem",
   fontWeight: 600,
   color: "var(--primary-color)",
@@ -18,13 +18,13 @@ const myStyle: React.CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   gap: "0.5em",
-};
+});
 
 export const GameId : React.FC<{ gameId: string }> = ({ gameId }) => {
     return (
-        <section className="game-id" style={myStyle}>
+        <GameIdSection>
             <span>{`Game ID: ${gameId}`}</span>
             <CopyButton text={gameId}/>
-        </section>
+        </GameIdSection>
     );
 };

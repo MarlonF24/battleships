@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { useRouteError, isRouteErrorResponse, useLocation } from 'react-router-dom';
 import { Page, useSwitchView } from '../../routing/switch_view';
-import { ButtonBar, ToWelcomeBtn } from '../../base';
+import { ButtonBar, ErrorMessage, Button } from '../../base';
+import ToWelcomeButton from '../../base/components/UI/ToWelcomeButton';
 
 
 
@@ -46,15 +47,13 @@ const ErrorPage: React.FC = () => {
         <div className="error-container">
             <h2 style={{color: 'var(--danger-color)'}}>Oops!</h2>
             <p>Sorry, an unexpected error has occurred.</p>
-            <div className="error-message">
-                <i>{errorMessage}</i>
-            </div>
+            <ErrorMessage errorMessage={errorMessage} />
             <ButtonBar>
-                <button onClick={() => switchView(Page.BACK)} className="btn-danger">
+                <Button $type="danger" onClick={() => switchView(Page.BACK)}>
                     Reload Previous Page
-                </button>
+                </Button>
                 
-                <ToWelcomeBtn/>
+                <ToWelcomeButton />
                 
             </ButtonBar>
         </div>

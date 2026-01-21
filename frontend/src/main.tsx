@@ -12,7 +12,7 @@ import "./main.css";
 import App from "./App.js";
 
 
-createPlayer();
+
 
 async function createPlayer() {
   let playerId = sessionStorage.getItem("playerId");
@@ -43,3 +43,6 @@ async function createPlayer() {
 createRoot(document.getElementById('root')!).render(
     <App />
 );
+
+
+await createPlayer();

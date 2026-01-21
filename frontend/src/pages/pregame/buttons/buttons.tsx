@@ -2,9 +2,9 @@ import React, { useCallback} from "react";
 import { create } from "@bufbuild/protobuf";
 
 import {  PregameWebSocketStore } from "../PregameWebsocket.js";
-import { BattleGrid } from "../BattleGrid/battle_grid.js";
-import { ShipGarage } from "../Garage/garage.js";
-import { useWebSocketStore, Tooltip, TooltipPosition, Ship, socketModels } from "../../../base";
+import { BattleGrid } from "../BattleGrid/BattleGrid.js";
+import { ShipGarage } from "../Garage/Garage.js";
+import { useWebSocketStore, Tooltip, TooltipPosition, Ship, socketModels, Button } from "../../../base";
 
 
 
@@ -21,7 +21,7 @@ export const ResetButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarag
 			shipGarage.reset();
 	}
 
-	return <button className="btn-danger" onClick={clickHandler}> Reset </button>;
+	return <Button $type="danger" onClick={clickHandler}> Reset </Button>;
 }
 
 
@@ -67,9 +67,9 @@ export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, ba
 
 
 	return (
-		<button className="btn-success" onClick={clickHandler}> 
+		<Button $type="success" onClick={clickHandler}> 
 		Ready! <span className="num-ready-players">{`(${store.readyState.numReadyPlayers}/2)`}</span> 
-		</button>
+		</Button>
 	);
 
 	
@@ -136,9 +136,9 @@ export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGara
 	}
 
 	return (
-		<button className="btn-primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships
+		<Button $type="primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships
 			<Tooltip position={TooltipPosition.TOP} text="Left Click: unplaced ships&#10;Right Click: all ships" />
-		</button>
+		</Button>
 	);
 }
 

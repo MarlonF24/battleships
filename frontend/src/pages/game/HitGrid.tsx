@@ -1,15 +1,31 @@
 import { useCallback } from "react";
 import { observer } from "mobx-react-lite";
 import { create } from "@bufbuild/protobuf";
-import { socketModels } from "../../../base/api";
-import { useWebSocketStore } from "../../../base";
-import GameWebsocketStore from "../GameWebsocket";
+import { socketModels, StyledGrid, useWebSocketStore } from "../../base";
+import GameWebsocketStore from "./GameWebsocket";
 
-import "./HitGrid.css";
-
+import styled from "styled-components";
 
 export type HitStateType = socketModels.ShipGridView_HitState;
 export const HitState = socketModels.ShipGridView_HitState;
+
+
+const StyledHitGrid = styled(StyledGrid).attrs({className: "hit-grid"})({
+    "td > *": {
+        position: "relative",
+        zIndex: 100,
+        
+        /* This forces the SVG to respect the parent's size */
+        display: "block", 
+        width: "100%",
+        height: "100%",
+        
+        /* This keeps the internal SVG graphics centered and scaled */
+        maxWidth: "var(--cell-size)",
+        maxHeight: "var(--cell-size)",
+    }
+})
+
 
 export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], shootable: boolean}) => {
     
@@ -27,7 +43,7 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
     }, []);
     
     return (
-            <table className="hit-grid grid" inert={!WSStore.hasTurn}>
+            <StyledHitGrid inert={!WSStore.hasTurn}>
                 <tbody>
                     {grid.map((row, r) => (
                         <tr key={r}>
@@ -39,7 +55,7 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </StyledHitGrid>
         );
     }
 );

@@ -1,4 +1,4 @@
 .ship-garage .grid .cell {
-  background: var(--garage-cell-bg);
-  border: 1px solid var(--grid-border-color);
+    background: #b3bec7;
+    border: 1px solid #1976d2;
 }
