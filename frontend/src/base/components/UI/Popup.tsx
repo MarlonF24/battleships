@@ -29,13 +29,13 @@ const PopupContent = styled.div.attrs({className: 'popup-content'})({
   overflow: "auto",
 });
 
-export const Popup = ({ children }: { children: React.ReactNode }) => {
+export const Popup = ({ children, style }: { children: React.ReactNode, style?: React.CSSProperties }) => {
     // Safety check for SSR (Server Side Rendering) environments
     if (typeof document === 'undefined') return null;
 
     return createPortal(
         <PopupBackdrop>
-            <PopupContent>
+            <PopupContent style={style}>
                 {children}
             </PopupContent>
         </PopupBackdrop>,

@@ -1,9 +1,9 @@
 import { useLoaderData } from "react-router-dom";
 import { observer } from "mobx-react-lite";
 
-import { ShipGrid, Ship, ShipPosition, GameArea as StyledGameArea } from "../../base";
+import { ShipGrid, Ship, ShipPosition, GameArea as StyledGameArea, Timer } from "../../base";
 import { useWebSocketStore } from "../../base";
-import { GameViewLoaderData } from "../pregame/view";
+import { GameViewLoaderData } from "../pregame/PreGameView";
 import GameWebsocketStore, { TurnStatus } from "./GameWebsocket";
 import { GameOverPopup } from "./GameOverPopup";
 
@@ -51,6 +51,18 @@ const GameArea = observer(() => {
         gameArea = (
             <>            
                 {WS.gameOverStatus && <GameOverPopup result={WS.gameOverStatus} />}
+
+                {WS.hasTurn == TurnStatus.YOUR_TURN &&
+                    <Timer 
+                        key={"shot-clock"} initialSeconds={15} 
+                        onExpire={() => {
+                            WS.sendShotMessage(WS.gameGrids!.opponentGameGrid.getRandomUntouchedCell()); 
+                            WS.setHasTurn(TurnStatus.WAITING);}
+                        } 
+                        style={{position:"absolute", left:"calc(100% + 1rem)"}} 
+                    />
+                }
+
                 <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
                     <WS.gameGrids.ownGameGrid.Renderer fleetPosition="left" opponent={false} />
                     <WS.gameGrids.opponentGameGrid.Renderer fleetPosition="right" opponent={true} />
@@ -60,7 +72,7 @@ const GameArea = observer(() => {
     } 
 
     return (
-        <>
+        <>  
             <div style={{ color: colour }}>{turnMessage}</div>
             <br/>
             <StyledGameArea inert={WS.gameOverStatus !== null}>

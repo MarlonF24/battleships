@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const Button = styled.button<{ $type?: 'primary' | 'danger' | 'success' }>(props => ({
   color: "#fff",
@@ -20,14 +20,17 @@ export const Button = styled.button<{ $type?: 'primary' | 'danger' | 'success' }
   }
 }));
 
-export const ButtonBar = styled.div.attrs({ className: 'button-bar' })({
+export const ButtonBar = styled.div.attrs({ className: 'button-bar' })<{ $vertical?: boolean }>(props => ({
   display: "flex",
+  flexDirection: props.$vertical ? "column" : "row",
   gap: "16px",
   marginBottom: "24px",
   flexWrap: "wrap",
   justifyContent: "center",
+  alignItems: props.$vertical ? "center" : "initial",
 
   "& > button": {
     flex: "0 1 auto",
+    width: props.$vertical ? "100%" : "auto",
   }
-});
+}));

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Ship, GameId, apiModels, socketModels, WebSocketProvider } from "../../base";
+import { Ship, GameId, apiModels, socketModels, WebSocketProvider } from "../../base/index.js";
 
 import { BattleGrid } from "./BattleGrid/BattleGrid.js";
 import { ShipGarage } from "./Garage/Garage.js";
@@ -50,8 +50,6 @@ const PreGameView: React.FC = () => {
 	}
 
 
-
-	
 	return (
 		<>
 			<GameId gameId={gameId} />

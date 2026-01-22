@@ -1,10 +1,12 @@
 import { makeObservable } from "mobx";
+import { useEffect, useState } from "react";
+
 import { ShipGrid, ShipPosition, socketModels, useWebSocketStore } from "../../../base";
 import HitGrid, {HitState, HitStateType} from "../HitGrid.js";
 import ActiveShipLogic from "../ActiveShipLogic.js";
 import FleetDisplay from "../FleetDisplay.js";
 
-import GameWebsocketStore from "../GameWebsocket.js";
+import GameWebsocketStore, { TurnStatus } from "../GameWebsocket.js";
 import { Constructor } from "protobufjs";
 
 
@@ -110,12 +112,25 @@ class GameGrid {
 
     readonly Renderer = ({fleetPosition, opponent}: {fleetPosition: "left" | "right", opponent: boolean} ) => {
         const WS = useWebSocketStore(GameWebsocketStore);
-        
+        const [opacity, setOpacity] = useState(0.6);
+
+        useEffect(() => {
+            if (opponent && WS.hasTurn === TurnStatus.YOUR_TURN
+                || !opponent && WS.hasTurn === TurnStatus.OPPONENT_TURN
+            ) {
+                setOpacity(1);
+            } else if (!opponent && WS.hasTurn === TurnStatus.YOUR_TURN
+                || opponent && WS.hasTurn === TurnStatus.OPPONENT_TURN
+            ) {
+                setOpacity(0.6);
+            }
+        }, [WS.hasTurn, opponent]);
+
         return (
             <GameGrid.StyledGameGrid>
                 {fleetPosition === "left" && <this.fleetDisplay.Renderer />}
                 
-                <div style={WS.hasTurn !== opponent ? {opacity: 0.6} : {opacity: 1}}>
+                <div style={{opacity}}>
                     <this.shipGrid.Renderer>
                         <HitGrid grid={this.hitGrid} shootable={opponent} />
                     </this.shipGrid.Renderer>

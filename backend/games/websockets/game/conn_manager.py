@@ -260,7 +260,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
         # end game if no players are connected
         if game_connections.num_of_currently_connected() == 0:
-            logger.info(f"No players connected in game {game.id}, ending battle.")
+            logger.info(f"No players connected in game {game.id}, ending battle...")
             await self.end_battle(game)
             return
         
@@ -337,7 +337,7 @@ class GameConnectionManager(ConnectionManager[GameGameConnections, GamePlayerCon
 
 
     async def end_battle(self, game: Game):
-        logger.info(f"Ending battle in game {game.id}. Broadcasting game over messages and closing connections...")
+        logger.info(f"Ending battle in game {game.id}. Broadcasting game over messages, closing connections and saving results to DB...")
         
         game_connections = self.get_game_connections(game)
         game_connections.end_battle()

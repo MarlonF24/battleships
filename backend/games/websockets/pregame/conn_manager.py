@@ -38,10 +38,10 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
     async def clean_up(self, game: Game, player: Player, wse: WebSocketException | None = None):
         if game_conns := self.get_game_connections(game, raise_on_missing=False):
 
-            if game_conns.num_initially_connected() <= 1 and game_conns.num_ready_players() == 0:
-                logger.info(f"Only initially connected player {player.id} disconnected from pregame of game {game.id} before he was ready. Closing game connections and deleting game.")
+            if game_conns.num_initially_connected() <= 1:
+                logger.info(f"Only initially connected player {player.id} disconnected from pregame of game {game.id} before a second player joined. Closing game connections and deleting game from DB.")
 
-                asyncio.create_task(self.delete_game_from_db(game))
+                await self.delete_game_from_db(game)
 
                 asyncio.create_task(self.close_player_connections(game, reason="A player disconnected before both players were ready.", remove_game_connection=True))
 
@@ -104,8 +104,8 @@ class PregameConnectionManager(ConnectionManager[PregameGameConnections, Pregame
 
         async for message in self.message_generator(message_queue):
             if player_connection.ready:
-                logger.error(f"Received ready message from player {player.id} in game {game.id} after they were already marked ready. Ignoring message: {message}")
-                raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION, reason="Received ready message after already marked ready.")
+                logger.warning(f"Received ready message from player {player.id} in game {game.id} after they were already marked ready. Ignoring message: {message}")
+        
             
             # Note: technically we dont need background task here as we expect to do this once, but for consistency with other handlers we use it
             self.create_background_task(self.handle_player_ready_message(game, player, message), name=f"handle_pregame_ready_message_game_{game.id}_player_{player.id}")

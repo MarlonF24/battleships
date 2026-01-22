@@ -18,5 +18,5 @@ export const useAsync = () => {
         }
     };
 
-    return { loading, error, execute };
+    return { loading, error, setError, execute };
 }

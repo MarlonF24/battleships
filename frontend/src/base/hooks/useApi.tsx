@@ -9,7 +9,7 @@ function defaultResponseErrorHandler(error: ResponseError, message: string) {
 
 
 export const useApi = (responseErrorHandler: (error: ResponseError, message: string) => void = defaultResponseErrorHandler) => {
-  const { loading, error, execute } = useAsync(); 
+  const { loading, error, setError, execute } = useAsync(); 
   
   async function executeApi<T>(apiCall: () => Promise<T>): Promise<T> {
     return execute(async () => {
@@ -25,5 +25,5 @@ export const useApi = (responseErrorHandler: (error: ResponseError, message: str
     });
   };
   
-  return { loading, error, executeApi };
+  return { loading, error, setError, executeApi };
 };

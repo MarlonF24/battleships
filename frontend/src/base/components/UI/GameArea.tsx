@@ -9,6 +9,7 @@ export const GameArea = styled.section.attrs({ className: 'game-area' })({
   alignItems: "start",
   justifyContent: "center",
   gap: "1rem",
+  position: "relative",
 
   [mobile]: {
     gap: '20px', // Only keep what changes

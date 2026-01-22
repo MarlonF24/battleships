@@ -1,2 +1,2 @@
-export {default} from "./view.js";
-export type { GameViewLoaderData } from "./view.js";
+export {default} from "./PreGameView.js";
+export type { GameViewLoaderData } from "./PreGameView.js";

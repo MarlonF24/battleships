@@ -1,4 +1,56 @@
 import { socketModels, Ship, ShipPosition } from "../../../base";
+import { ShipGarage } from "../Garage/Garage.js";
+import { BattleGrid } from "../BattleGrid/BattleGrid.js";
+
+
+
+
+export const generateRandomBoard = (battleGrid: BattleGrid, shipGarage: ShipGarage, resetAll: boolean = false): void => {
+	// Logic to randomize ship placement goes here
+	const initialShips = Array.from(shipGarage.ships.keys()).concat(
+		Array.from(battleGrid.ships.keys())
+	);
+
+	initialShips.sort((a, b) => {return b.length - a.length}); //sort ships by length (desc) so that we place longer ships first
+
+	let {rows, cols} = battleGrid.size;
+
+
+	let nullSolution: BattleGridInfo = {
+		shipPositions: new Map(),
+		rowGaps: Array.from({ length: rows }, () => {
+			const gap = { size: cols, coord: 0 };
+			return { largestGap: gap, gaps: [gap] };
+		}),
+		colGaps: Array.from({ length: cols }, () => {
+			const gap = { size: rows, coord: 0 };
+			return { largestGap: gap, gaps: [gap] };
+		})
+	}
+
+	let shipsToPlace = initialShips;
+
+	if (!resetAll) {
+		console.log("Randomly placing unplaced ships.");
+		for (let [ship, position] of battleGrid.ships) {
+			RandomBattleGridGenerator.placeShip(nullSolution, ship, position);
+		}
+
+		shipsToPlace = initialShips.filter((ship) => !nullSolution.shipPositions.has(ship));
+	} else {
+		console.log("Randomly placing all ships.");
+	}
+
+	shipsToPlace = shipsToPlace.map((ship) => new Ship(ship.length, ship.orientation)); // to avoid rotation mutations on original ships
+
+
+	const solution = RandomBattleGridGenerator.DFS(nullSolution, shipsToPlace);
+
+	if (!solution) throw new Error("Error in DFS for random battle grid.");
+	shipGarage.shipGrid.clear();
+	battleGrid.reset(solution);
+}
+
 
 
 interface Gap { // gapsize -> start coordinate of gap in the perp dimension
@@ -11,14 +63,14 @@ interface GapsInfo {
 	gaps: Readonly<Gap>[] // gaps ordered by coord (asc)
 }
 
-export interface BattleGridInfo {	
+interface BattleGridInfo {	
 	shipPositions: Map<Ship, ShipPosition>;
 	rowGaps: GapsInfo[],
 	colGaps: GapsInfo[];
 }
 
 
-export class RandomBattleGridGenerator {
+class RandomBattleGridGenerator {
 
 	static DFS(partialSolution: BattleGridInfo, shipsToPlace: Ship[]): (Map<Ship, ShipPosition> | null) {
 		if (shipsToPlace.length === 0) return partialSolution.shipPositions;

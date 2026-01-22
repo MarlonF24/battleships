@@ -1,12 +1,11 @@
 import React, { useCallback} from "react";
-import { create } from "@bufbuild/protobuf";
+import { observer } from "mobx-react-lite";
 
 import {  PregameWebSocketStore } from "../PregameWebsocket.js";
 import { BattleGrid } from "../BattleGrid/BattleGrid.js";
 import { ShipGarage } from "../Garage/Garage.js";
-import { useWebSocketStore, Tooltip, TooltipPosition, Ship, socketModels, Button } from "../../../base";
-
-
+import { useWebSocketStore, Tooltip, TooltipPosition, Button } from "../../../base";
+import { generateRandomBoard } from "./random_grid.js";
 
 export interface PregameButtonProps {
 	readonly battleGrid: BattleGrid;
@@ -34,6 +33,8 @@ interface ReadyButtonProps extends PregameButtonProps {
 export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, battleGrid}) => {
 	
 	const store = useWebSocketStore(PregameWebSocketStore);
+
+	
 	
 	const clickHandler = useCallback(() => {
 		if (shipGarage.ships.size > 0) {
@@ -48,26 +49,14 @@ export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, ba
 			return;
 		}
 
-		let ships: socketModels.PregamePlayerSetReadyStateMessage["ships"] = [];
-		for (let [ship, position] of battleGrid.ships) {
-			ships.push(
-				create(socketModels.ShipSchema,
-					{length: ship.length, orientation: ship.orientation, headRow: position.headRow, headCol: position.headCol})
-				);
-		}
-
-		let WSMessage: socketModels.PregamePlayerSetReadyStateMessage = create(socketModels.PregamePlayerSetReadyStateMessageSchema, {ships: ships});
-
-		console.log("Sending ready message to backend:", WSMessage);
-		store.sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
+		store.sendPlayerReadyMessage(battleGrid);
 		
-		console.log("Player is ready!");
 	}, [battleGrid, shipGarage]);
 
 
 
 	return (
-		<Button $type="success" onClick={clickHandler}> 
+		<Button $type="success" onClick={clickHandler} > 
 		Ready! <span className="num-ready-players">{`(${store.readyState.numReadyPlayers}/2)`}</span> 
 		</Button>
 	);
@@ -75,65 +64,19 @@ export const ReadyButton: React.FC<ReadyButtonProps> = observer(({shipGarage, ba
 	
 })
 
-import { BattleGridInfo, RandomBattleGridGenerator } from "./random_grid.js";
-import { observer } from "mobx-react-lite";
+
 
 export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGarage}) => {
 
 	const clickHandler = () => {
-		generateRandomBoard();
+		generateRandomBoard(battleGrid, shipGarage, false);
 	};
 
 	const rightClickHandler = (ev: React.MouseEvent<HTMLButtonElement>) => {
 		ev.preventDefault();
-		generateRandomBoard(true);
+		generateRandomBoard(battleGrid, shipGarage, true);
 	}
 
-	const generateRandomBoard = (resetAll: boolean = false): void => {
-		// Logic to randomize ship placement goes here
-		const initialShips = Array.from(shipGarage.ships.keys()).concat(
-			Array.from(battleGrid.ships.keys())
-		);
-
-		initialShips.sort((a, b) => {return b.length - a.length}); //sort ships by length (desc) so that we place longer ships first
-
-		let {rows, cols} = battleGrid.size;
-
-
-		let nullSolution: BattleGridInfo = {
-			shipPositions: new Map(),
-			rowGaps: Array.from({ length: rows }, () => {
-				const gap = { size: cols, coord: 0 };
-				return { largestGap: gap, gaps: [gap] };
-			}),
-			colGaps: Array.from({ length: cols }, () => {
-				const gap = { size: rows, coord: 0 };
-				return { largestGap: gap, gaps: [gap] };
-			})
-		}
-
-		let shipsToPlace = initialShips;
-
-		if (!resetAll) {
-			console.log("Randomly placing unplaced ships.");
-			for (let [ship, position] of battleGrid.ships) {
-				RandomBattleGridGenerator.placeShip(nullSolution, ship, position);
-			}
-
-			shipsToPlace = initialShips.filter((ship) => !nullSolution.shipPositions.has(ship));
-		} else {
-			console.log("Randomly placing all ships.");
-		}
-
-		shipsToPlace = shipsToPlace.map((ship) => new Ship(ship.length, ship.orientation)); // to avoid rotation mutations on original ships
-
-
-		const solution = RandomBattleGridGenerator.DFS(nullSolution, shipsToPlace);
-
-		if (!solution) throw new Error("Error in DFS for random battle grid.");
-		shipGarage.shipGrid.clear();
-		battleGrid.reset(solution);
-	}
 
 	return (
 		<Button $type="primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships

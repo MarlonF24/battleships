@@ -34,6 +34,29 @@ class OpponentGrid extends GameGrid {
         this.hitGrid[row][col] = isHit ? HitState.HIT : HitState.MISS;
     }
 
+    get untouchedCells(): {row: number; col: number}[] {
+        const cells: {row: number; col: number}[] = [];
+        for (let r = 0; r < this.shipGrid.size.rows; r++) {
+            for (let c = 0; c < this.shipGrid.size.cols; c++) {
+                if (this.hitGrid[r][c] === HitState.UNTOUCHED) {
+                    cells.push({row: r, col: c});
+                }
+            }
+        }
+        return cells;
+    }
+    
+    getRandomUntouchedCell(): {row: number; col: number} {
+        const untouched = this.untouchedCells;
+        if (untouched.length === 0) {
+            throw new Error("No untouched cells left to take a shot. The game should be over already!");
+        }
+        const randomIndex = Math.floor(Math.random() * untouched.length);
+        const cell = untouched[randomIndex];
+
+        return cell;
+    }
+
     addShip (ship: ActiveShipLogic): void {
         const {headRow, headCol} = ship;
         

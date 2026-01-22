@@ -40,7 +40,7 @@ export const GameInput = styled.input({
 
 
 export const JoinGameInput: React.FC = () => {
-  const { loading, error, executeApi } = useApi();
+  const { loading, error, setError, executeApi } = useApi();
   const switchView = useSwitchView();
 
   const dispatchJoin = (event: React.FormEvent) => executeApi(async () => {
@@ -69,7 +69,7 @@ export const JoinGameInput: React.FC = () => {
   });
 
   return (
-    <StyledJoinGameForm onSubmit={dispatchJoin}>
+    <StyledJoinGameForm onSubmit={dispatchJoin} onInput={() => error && setError(null)}>
       {error && <ErrorMessage errorMessage={error} />}
       
       <label htmlFor="game-id-input">Join an existing game:</label>

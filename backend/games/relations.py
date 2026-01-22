@@ -31,8 +31,8 @@ class Game(Base):
 class GamePlayerLink(Base):
     __tablename__ = "game_player_link"
 
-    game_id: Mapped[str] = mapped_column(ForeignKey("game.id"), primary_key=True)
-    player_id: Mapped[str] = mapped_column(ForeignKey("player.id"), primary_key=True)
+    game_id: Mapped[str] = mapped_column(ForeignKey("game.id", ondelete="CASCADE"), primary_key=True)
+    player_id: Mapped[str] = mapped_column(ForeignKey("player.id", ondelete="CASCADE"), primary_key=True)
     player_slot: Mapped[int] = mapped_column(Integer, default=1)
 
     ships: Mapped[list["Ship"]] = relationship(back_populates="game_player_link", cascade="all, delete-orphan")
@@ -62,6 +62,7 @@ class Ship(Base):
         ForeignKeyConstraint(
             ["game_id", "player_id"],
             ["game_player_link.game_id", "game_player_link.player_id"],
+            ondelete="CASCADE",
         ),
     )
 

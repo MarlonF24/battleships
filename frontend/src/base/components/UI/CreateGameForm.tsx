@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useApi } from "../../hooks";
 import { api, apiModels } from "../../api";
-import { ErrorMessage } from "./ErrorMessage.tsx";
+import { ErrorMessage } from "../ErrorMessage.tsx";
 import { useSwitchView, Page } from "../../../routing/switch_view";
 import { Button } from "./Button.tsx";
 
@@ -114,7 +114,7 @@ export const CreateGameForm: React.FC = () => {
   };
 
   return (
-    <FormContainer onSubmit={submitHandler}>
+    <FormContainer onSubmit={submitHandler} >
       <FieldSet>
         <Label>Turn Rules</Label>
         <SegmentedControl>

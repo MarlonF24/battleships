@@ -31,7 +31,12 @@ class GameWebsocketStore extends WebSocketStore {
             handleServerTurnMessage: true,
             handleServerShotResultMessage: true,
             handleGameOver: true,
+            setHasTurn: true
         });
+    }
+
+    setHasTurn = (turnStatus: TurnStatus) => {
+        this.hasTurn = turnStatus;
     }
 
 
@@ -118,6 +123,16 @@ class GameWebsocketStore extends WebSocketStore {
         console.log("Sending game player message:", message);
         this.sendPlayerMessage({case: "gameMessage", value: wrappedMessage});
     }
+
+    sendShotMessage = ({row, col:column}:{row: number, col: number}) => {
+        const shotMessage = create(socketModels.GamePlayerShotMessageSchema, {row, column});
+
+        console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
+        
+        this.setHasTurn(TurnStatus.WAITING); 
+        
+        this.sendGamePlayerMessage({case: "shot", value: shotMessage});
+    };
 
 }
 

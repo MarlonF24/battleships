@@ -2,6 +2,7 @@ import { WebSocketStore, ExcludeMessageTypeField, socketModels, MessagePayload, 
 import { Page, useSwitchView } from "../../routing/switch_view.js";
 import { makeObservable, observable } from "mobx";
 import { create } from "@bufbuild/protobuf";
+import { BattleGrid } from "./BattleGrid/BattleGrid.js";
 
 
 export class PregameWebSocketStore extends WebSocketStore {
@@ -19,6 +20,7 @@ export class PregameWebSocketStore extends WebSocketStore {
       makeObservable(this, {
           readyState: observable,
           handleReadyStateMessage: true,
+          setSelfReady: true
       });
   }
 
@@ -34,7 +36,9 @@ export class PregameWebSocketStore extends WebSocketStore {
   }
 
   handleReadyStateMessage = (message: socketModels.PregameServerReadyStateMessage) => {
-      Object.assign(this.readyState, message);
+      this.readyState.numReadyPlayers = message.numReadyPlayers;
+        if (!this.readyState.selfReady) this.readyState.selfReady = message.selfReady; // only update if false to avoid edge cases where opponent gets ready right before us and sends us an outdated state   
+
       console.log("Updated ready state:, numReadyPlayers:", this.readyState.numReadyPlayers, "selfReady:", this.readyState.selfReady);
 
       if (this.readyState.numReadyPlayers === 2) {
@@ -46,6 +50,10 @@ export class PregameWebSocketStore extends WebSocketStore {
       } 
   }
 
+  setSelfReady = (ready: boolean) => {
+      this.readyState.selfReady = ready;
+  }
+
 
 
     sendPregamePlayerMessage = <T extends MessagePayload<socketModels.PregamePlayerMessage>>(message: T): void => {
@@ -54,6 +62,28 @@ export class PregameWebSocketStore extends WebSocketStore {
         });
         console.log("Sending pregame player message:", message);
         this.sendPlayerMessage({case: "pregameMessage", value: wrappedMessage});
+    }
+
+    sendPlayerReadyMessage(battleGrid: BattleGrid): void {
+    
+        let ships: socketModels.PregamePlayerSetReadyStateMessage["ships"] = [];
+        
+        for (let [ship, position] of battleGrid.ships) {
+            ships.push(
+                create(socketModels.ShipSchema,
+                    {length: ship.length, orientation: ship.orientation, headRow: position.headRow, headCol: position.headCol})
+                );
+        }
+
+        let WSMessage: socketModels.PregamePlayerSetReadyStateMessage = create(socketModels.PregamePlayerSetReadyStateMessageSchema, {ships: ships});
+
+        console.log("Sending ready message to backend:", WSMessage);
+        this.sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
+        
+        console.log("Player is ready!");
+
+        this.setSelfReady(true);
+        // not assigning the numReadyPlayers here, we expect the server to broadcast the updated count, the self ready we only set to make the UI inert
     }
 
 }

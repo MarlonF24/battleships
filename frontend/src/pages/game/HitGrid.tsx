@@ -31,16 +31,7 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
     
     const WSStore = useWebSocketStore(GameWebsocketStore);
 
-    const sendShotMessage = useCallback((row: number, column: number) => {
-        
-        const shotMessage = create(socketModels.GamePlayerShotMessageSchema, {row, column});
-
-        console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
-        
-        WSStore.hasTurn = TurnStatus.WAITING; 
-        
-        WSStore.sendGamePlayerMessage({case: "shot", value: shotMessage});
-    }, []);
+    
     
     return (
             <StyledHitGrid inert={WSStore.hasTurn !== TurnStatus.YOUR_TURN}>
@@ -48,7 +39,12 @@ export const HitGrid =  observer(({grid, shootable}: {grid: HitStateType[][], sh
                     {grid.map((row, r) => (
                         <tr key={r}>
                             {row.map((cell, c) => (
-                                <td key={`${r}-${c}`} className="cell" onClick={shootable && cell === HitState.UNTOUCHED ? () => sendShotMessage(r, c) : undefined} style={shootable && cell === HitState.UNTOUCHED ? {cursor:"pointer"} : undefined}>
+                                <td key={`${r}-${c}`} className="cell" 
+                                    onClick={shootable && cell === HitState.UNTOUCHED ? 
+                                        () => WSStore.sendShotMessage({row: r, col: c}) : undefined} 
+                                    
+                                    style={shootable && cell === HitState.UNTOUCHED ? {cursor:"pointer"} : undefined}>
+                                    
                                     <HitGridCellContent hitState={cell} />
                                 </td>
                             ))}

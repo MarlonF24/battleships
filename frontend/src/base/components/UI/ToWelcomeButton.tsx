@@ -6,7 +6,7 @@ export const ToWelcomeButton = ({ style }: { style?: React.CSSProperties }) => {
     
     return (
         <Button $type="primary" onClick={() => switchView(Page.WELCOME)} style={style}>
-                Back to Welcome Page
+                Back to Welcome
         </Button>
     )
 }

@@ -18,7 +18,7 @@ export const GameOverPopup = ({ result}: { result: socketModels.GameOverResult})
             {result === socketModels.GameOverResult.LOSS && "Game Over! You lost."}
             {result === socketModels.GameOverResult.PREMATURE && "Game Ended Prematurely."}
         </GameOverMessage>
-      <ButtonBar>
+      <ButtonBar $vertical={true}>
         <CreateGameForm />
         <ToWelcomeButton style={{ width: "fit-content", alignSelf: "center" }}/>
       </ButtonBar>
