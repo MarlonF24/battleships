@@ -8,7 +8,7 @@ import type { PregamePlayerMessage, PregameServerMessage } from "../pregame/mess
 import { file_pregame_messages } from "../pregame/messages_pb";
 import type { GamePlayerMessage, GameServerMessage } from "../game/messages_pb";
 import { file_game_messages } from "../game/messages_pb";
-import type { GeneralServerMessage } from "../general/messages_pb";
+import type { GeneralPlayerMessage, GeneralServerMessage } from "../general/messages_pb";
 import { file_general_messages } from "../general/messages_pb";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -16,7 +16,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file root/messages.proto.
  */
 export const file_root_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChNyb290L21lc3NhZ2VzLnByb3RvEg1yb290X21lc3NhZ2VzIpcBCg1QbGF5ZXJNZXNzYWdlEkEKD3ByZWdhbWVfbWVzc2FnZRgBIAEoCzImLnByZWdhbWVfbWVzc2FnZXMuUHJlZ2FtZVBsYXllck1lc3NhZ2VIABI4CgxnYW1lX21lc3NhZ2UYAiABKAsyIC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJNZXNzYWdlSABCCQoHcGF5bG9hZCLaAQoNU2VydmVyTWVzc2FnZRJBCg9nZW5lcmFsX21lc3NhZ2UYASABKAsyJi5nZW5lcmFsX21lc3NhZ2VzLkdlbmVyYWxTZXJ2ZXJNZXNzYWdlSAASQQoPcHJlZ2FtZV9tZXNzYWdlGAIgASgLMiYucHJlZ2FtZV9tZXNzYWdlcy5QcmVnYW1lU2VydmVyTWVzc2FnZUgAEjgKDGdhbWVfbWVzc2FnZRgDIAEoCzIgLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlck1lc3NhZ2VIAEIJCgdwYXlsb2FkQnIKEWNvbS5yb290X21lc3NhZ2VzQg1NZXNzYWdlc1Byb3RvUAGiAgNSWFiqAgxSb290TWVzc2FnZXPKAgxSb290TWVzc2FnZXPiAhhSb290TWVzc2FnZXNcR1BCTWV0YWRhdGHqAgxSb290TWVzc2FnZXNiBnByb3RvMw", [file_pregame_messages, file_game_messages, file_general_messages]);
+  fileDesc("ChNyb290L21lc3NhZ2VzLnByb3RvEg1yb290X21lc3NhZ2VzItoBCg1QbGF5ZXJNZXNzYWdlEkEKD3ByZWdhbWVfbWVzc2FnZRgBIAEoCzImLnByZWdhbWVfbWVzc2FnZXMuUHJlZ2FtZVBsYXllck1lc3NhZ2VIABI4CgxnYW1lX21lc3NhZ2UYAiABKAsyIC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJNZXNzYWdlSAASQQoPZ2VuZXJhbF9tZXNzYWdlGAMgASgLMiYuZ2VuZXJhbF9tZXNzYWdlcy5HZW5lcmFsUGxheWVyTWVzc2FnZUgAQgkKB3BheWxvYWQi2gEKDVNlcnZlck1lc3NhZ2USQQoPZ2VuZXJhbF9tZXNzYWdlGAEgASgLMiYuZ2VuZXJhbF9tZXNzYWdlcy5HZW5lcmFsU2VydmVyTWVzc2FnZUgAEkEKD3ByZWdhbWVfbWVzc2FnZRgCIAEoCzImLnByZWdhbWVfbWVzc2FnZXMuUHJlZ2FtZVNlcnZlck1lc3NhZ2VIABI4CgxnYW1lX21lc3NhZ2UYAyABKAsyIC5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJNZXNzYWdlSABCCQoHcGF5bG9hZEJyChFjb20ucm9vdF9tZXNzYWdlc0INTWVzc2FnZXNQcm90b1ABogIDUlhYqgIMUm9vdE1lc3NhZ2VzygIMUm9vdE1lc3NhZ2Vz4gIYUm9vdE1lc3NhZ2VzXEdQQk1ldGFkYXRh6gIMUm9vdE1lc3NhZ2VzYgZwcm90bzM", [file_pregame_messages, file_game_messages, file_general_messages]);
 
 /**
  * @generated from message root_messages.PlayerMessage
@@ -37,6 +37,12 @@ export type PlayerMessage = Message<"root_messages.PlayerMessage"> & {
      */
     value: GamePlayerMessage;
     case: "gameMessage";
+  } | {
+    /**
+     * @generated from field: general_messages.GeneralPlayerMessage general_message = 3;
+     */
+    value: GeneralPlayerMessage;
+    case: "generalMessage";
   } | { case: undefined; value?: undefined };
 };
 

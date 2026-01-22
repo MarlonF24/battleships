@@ -11,6 +11,7 @@ message PlayerMessage {
     oneof payload {
         pregame_messages.PregamePlayerMessage pregame_message = 1;
         game_messages.GamePlayerMessage game_message = 2;
+        general_messages.GeneralPlayerMessage general_message = 3;
     }
 }
 

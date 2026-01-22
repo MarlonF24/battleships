@@ -1,2 +1,15 @@
-backend: python, fastAPI(REST + websockets), PostGreSQL
-frontend: TS, vite, Navigo router, openapi client
+backend: python, fastAPI(REST + websockets), PostGreSQL, asyncio
+frontend: TS, vite, openapi client, react, MobX
+
+shared: protocol buffers
+
+memory shields: 
+    - active ping-pong clock
+    - ready timer(pregame)/shot clock(game)
+    - passive db cleaner on partial index 
+
+websocket handling:
+    - queues
+    - routers(producers)
+    - cosumers 
+    - handlers

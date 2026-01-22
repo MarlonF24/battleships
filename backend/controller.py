@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 import os, dotenv
+
 dotenv.load_dotenv("backend/.env")
 
 from contextlib import asynccontextmanager
@@ -8,7 +9,7 @@ from fastapi import FastAPI, responses, staticfiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from pathlib import Path
- 
+
 from .db import *
 from .logger import logger
 
@@ -19,16 +20,16 @@ from .players import players_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with db_engine.begin() as conn:
-        
+
         await conn.execute(text("DROP SCHEMA public CASCADE"))
         await conn.execute(text("CREATE SCHEMA public"))
-        
+
         await conn.run_sync(Base.metadata.create_all)
 
         # Set eager task factory for websockets
-    
+
     asyncio.get_running_loop().set_task_factory(asyncio.eager_task_factory)
-    
+
     yield
 
     await db_engine.dispose()
@@ -52,14 +53,12 @@ app.add_middleware(
 
 BACKENDDIR = Path(__file__).parent
 FROTENTDIR = BACKENDDIR.parent / "frontend/dist"
-app.mount("/assets", staticfiles.StaticFiles(directory=FROTENTDIR / "assets"), name="assets")
+app.mount(
+    "/assets", staticfiles.StaticFiles(directory=FROTENTDIR / "assets"), name="assets"
+)
 
 
-
-@app.get("/{full_path:path}") # catch all route
+@app.get("/{full_path:path}")  # catch all route
 def welcome(full_path: str) -> responses.FileResponse:
     logger.info(f"Redirecting to welcome page from path: {full_path}")
     return responses.FileResponse(FROTENTDIR / "index.html")
-
-
-

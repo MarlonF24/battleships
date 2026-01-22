@@ -14,8 +14,11 @@ async def validate_game(gameId: UUID, session: SessionDep) -> Game:
     game = await session.get(Game, gameId)
     if not game:
         print(f"Game with ID {gameId} not found")
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Game not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Game not found"
+        )
     return game
+
 
 GameDep = Annotated[Game, Depends(validate_game)]
 
@@ -31,10 +34,12 @@ async def validate_player_in_game(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Player not registered for this game",
         )
-    
+
     return player, game
 
+
 PlayerGameDep = Annotated[tuple[Player, Game], Depends(validate_player_in_game)]
+
 
 async def get_ships_for_player_in_game(
     player: PlayerDep,
@@ -43,13 +48,12 @@ async def get_ships_for_player_in_game(
 ) -> list[Ship]:
 
     link = await session.get_one(GamePlayerLink, (game.id, player.id))
-    
+
     result = await link.awaitable_attrs.ships
 
     test = [Ship(**ship.__dict__) for ship in result]
-    
+
     return test
 
+
 ShipsDep = Annotated[list[Ship], Depends(get_ships_for_player_in_game)]
-
-

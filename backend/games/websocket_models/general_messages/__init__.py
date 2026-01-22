@@ -21,6 +21,9 @@ class GeneralServerMessage(betterproto.Message):
     opponent_connection_message: "ServerOpponentConnectionMessage | None" = (
         betterproto.message_field(1, optional=True, group="payload")
     )
+    heartbeat_request: "ServerHeartbeatRequest | None" = betterproto.message_field(
+        2, optional=True, group="payload"
+    )
 
     @model_validator(mode="after")
     def check_oneof(cls, values):
@@ -34,8 +37,25 @@ class ServerOpponentConnectionMessage(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class ServerHeartbeatRequest(betterproto.Message):
+    pass
+
+
+@dataclass(eq=False, repr=False)
 class GeneralPlayerMessage(betterproto.Message):
+    heartbeat_response: "PlayerHeartbeatResponse | None" = betterproto.message_field(
+        1, optional=True, group="payload"
+    )
+
+    @model_validator(mode="after")
+    def check_oneof(cls, values):
+        return cls._validate_field_groups(values)
+
+
+@dataclass(eq=False, repr=False)
+class PlayerHeartbeatResponse(betterproto.Message):
     pass
 
 
 rebuild_dataclass(GeneralServerMessage)  # type: ignore
+rebuild_dataclass(GeneralPlayerMessage)  # type: ignore

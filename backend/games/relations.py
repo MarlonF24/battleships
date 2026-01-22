@@ -1,49 +1,88 @@
-import uuid, enum
+import uuid, enum, datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import CheckConstraint, UniqueConstraint, Integer, ForeignKey, ForeignKeyConstraint, Enum, JSON
+from sqlalchemy import (
+    CheckConstraint,
+    Index,
+    UniqueConstraint,
+    Integer,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Enum,
+    JSON,
+    text,
+    func,
+)
 
 
 from ..db import Base
 from ..players import Player
 from .websocket_models import Orientation, GameOverResult
 
+
 class GamePhase(enum.Enum):
     PREGAME = "PREGAME"
     GAME = "GAME"
     COMPLETED = "COMPLETED"
 
+
 class GameMode(enum.Enum):
-    SINGLESHOT = "SINGLESHOT" # 1 shot per turn
-    SALVO = "SALVO" # 3 shots per turn
-    STREAK = "STREAK" # until miss
+    SINGLESHOT = "SINGLESHOT"  # 1 shot per turn
+    SALVO = "SALVO"  # 3 shots per turn
+    STREAK = "STREAK"  # until miss
+
 
 class Game(Base):
     __tablename__ = "game"
 
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=lambda: uuid.uuid4(), index=True)
-    players: Mapped[list["Player"]] = relationship(secondary="game_player_link", back_populates="games")
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4, index=True
+    )
+    players: Mapped[list["Player"]] = relationship(
+        secondary="game_player_link", back_populates="games"
+    )
     battle_grid_rows: Mapped[int] = mapped_column()
     battle_grid_cols: Mapped[int] = mapped_column()
-    ship_lengths: Mapped[dict[int, int]] = mapped_column(JSON)  # e.g., [5, 4, 3, 3, 2]
+    ship_lengths: Mapped[dict[int, int]] = mapped_column(JSON)
     phase: Mapped[GamePhase] = mapped_column(Enum(GamePhase), default=GamePhase.PREGAME)
     mode: Mapped[GameMode] = mapped_column(Enum(GameMode), default=GameMode.SINGLESHOT)
-  
+    
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        server_default=func.now()
+    )
+
+    __table_args__ = (
+        # partial index to help passive cleanup of inactive games
+        Index(
+            "idx_inactive_games",
+            "created_at", "phase",
+            postgresql_where=text("phase != 'COMPLETED'"),
+        ),
+    )
+
+
 class GamePlayerLink(Base):
     __tablename__ = "game_player_link"
 
-    game_id: Mapped[str] = mapped_column(ForeignKey("game.id", ondelete="CASCADE"), primary_key=True)
-    player_id: Mapped[str] = mapped_column(ForeignKey("player.id", ondelete="CASCADE"), primary_key=True)
+    game_id: Mapped[str] = mapped_column(
+        ForeignKey("game.id", ondelete="CASCADE"), primary_key=True
+    )
+    player_id: Mapped[str] = mapped_column(
+        ForeignKey("player.id", ondelete="CASCADE"), primary_key=True
+    )
     player_slot: Mapped[int] = mapped_column(Integer, default=1)
 
-    ships: Mapped[list["Ship"]] = relationship(back_populates="game_player_link", cascade="all, delete-orphan")
-
-    outcome: Mapped[GameOverResult | None] = mapped_column(Enum(GameOverResult), nullable=True)
-
-    __table_args__ = (
-    CheckConstraint('player_slot IN (1, 2)', name='check_player_slot'),
-    UniqueConstraint('game_id', 'player_slot', name='unique_game_player_slot')
+    ships: Mapped[list["Ship"]] = relationship(
+        back_populates="game_player_link", cascade="all, delete-orphan"
     )
 
+    outcome: Mapped[GameOverResult | None] = mapped_column(
+        Enum(GameOverResult), nullable=True
+    )
+
+    __table_args__ = (
+        CheckConstraint("player_slot IN (1, 2)", name="check_player_slot"),
+        UniqueConstraint("game_id", "player_slot", name="unique_game_player_slot"),
+    )
 
 
 class Ship(Base):

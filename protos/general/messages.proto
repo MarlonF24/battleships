@@ -5,6 +5,7 @@ package general_messages;
 message GeneralServerMessage {
     oneof payload {
         ServerOpponentConnectionMessage opponent_connection_message = 1;
+        ServerHeartbeatRequest heartbeat_request = 2;
     }
 }
 
@@ -13,7 +14,16 @@ message ServerOpponentConnectionMessage {
     bool initially_connected = 2;
 }
 
-message GeneralPlayerMessage {
+message ServerHeartbeatRequest {
     
 }
 
+message GeneralPlayerMessage {
+    oneof payload {
+      PlayerHeartbeatResponse heartbeat_response = 1;
+    }
+}
+
+message PlayerHeartbeatResponse {
+    
+}

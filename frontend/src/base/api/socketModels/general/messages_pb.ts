@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file general/messages.proto.
  */
 export const file_general_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzInsKFEdlbmVyYWxTZXJ2ZXJNZXNzYWdlElgKG29wcG9uZW50X2Nvbm5lY3Rpb25fbWVzc2FnZRgBIAEoCzIxLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZUgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCCIWChRHZW5lcmFsUGxheWVyTWVzc2FnZUKBAQoUY29tLmdlbmVyYWxfbWVzc2FnZXNCDU1lc3NhZ2VzUHJvdG9QAaICA0dYWKoCD0dlbmVyYWxNZXNzYWdlc8oCD0dlbmVyYWxNZXNzYWdlc+ICG0dlbmVyYWxNZXNzYWdlc1xHUEJNZXRhZGF0YeoCD0dlbmVyYWxNZXNzYWdlc2IGcHJvdG8z");
+  fileDesc("ChZnZW5lcmFsL21lc3NhZ2VzLnByb3RvEhBnZW5lcmFsX21lc3NhZ2VzIsIBChRHZW5lcmFsU2VydmVyTWVzc2FnZRJYChtvcHBvbmVudF9jb25uZWN0aW9uX21lc3NhZ2UYASABKAsyMS5nZW5lcmFsX21lc3NhZ2VzLlNlcnZlck9wcG9uZW50Q29ubmVjdGlvbk1lc3NhZ2VIABJFChFoZWFydGJlYXRfcmVxdWVzdBgCIAEoCzIoLmdlbmVyYWxfbWVzc2FnZXMuU2VydmVySGVhcnRiZWF0UmVxdWVzdEgAQgkKB3BheWxvYWQiWgofU2VydmVyT3Bwb25lbnRDb25uZWN0aW9uTWVzc2FnZRIaChJvcHBvbmVudF9jb25uZWN0ZWQYASABKAgSGwoTaW5pdGlhbGx5X2Nvbm5lY3RlZBgCIAEoCCIYChZTZXJ2ZXJIZWFydGJlYXRSZXF1ZXN0ImoKFEdlbmVyYWxQbGF5ZXJNZXNzYWdlEkcKEmhlYXJ0YmVhdF9yZXNwb25zZRgBIAEoCzIpLmdlbmVyYWxfbWVzc2FnZXMuUGxheWVySGVhcnRiZWF0UmVzcG9uc2VIAEIJCgdwYXlsb2FkIhkKF1BsYXllckhlYXJ0YmVhdFJlc3BvbnNlQoEBChRjb20uZ2VuZXJhbF9tZXNzYWdlc0INTWVzc2FnZXNQcm90b1ABogIDR1hYqgIPR2VuZXJhbE1lc3NhZ2VzygIPR2VuZXJhbE1lc3NhZ2Vz4gIbR2VuZXJhbE1lc3NhZ2VzXEdQQk1ldGFkYXRh6gIPR2VuZXJhbE1lc3NhZ2VzYgZwcm90bzM");
 
 /**
  * @generated from message general_messages.GeneralServerMessage
@@ -25,6 +25,12 @@ export type GeneralServerMessage = Message<"general_messages.GeneralServerMessag
      */
     value: ServerOpponentConnectionMessage;
     case: "opponentConnectionMessage";
+  } | {
+    /**
+     * @generated from field: general_messages.ServerHeartbeatRequest heartbeat_request = 2;
+     */
+    value: ServerHeartbeatRequest;
+    case: "heartbeatRequest";
   } | { case: undefined; value?: undefined };
 };
 
@@ -58,9 +64,32 @@ export const ServerOpponentConnectionMessageSchema: GenMessage<ServerOpponentCon
   messageDesc(file_general_messages, 1);
 
 /**
+ * @generated from message general_messages.ServerHeartbeatRequest
+ */
+export type ServerHeartbeatRequest = Message<"general_messages.ServerHeartbeatRequest"> & {
+};
+
+/**
+ * Describes the message general_messages.ServerHeartbeatRequest.
+ * Use `create(ServerHeartbeatRequestSchema)` to create a new message.
+ */
+export const ServerHeartbeatRequestSchema: GenMessage<ServerHeartbeatRequest> = /*@__PURE__*/
+  messageDesc(file_general_messages, 2);
+
+/**
  * @generated from message general_messages.GeneralPlayerMessage
  */
 export type GeneralPlayerMessage = Message<"general_messages.GeneralPlayerMessage"> & {
+  /**
+   * @generated from oneof general_messages.GeneralPlayerMessage.payload
+   */
+  payload: {
+    /**
+     * @generated from field: general_messages.PlayerHeartbeatResponse heartbeat_response = 1;
+     */
+    value: PlayerHeartbeatResponse;
+    case: "heartbeatResponse";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
@@ -68,5 +97,18 @@ export type GeneralPlayerMessage = Message<"general_messages.GeneralPlayerMessag
  * Use `create(GeneralPlayerMessageSchema)` to create a new message.
  */
 export const GeneralPlayerMessageSchema: GenMessage<GeneralPlayerMessage> = /*@__PURE__*/
-  messageDesc(file_general_messages, 2);
+  messageDesc(file_general_messages, 3);
+
+/**
+ * @generated from message general_messages.PlayerHeartbeatResponse
+ */
+export type PlayerHeartbeatResponse = Message<"general_messages.PlayerHeartbeatResponse"> & {
+};
+
+/**
+ * Describes the message general_messages.PlayerHeartbeatResponse.
+ * Use `create(PlayerHeartbeatResponseSchema)` to create a new message.
+ */
+export const PlayerHeartbeatResponseSchema: GenMessage<PlayerHeartbeatResponse> = /*@__PURE__*/
+  messageDesc(file_general_messages, 4);
 

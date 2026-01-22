@@ -5,9 +5,10 @@ from typing import Any, Collection
 from .websocket_models import *
 from .relations import GameMode, Ship as DBShip
 
+
 def to_camel(string: str) -> str:
-    parts = string.split('_')
-    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+    parts = string.split("_")
+    return parts[0] + "".join(word.capitalize() for word in parts[1:])
 
 
 class Base(BaseModel):
@@ -17,14 +18,12 @@ class Base(BaseModel):
         populate_by_name = True
 
 
-
 class PregameParams(Base):
     battle_grid_rows: int
     battle_grid_cols: int
     ship_lengths: dict[int, int]  # length -> count
     mode: GameMode = GameMode.SINGLESHOT
 
-  
 
 class GameParams(PregameParams):
     own_ships: list[Ship]
@@ -35,7 +34,7 @@ class ActiveShipLogic(Base):
     orientation: Orientation
     head_row: int
     head_col: int
-    hits: list[bool] 
+    hits: list[bool]
 
     def model_post_init(self, context: Any) -> None:
         if not self.hits:
@@ -46,28 +45,26 @@ class ActiveShipLogic(Base):
 
     def is_sunk(self) -> bool:
         return self.hits.count(True) >= self.length
-    
+
     def hit(self, idx: int) -> None:
         if self.is_sunk():
             raise ValueError("Tried to hit a ship that is already sunk")
-        
+
         if self.hits[idx]:
             raise ValueError(f"Tried to hit already hit position {idx} of ship")
-        
-        self.hits[idx] = True
 
+        self.hits[idx] = True
 
     @classmethod
     def from_protobuf(cls, ship: ActiveShip | Ship | DBShip) -> "ActiveShipLogic":
         match ship:
-            case DBShip() :
+            case DBShip():
                 hits = [False for _ in range(ship.length)]
-            case Ship() :
+            case Ship():
                 hits = [False for _ in range(ship.length)]
-            case ActiveShip() :
+            case ActiveShip():
                 hits = ship.hits
-        
-        
+
         return cls(
             length=ship.length,
             orientation=Orientation(ship.orientation.value),
@@ -75,7 +72,7 @@ class ActiveShipLogic(Base):
             head_col=ship.head_col,
             hits=hits,
         )
-    
+
     @classmethod
     def to_protobuf(cls, ship: "ActiveShipLogic") -> ActiveShip:
         return ActiveShip(
@@ -85,33 +82,41 @@ class ActiveShipLogic(Base):
             head_col=ship.head_col,
             hits=ship.hits,
         )
-    
+
 
 class CellInfo(BaseModel):
     ship: ActiveShipLogic | None = None
     hit_state: ShipGridViewHitState = ShipGridViewHitState.UNTOUCHED
 
 
-class ShipGrid():
+class ShipGrid:
 
     cells: list[list[CellInfo]]  # [Ship on cell, was shot?]
 
     @property
     def ships(self) -> set[ActiveShipLogic]:
-        return {cellInfo.ship for row in self.cells for cellInfo in row if cellInfo.ship is not None}
-    
+        return {
+            cellInfo.ship
+            for row in self.cells
+            for cellInfo in row
+            if cellInfo.ship is not None
+        }
+
     @property
     def sunk_ships(self) -> list[ActiveShipLogic]:
         return [ship for ship in self.ships if ship.is_sunk()]
-    
 
-    def __init__(self, ships: Collection[Ship] | Collection[DBShip], rows: int, cols: int):
-        cells: list[list[CellInfo]] = [[CellInfo() for _ in range(cols)] for _ in range(rows)]
-    
+    def __init__(
+        self, ships: Collection[Ship] | Collection[DBShip], rows: int, cols: int
+    ):
+        cells: list[list[CellInfo]] = [
+            [CellInfo() for _ in range(cols)] for _ in range(rows)
+        ]
+
         for _ship in ships:
-            
+
             ship = ActiveShipLogic.from_protobuf(_ship)
-            
+
             if ship.orientation == Orientation.HORIZONTAL:
                 for c in range(ship.head_col, ship.head_col + ship.length):
                     cells[ship.head_row][c].ship = ship
@@ -121,20 +126,24 @@ class ShipGrid():
 
         self.cells = cells
 
-
     @property
     def all_ships_sunk(self) -> bool:
         return all(ship.is_sunk() for ship in self.ships)
 
     def shoot_at(self, row: int, col: int) -> tuple[bool, ActiveShipLogic | None]:
         if self.cells[row][col].hit_state != ShipGridViewHitState.UNTOUCHED:
-            raise ValueError(f"Position ({row}, {col}) has already been shot or is impossible to have a ship.")
-        
-        
+            raise ValueError(
+                f"Position ({row}, {col}) has already been shot or is impossible to have a ship."
+            )
+
         ship = self.cells[row][col].ship
-        
+
         if ship:
-            ship_idx = (col - ship.head_col) if ship.orientation == Orientation.HORIZONTAL else (row - ship.head_row)
+            ship_idx = (
+                (col - ship.head_col)
+                if ship.orientation == Orientation.HORIZONTAL
+                else (row - ship.head_row)
+            )
             ship.hit(ship_idx)
             self.cells[row][col].hit_state = ShipGridViewHitState.HIT
 
@@ -142,33 +151,38 @@ class ShipGrid():
         else:
             self.cells[row][col].hit_state = ShipGridViewHitState.MISS
             return False, None
-    
 
     def get_own_view(self) -> ShipGridView:
         return ShipGridView(
-            hit_grid=[ShipGridViewRow(cells=[cell.hit_state for cell in row]) for row in self.cells],
+            hit_grid=[
+                ShipGridViewRow(cells=[cell.hit_state for cell in row])
+                for row in self.cells
+            ],
             ships=[ActiveShipLogic.to_protobuf(ship) for ship in self.ships],
         )
 
     def get_opponent_view(self) -> ShipGridView:
         return ShipGridView(
-            hit_grid=[ShipGridViewRow(cells=[cell.hit_state for cell in row]) for row in self.cells],
+            hit_grid=[
+                ShipGridViewRow(cells=[cell.hit_state for cell in row])
+                for row in self.cells
+            ],
             ships=[ActiveShipLogic.to_protobuf(ship) for ship in self.sunk_ships],
         )
-    
+
     def random_shot(self) -> tuple[int, int]:
 
         rows = len(self.cells)
         cols = len(self.cells[0]) if rows > 0 else 0
 
-        candidates = [(r, c) for r in range(rows) for c in range(cols) if self.cells[r][c].hit_state == ShipGridViewHitState.UNTOUCHED]
+        candidates = [
+            (r, c)
+            for r in range(rows)
+            for c in range(cols)
+            if self.cells[r][c].hit_state == ShipGridViewHitState.UNTOUCHED
+        ]
 
         if not candidates:
             raise ValueError("No unshot positions available.")
 
         return random.choice(candidates)
-
-
-
-
-

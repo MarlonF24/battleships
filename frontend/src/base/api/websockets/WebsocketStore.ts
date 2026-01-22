@@ -78,14 +78,36 @@ export class WebSocketStore {
     }
 
     handleGeneralServerMessage = (message: socketModels.GeneralServerMessage) => {
-        if (message.payload.case === "opponentConnectionMessage") {
-            this.handleOpponentConnectionMessage(message.payload.value);
+        switch (message.payload.case) {
+            case "opponentConnectionMessage":
+                this.handleOpponentConnectionMessage(message.payload.value);
+                break;
+            case "heartbeatRequest":
+                this.handleHeartbeatRequest(message.payload.value);
+                break;
+            default:
+                console.error(`Unhandled GeneralServerMessage type: ${message.payload.case}`);
         }
     }
 
     handleOpponentConnectionMessage = (message: socketModels.ServerOpponentConnectionMessage) => {
         console.log(`Opponent connection status changed: connected=${message.opponentConnected} (initially_connected=${message.initiallyConnected})`);
         Object.assign(this.opponentConnection, message);
+    }
+
+
+    handleHeartbeatRequest = (message: socketModels.ServerHeartbeatRequest) => {
+        const response = create(socketModels.PlayerHeartbeatResponseSchema, {});
+        this.sendGeneralPlayerMessage({case: "heartbeatResponse", value: response});
+    }
+
+    
+    sendGeneralPlayerMessage = <T extends MessagePayload<socketModels.GeneralPlayerMessage>>(message: T): void => {
+        const wrappedMessage = create(socketModels.GeneralPlayerMessageSchema, {
+            payload: message
+        });
+        console.log("Sending general player message:", message);
+        this.sendPlayerMessage({case: "generalMessage", value: wrappedMessage});
     }
 
     sendPlayerMessage = <T extends MessagePayload<socketModels.PlayerMessage>>(message: T): void => {

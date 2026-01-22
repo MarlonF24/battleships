@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, WebSocket
 
 
@@ -22,5 +21,5 @@ async def pregame_websocket(websocket: WebSocket, player_game: PlayerGameDep):
 @router.websocket("/{gameId}/game")
 async def game_websocket(websocket: WebSocket, player_game: PlayerGameDep):
     player, game = player_game
-    
+
     await game_conn_manager.handle_websocket(game, player, websocket)

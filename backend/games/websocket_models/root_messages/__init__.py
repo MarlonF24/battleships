@@ -30,6 +30,9 @@ class PlayerMessage(betterproto.Message):
     game_message: "_game_messages__.GamePlayerMessage | None" = (
         betterproto.message_field(2, optional=True, group="payload")
     )
+    general_message: "_general_messages__.GeneralPlayerMessage | None" = (
+        betterproto.message_field(3, optional=True, group="payload")
+    )
 
     @model_validator(mode="after")
     def check_oneof(cls, values):
