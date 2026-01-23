@@ -27,7 +27,7 @@ export class PregameWebSocketStore extends WebSocketStore {
   pregameMessageHandler = (message: socketModels.PregameServerMessage) => {
       switch (message.payload.case) {
           case "readyState":
-              console.log("Received ready state message:", message.payload.value);
+              console.debug("Received ready state message:", message.payload.value);
               this.handleReadyStateMessage(message.payload.value);
               break;
           default:
@@ -60,7 +60,7 @@ export class PregameWebSocketStore extends WebSocketStore {
         const wrappedMessage = create(socketModels.PregamePlayerMessageSchema, {
             payload: message
         });
-        console.log("Sending pregame player message:", message);
+        console.debug("Sending pregame player message:", message);
         this.sendPlayerMessage({case: "pregameMessage", value: wrappedMessage});
     }
 
@@ -77,7 +77,7 @@ export class PregameWebSocketStore extends WebSocketStore {
 
         let WSMessage: socketModels.PregamePlayerSetReadyStateMessage = create(socketModels.PregamePlayerSetReadyStateMessageSchema, {ships: ships});
 
-        console.log("Sending ready message to backend:", WSMessage);
+
         this.sendPregamePlayerMessage({case: "setReadyState", value: WSMessage});
         
         console.log("Player is ready!");

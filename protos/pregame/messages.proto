@@ -11,7 +11,7 @@ message PregameServerMessage {
 }
 
 message  PregameServerReadyStateMessage {
-  int32 num_ready_players = 1;
+  uint32 num_ready_players = 1;
   bool self_ready = 2;
 }
 

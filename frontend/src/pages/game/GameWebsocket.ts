@@ -120,14 +120,14 @@ class GameWebsocketStore extends WebSocketStore {
         const wrappedMessage = create(socketModels.GamePlayerMessageSchema, {
             payload: message
         });
-        console.log("Sending game player message:", message);
+        console.debug("Sending game player message:", message);
         this.sendPlayerMessage({case: "gameMessage", value: wrappedMessage});
     }
 
     sendShotMessage = ({row, col:column}:{row: number, col: number}) => {
         const shotMessage = create(socketModels.GamePlayerShotMessageSchema, {row, column});
 
-        console.log(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
+        console.debug(`Shot detected at ${row}, ${column}. Sending shot message:`, shotMessage, "Toggling turn in frontend");
         
         this.setHasTurn(TurnStatus.WAITING); 
         

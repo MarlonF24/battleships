@@ -44,8 +44,8 @@ class GamePlayerMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class GamePlayerShotMessage(betterproto.Message):
-    row: int = betterproto.int32_field(1)
-    column: int = betterproto.int32_field(2)
+    row: int = betterproto.uint32_field(1)
+    column: int = betterproto.uint32_field(2)
 
 
 @dataclass(eq=False, repr=False)
@@ -88,8 +88,8 @@ class GameServerShotResultMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class GameServerShotMessage(betterproto.Message):
-    row: int = betterproto.int32_field(1)
-    column: int = betterproto.int32_field(2)
+    row: int = betterproto.uint32_field(1)
+    column: int = betterproto.uint32_field(2)
 
 
 @dataclass(eq=False, repr=False)

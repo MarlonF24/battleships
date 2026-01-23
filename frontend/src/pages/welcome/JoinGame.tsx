@@ -1,5 +1,5 @@
 import { useSwitchView, Page } from "../../routing/switch_view";
-import { useApi, api, ErrorMessage, Button } from "../../base";
+import { useApi, api, ErrorMessage, Button, getPlayerId } from "../../base";
 
 import styled from 'styled-components';
 
@@ -50,7 +50,7 @@ export const JoinGameInput: React.FC = () => {
 
     if (!gameId) return;
 
-    const playerId = sessionStorage.getItem("playerId")!;
+    const playerId = getPlayerId()!;
     
     const gamePhase = await api.joinGameGamesGameIdJoinPost({ gameId, playerId }); // check whether player 
 

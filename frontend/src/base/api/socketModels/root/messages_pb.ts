@@ -16,30 +16,35 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file root/messages.proto.
  */
 export const file_root_messages: GenFile = /*@__PURE__*/
-  fileDesc("ChNyb290L21lc3NhZ2VzLnByb3RvEg1yb290X21lc3NhZ2VzItoBCg1QbGF5ZXJNZXNzYWdlEkEKD3ByZWdhbWVfbWVzc2FnZRgBIAEoCzImLnByZWdhbWVfbWVzc2FnZXMuUHJlZ2FtZVBsYXllck1lc3NhZ2VIABI4CgxnYW1lX21lc3NhZ2UYAiABKAsyIC5nYW1lX21lc3NhZ2VzLkdhbWVQbGF5ZXJNZXNzYWdlSAASQQoPZ2VuZXJhbF9tZXNzYWdlGAMgASgLMiYuZ2VuZXJhbF9tZXNzYWdlcy5HZW5lcmFsUGxheWVyTWVzc2FnZUgAQgkKB3BheWxvYWQi2gEKDVNlcnZlck1lc3NhZ2USQQoPZ2VuZXJhbF9tZXNzYWdlGAEgASgLMiYuZ2VuZXJhbF9tZXNzYWdlcy5HZW5lcmFsU2VydmVyTWVzc2FnZUgAEkEKD3ByZWdhbWVfbWVzc2FnZRgCIAEoCzImLnByZWdhbWVfbWVzc2FnZXMuUHJlZ2FtZVNlcnZlck1lc3NhZ2VIABI4CgxnYW1lX21lc3NhZ2UYAyABKAsyIC5nYW1lX21lc3NhZ2VzLkdhbWVTZXJ2ZXJNZXNzYWdlSABCCQoHcGF5bG9hZEJyChFjb20ucm9vdF9tZXNzYWdlc0INTWVzc2FnZXNQcm90b1ABogIDUlhYqgIMUm9vdE1lc3NhZ2VzygIMUm9vdE1lc3NhZ2Vz4gIYUm9vdE1lc3NhZ2VzXEdQQk1ldGFkYXRh6gIMUm9vdE1lc3NhZ2VzYgZwcm90bzM", [file_pregame_messages, file_game_messages, file_general_messages]);
+  fileDesc("ChNyb290L21lc3NhZ2VzLnByb3RvEg1yb290X21lc3NhZ2VzIu0BCg1QbGF5ZXJNZXNzYWdlEhEKCXRpbWVzdGFtcBgBIAEoBBJBCg9wcmVnYW1lX21lc3NhZ2UYAiABKAsyJi5wcmVnYW1lX21lc3NhZ2VzLlByZWdhbWVQbGF5ZXJNZXNzYWdlSAASOAoMZ2FtZV9tZXNzYWdlGAMgASgLMiAuZ2FtZV9tZXNzYWdlcy5HYW1lUGxheWVyTWVzc2FnZUgAEkEKD2dlbmVyYWxfbWVzc2FnZRgEIAEoCzImLmdlbmVyYWxfbWVzc2FnZXMuR2VuZXJhbFBsYXllck1lc3NhZ2VIAEIJCgdwYXlsb2FkIu0BCg1TZXJ2ZXJNZXNzYWdlEhEKCXRpbWVzdGFtcBgBIAEoBBJBCg9nZW5lcmFsX21lc3NhZ2UYAiABKAsyJi5nZW5lcmFsX21lc3NhZ2VzLkdlbmVyYWxTZXJ2ZXJNZXNzYWdlSAASQQoPcHJlZ2FtZV9tZXNzYWdlGAMgASgLMiYucHJlZ2FtZV9tZXNzYWdlcy5QcmVnYW1lU2VydmVyTWVzc2FnZUgAEjgKDGdhbWVfbWVzc2FnZRgEIAEoCzIgLmdhbWVfbWVzc2FnZXMuR2FtZVNlcnZlck1lc3NhZ2VIAEIJCgdwYXlsb2FkQnIKEWNvbS5yb290X21lc3NhZ2VzQg1NZXNzYWdlc1Byb3RvUAGiAgNSWFiqAgxSb290TWVzc2FnZXPKAgxSb290TWVzc2FnZXPiAhhSb290TWVzc2FnZXNcR1BCTWV0YWRhdGHqAgxSb290TWVzc2FnZXNiBnByb3RvMw", [file_pregame_messages, file_game_messages, file_general_messages]);
 
 /**
  * @generated from message root_messages.PlayerMessage
  */
 export type PlayerMessage = Message<"root_messages.PlayerMessage"> & {
   /**
+   * @generated from field: uint64 timestamp = 1;
+   */
+  timestamp: bigint;
+
+  /**
    * @generated from oneof root_messages.PlayerMessage.payload
    */
   payload: {
     /**
-     * @generated from field: pregame_messages.PregamePlayerMessage pregame_message = 1;
+     * @generated from field: pregame_messages.PregamePlayerMessage pregame_message = 2;
      */
     value: PregamePlayerMessage;
     case: "pregameMessage";
   } | {
     /**
-     * @generated from field: game_messages.GamePlayerMessage game_message = 2;
+     * @generated from field: game_messages.GamePlayerMessage game_message = 3;
      */
     value: GamePlayerMessage;
     case: "gameMessage";
   } | {
     /**
-     * @generated from field: general_messages.GeneralPlayerMessage general_message = 3;
+     * @generated from field: general_messages.GeneralPlayerMessage general_message = 4;
      */
     value: GeneralPlayerMessage;
     case: "generalMessage";
@@ -58,23 +63,28 @@ export const PlayerMessageSchema: GenMessage<PlayerMessage> = /*@__PURE__*/
  */
 export type ServerMessage = Message<"root_messages.ServerMessage"> & {
   /**
+   * @generated from field: uint64 timestamp = 1;
+   */
+  timestamp: bigint;
+
+  /**
    * @generated from oneof root_messages.ServerMessage.payload
    */
   payload: {
     /**
-     * @generated from field: general_messages.GeneralServerMessage general_message = 1;
+     * @generated from field: general_messages.GeneralServerMessage general_message = 2;
      */
     value: GeneralServerMessage;
     case: "generalMessage";
   } | {
     /**
-     * @generated from field: pregame_messages.PregameServerMessage pregame_message = 2;
+     * @generated from field: pregame_messages.PregameServerMessage pregame_message = 3;
      */
     value: PregameServerMessage;
     case: "pregameMessage";
   } | {
     /**
-     * @generated from field: game_messages.GameServerMessage game_message = 3;
+     * @generated from field: game_messages.GameServerMessage game_message = 4;
      */
     value: GameServerMessage;
     case: "gameMessage";

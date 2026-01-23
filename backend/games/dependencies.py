@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 
+from backend.logger import logger
 
 from ..db import SessionDep
 from ..players import PlayerDep
@@ -49,11 +50,12 @@ async def get_ships_for_player_in_game(
 
     link = await session.get_one(GamePlayerLink, (game.id, player.id))
 
-    result = await link.awaitable_attrs.ships
+    result = link.ships
+    # test = [Ship(**ship.__dict__) for ship in result]
 
-    test = [Ship(**ship.__dict__) for ship in result]
-
-    return test
+    logger.debug(f"Retrieved ships for player {player.id} in game {game.id}: {result}")
+    
+    return result
 
 
 ShipsDep = Annotated[list[Ship], Depends(get_ships_for_player_in_game)]

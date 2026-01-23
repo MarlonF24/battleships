@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { configure } from "mobx";
 
+import { getPlayerId, setPlayerId } from "./base";
+
+
 configure({
     enforceActions: "observed" 
 });
@@ -15,11 +18,11 @@ import App from "./App.js";
 
 
 async function createPlayer() {
-  let playerId = sessionStorage.getItem("playerId");
+  let playerId = getPlayerId();
 
   try {
     let responsePlayerId = await api.createPlayerPlayersCreatePost(playerId ? {playerId: playerId} : undefined);
-    sessionStorage.setItem("playerId", responsePlayerId);
+    setPlayerId(responsePlayerId);
     console.log(`Player in the DB with ID: ${responsePlayerId}`);
 
   } catch (error) {

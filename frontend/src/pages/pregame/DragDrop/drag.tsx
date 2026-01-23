@@ -78,7 +78,7 @@ export class Dragger {
 			const newInCellY = shiftY / CELLSIZE + this.state.currentCellInfo.inCellPosition.y;
 			
 			this.state.currentCellInfo.inCellPosition = { x: newInCellX, y: newInCellY };
-			// console.log(newInCellX, newInCellY);
+			
 			if (
 				newInCellX < 0 ||
 				newInCellX > 1 ||

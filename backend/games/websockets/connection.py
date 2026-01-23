@@ -14,6 +14,8 @@ from ..model import GeneralServerMessage, ServerOpponentConnectionMessage
 class PlayerConnection:
     websocket: WebSocket
     heart_beat_event: asyncio.Event
+    duplicate_connection_cleanup: bool = field(default=False, init=False) # flag for the cleanup to not disconnect the new connection immediately when we cleanup the old one
+
 
 
 PlayerConnectionType = TypeVar("PlayerConnectionType", bound=PlayerConnection)
@@ -23,7 +25,7 @@ PlayerConnectionType = TypeVar("PlayerConnectionType", bound=PlayerConnection)
 class GameConnections(ABC, Generic[PlayerConnectionType]):
     players: dict[UUID, PlayerConnectionType] = field(default_factory=dict)  # type: ignore
 
-    def add_player(self, player_id: UUID, connection: PlayerConnectionType):
+    async def add_player(self, player_id: UUID, connection: PlayerConnectionType):
         if player_id not in self.players and len(self.players) >= 2:
             raise WebSocketException(
                 code=status.WS_1008_POLICY_VIOLATION,
@@ -33,9 +35,27 @@ class GameConnections(ABC, Generic[PlayerConnectionType]):
         if player_id not in self.players:
             logger.info(f"Added player {player_id} to PregameGameConnections.")
             self.players[player_id] = connection
-        else:
-            logger.info(f"Player {player_id} reconnected. Updating connection.")
+       
+        
+        else: # player connected again 
+            logger.info(f"Player {player_id} reconnected. Updating connection...")
+            
+            # is the previous connection still open? -> close it and set flag to not close the new one in clean up
+            if self.players[player_id].websocket.client_state == websockets.WebSocketState.CONNECTED:
+                logger.debug(f"Closing previous websocket for player {player_id} before updating to new connection.")
+                
+                self.players[player_id].duplicate_connection_cleanup = True
+                
+                try:
+                    # closing the new connection, the top-level router will notice and shut down the queues immediately -> clean up 
+                    await self.players[player_id].websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Duplicate connection to the same game detected. Use the new one.")
+
+                except Exception as e:
+                    logger.warning(f"Error closing duplicate open websocket for player {player_id} after second connection to same game (ok if the socket was already closed): {e}")
+
+
             self.players[player_id].websocket = connection.websocket
+
 
     def validate_player_in_game(self, player_id: UUID):
         if player_id not in self.players:

@@ -3,6 +3,7 @@ import { create, Message } from "@bufbuild/protobuf";
 import { Page, useSwitchView } from "../../../routing/switch_view";
 import * as socketModels from "../socketModels";
 import { BackendWebSocket } from "./ws";
+import { getPlayerId } from "../../utility";
 
 export type ExcludeMessageTypeField<T> = Omit<T, keyof Message<any>>;
 
@@ -31,7 +32,7 @@ export class WebSocketStore {
             handleOpponentConnectionMessage: action,
         });
 
-        const playerId = sessionStorage.getItem("playerId")!;
+        const playerId = getPlayerId()!;
         
         this.WS = BackendWebSocket.connect(page, gameId, playerId, {
             onMessage: this.handleServerMessage,
@@ -73,6 +74,7 @@ export class WebSocketStore {
 
     private handleServerMessage = (message: socketModels.ServerMessage) => {
         if (message.payload.case !== undefined) {
+            
             this.trigger(message.payload);
         }
     }
@@ -106,15 +108,18 @@ export class WebSocketStore {
         const wrappedMessage = create(socketModels.GeneralPlayerMessageSchema, {
             payload: message
         });
-        console.log("Sending general player message:", message);
+
+        console.debug("Sending general player message:", message);
         this.sendPlayerMessage({case: "generalMessage", value: wrappedMessage});
     }
 
     sendPlayerMessage = <T extends MessagePayload<socketModels.PlayerMessage>>(message: T): void => {
         const wrappedMessage = create(socketModels.PlayerMessageSchema, {
+            timestamp: BigInt(Date.now()),
             payload: message
         });
-        console.log("Sending player message:", message);
+
+        console.debug("Sending player message:", message);
         BackendWebSocket.sendPlayerMessage(this.WS, wrappedMessage);
     }
 

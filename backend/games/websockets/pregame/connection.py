@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from uuid import UUID
-from fastapi import WebSocket
 
 from ..connection import GameConnections, PlayerConnection
 from ...model import PregameServerReadyStateMessage
@@ -8,7 +7,6 @@ from ...model import PregameServerReadyStateMessage
 
 @dataclass
 class PregamePlayerConnection(PlayerConnection):
-    websocket: WebSocket
     ready: bool = False
 
 

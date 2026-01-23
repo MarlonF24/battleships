@@ -31,7 +31,7 @@ class PregameServerMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class PregameServerReadyStateMessage(betterproto.Message):
-    num_ready_players: int = betterproto.int32_field(1)
+    num_ready_players: int = betterproto.uint32_field(1)
     self_ready: bool = betterproto.bool_field(2)
 
 

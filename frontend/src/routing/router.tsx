@@ -1,5 +1,5 @@
 import { createBrowserRouter, LoaderFunction, Navigate } from "react-router-dom";
-import { api, ResponseError, unpackErrorMessage } from "../base";
+import { api, ResponseError, unpackErrorMessage, getPlayerId } from "../base";
 import PreGameView, { GameViewLoaderData } from "../pages/pregame";
 import  WelcomeView  from "../pages/welcome";
 import GameView from "../pages/game";
@@ -8,7 +8,7 @@ import { LoadingFallback } from "./LoadingFallback";
 
 const paramsLoader: LoaderFunction<GameViewLoaderData> = async ({ params }) => {
   const gameId = params.gameId!;
-  const playerId = sessionStorage.getItem("playerId")!;
+  const playerId = getPlayerId()!;
   try {
     const gameParams = await api.getGameParamsGamesGameIdParamsGet({ gameId, playerId });
     

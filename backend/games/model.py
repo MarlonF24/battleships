@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Any, Collection
 
 from .websocket_models import *
-from .relations import GameMode, Ship as DBShip
+from .relations import GameMode
 
 
 def to_camel(string: str) -> str:
@@ -56,10 +56,8 @@ class ActiveShipLogic(Base):
         self.hits[idx] = True
 
     @classmethod
-    def from_protobuf(cls, ship: ActiveShip | Ship | DBShip) -> "ActiveShipLogic":
+    def from_protobuf(cls, ship: ActiveShip | Ship) -> "ActiveShipLogic":
         match ship:
-            case DBShip():
-                hits = [False for _ in range(ship.length)]
             case Ship():
                 hits = [False for _ in range(ship.length)]
             case ActiveShip():
@@ -67,7 +65,7 @@ class ActiveShipLogic(Base):
 
         return cls(
             length=ship.length,
-            orientation=Orientation(ship.orientation.value),
+            orientation=ship.orientation,
             head_row=ship.head_row,
             head_col=ship.head_col,
             hits=hits,
@@ -107,7 +105,7 @@ class ShipGrid:
         return [ship for ship in self.ships if ship.is_sunk()]
 
     def __init__(
-        self, ships: Collection[Ship] | Collection[DBShip], rows: int, cols: int
+        self, ships: Collection[Ship], rows: int, cols: int
     ):
         cells: list[list[CellInfo]] = [
             [CellInfo() for _ in range(cols)] for _ in range(rows)

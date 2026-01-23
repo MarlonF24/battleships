@@ -29,10 +29,10 @@ class Orientation(betterproto.Enum):
 
 @dataclass(eq=False, repr=False)
 class Ship(betterproto.Message):
-    length: int = betterproto.int32_field(1)
+    length: int = betterproto.uint32_field(1)
     orientation: "Orientation" = betterproto.enum_field(2)
-    head_row: int = betterproto.int32_field(3)
-    head_col: int = betterproto.int32_field(4)
+    head_row: int = betterproto.uint32_field(3)
+    head_col: int = betterproto.uint32_field(4)
 
 
 rebuild_dataclass(Ship)  # type: ignore

@@ -24,14 +24,15 @@ from .. import (
 
 @dataclass(eq=False, repr=False)
 class PlayerMessage(betterproto.Message):
+    timestamp: int = betterproto.uint64_field(1)
     pregame_message: "_pregame_messages__.PregamePlayerMessage | None" = (
-        betterproto.message_field(1, optional=True, group="payload")
-    )
-    game_message: "_game_messages__.GamePlayerMessage | None" = (
         betterproto.message_field(2, optional=True, group="payload")
     )
-    general_message: "_general_messages__.GeneralPlayerMessage | None" = (
+    game_message: "_game_messages__.GamePlayerMessage | None" = (
         betterproto.message_field(3, optional=True, group="payload")
+    )
+    general_message: "_general_messages__.GeneralPlayerMessage | None" = (
+        betterproto.message_field(4, optional=True, group="payload")
     )
 
     @model_validator(mode="after")
@@ -41,14 +42,15 @@ class PlayerMessage(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ServerMessage(betterproto.Message):
+    timestamp: int = betterproto.uint64_field(1)
     general_message: "_general_messages__.GeneralServerMessage | None" = (
-        betterproto.message_field(1, optional=True, group="payload")
-    )
-    pregame_message: "_pregame_messages__.PregameServerMessage | None" = (
         betterproto.message_field(2, optional=True, group="payload")
     )
-    game_message: "_game_messages__.GameServerMessage | None" = (
+    pregame_message: "_pregame_messages__.PregameServerMessage | None" = (
         betterproto.message_field(3, optional=True, group="payload")
+    )
+    game_message: "_game_messages__.GameServerMessage | None" = (
+        betterproto.message_field(4, optional=True, group="payload")
     )
 
     @model_validator(mode="after")

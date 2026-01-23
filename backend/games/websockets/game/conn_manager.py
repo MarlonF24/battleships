@@ -2,7 +2,6 @@ import asyncio, betterproto
 from uuid import UUID
 from fastapi import WebSocket
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from backend.games.relations import Player
 
@@ -22,7 +21,7 @@ from ...model import (
     GameOverResult,
 )
 
-from ...relations import Game, GameMode, GamePhase, Ship, GamePlayerLink
+from ...relations import Game, GameMode, GamePhase, GamePlayerLink
 from .connection import GameGameConnections, GamePlayerConnection
 
 
@@ -47,15 +46,10 @@ class GameConnectionManager(
     ):
         async with session_mkr.begin() as session:
 
-            ships = await session.scalars(
-                select(Ship)
-                .where(Ship.game_id == game.id)  # type: ignore
-                .where(Ship.player_id == player.id)  # type: ignore
-            )
+            link = await session.get_one(GamePlayerLink, (game.id, player.id))
+            ships = link.ships
 
-            ships = set(ships.all())
-
-            game_obj = await session.get_one(Game, game.id)
+            game_obj = await link.awaitable_attrs.game
 
             player_connection = GamePlayerConnection(
                 websocket=websocket,
@@ -67,7 +61,11 @@ class GameConnectionManager(
                 heart_beat_event=asyncio.Event(),
             )
 
-        self.active_connections[game.id].add_player(player.id, player_connection)
+        game_connections = self.get_game_connections(game.id)
+        game_connections.mode = game.mode
+        await game_connections.add_player(player.id, player_connection)
+
+
 
     async def start_up(self, game: Game, player: Player, websocket: WebSocket):
         await super().start_up(game, player, websocket)
@@ -107,42 +105,48 @@ class GameConnectionManager(
                 ),
             )
 
-            if game_connections.turn_player_id == player.id:
-                game_connections.reconnect_event.set()  # signal that player has reconnected during their turn
-            else:
-                # notify player that it's opponent's turn
+            player_conn = game_connections.players[player.id]
+
+            # if the player double connected during their turn we just notify them that they have the turn (note: that means the lock is not aquired rn)
+            if game_connections.turn_player_id != player.id or player_conn.duplicate_connection_cleanup:
                 await self._dispatch_turn_message(
                     game.id, player.id, release_lock=False
                 )
 
+            else:
+                game_connections.reconnect_event.set()  # signal that player has reconnected during their turn
+            
+
     async def clean_up(
         self, game_id: UUID, player_id: UUID, wse: WebSocketException | None = None
     ) -> None:
+        if game_connections := self.get_game_connections(game_id, raise_on_missing=False):
 
-        if game_connections := self.get_game_connections(
-            game_id, raise_on_missing=False
-        ):
-            # Is it this player's turn?
-            if (
-                game_connections.running
-                and game_connections.turn_player_id == player_id
-            ):
-                # Did he NOT submit his shot already before this cleanup and its currently being processed in the background?
-                if not game_connections.shot_lock.locked():
-                    await game_connections.shot_lock.acquire()
+            player_conn = game_connections.players.get(player_id, None)
 
-                    # not passing the cleanup task here as task to crash along so its unaffected
-                    self.create_background_task(
-                        self.handle_reconnection_timeout(game_id, player_id),
-                        name=f"handle_reconnection_timeout_{game_id}_{player_id}",
-                    )
+            if player_conn and not player_conn.duplicate_connection_cleanup:
+                # Is it this player's turn?
+                if (
+                    game_connections.running
+                    and game_connections.turn_player_id == player_id
+                ):
+                    # Did he NOT submit his shot already before this cleanup and its currently being processed in the background?
+                    if not game_connections.shot_lock.locked():
+                        await game_connections.shot_lock.acquire()
 
-                    logger.info(
-                        f"Player {player_id} disconnected during their turn in game {game_id}, taking random shot for them."
-                    )
-                    # wait in the background for a reconnection
+                        # not passing the cleanup task here as task to crash along so its unaffected
+                        self.create_background_task(
+                            self.handle_reconnection_timeout(game_id, player_id),
+                            name=f"handle_reconnection_timeout_{game_id}_{player_id}",
+                        )
+
+                        logger.info(
+                            f"Player {player_id} disconnected during their turn in game {game_id}, taking random shot for them."
+                        )
+                        # wait in the background for a reconnection
 
             await super().clean_up(game_id, player_id, wse=wse)
+            
 
     async def handle_type_messages(
         self,
@@ -248,13 +252,18 @@ class GameConnectionManager(
         logger.info(
             f"Handling shot message for player {player_id} in game {game_id} at ({shot_msg.row}, {shot_msg.column})"
         )
+        
+        
         if game_connections.turn_player_id != player_id:
-            if game_connections.currently_connected(player_id):
-                game_connections.shot_lock.release()  # release the lock as the shot will not be processed
+            logger.error(
+                f"Player {player_id} tried to shoot out of turn in game {game_id}. Closing their connection."
+            )
 
-                raise WebSocketException(
-                    code=status.WS_1008_POLICY_VIOLATION,
-                    reason=f"Player {player_id} tried to shoot out of turn.",
+            game_connections.shot_lock.release()  # release the lock as the shot will not be processed
+
+            raise WebSocketException(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason=f"Player {player_id} tried to shoot out of turn.",
                 )
 
         try:
@@ -270,10 +279,9 @@ class GameConnectionManager(
                 f"Player {player_id} {'hit' if hit else 'missed'} in game {game_id}. {f'Sunk a ship: {sunk_ship}' if sunk_ship else 'No ship sunk.'}"
             )
 
-            async with session_mkr.begin() as session:
-                game = await session.get_one(Game, game_id)
+            
 
-            match game.mode:
+            match game_connections.mode:
                 case GameMode.SINGLESHOT:
                     swap_turn = True
 
@@ -340,14 +348,17 @@ class GameConnectionManager(
             await self.send_turn_messages(game_id)
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"Error while handling shot message for player {player_id} in game {game_id}: {e}"
             )
 
             # if anything goes wrong during shot processing, close the whole game, players can restart the battle from the beginning if they reload the page, as a new game connections object and new ship grids will be created
             await self.close_player_connections(
                 game_id,
-                reason="SERVER ERROR: Error occurred during shot processing. The game must be restarted via a refresh.",
+                reason=WebSocketException(
+                    code=status.WS_1011_INTERNAL_ERROR,
+                    reason="SERVER ERROR: Error occurred during shot processing. The game must be restarted via a refresh.",
+                ),
                 remove_game_connection=True,
             )
 
@@ -524,7 +535,10 @@ class GameConnectionManager(
         )
 
         await self.close_player_connections(
-            game_id, reason="Game completed.", remove_game_connection=True
+            game_id, reason=WebSocketException(
+                code=status.WS_1000_NORMAL_CLOSURE,
+                reason="Game completed.",
+            ), remove_game_connection=True
         )
 
     async def save_game_result(

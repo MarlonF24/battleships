@@ -49,6 +49,15 @@ async def join_game(player: Player, game: Game, session: AsyncSession) -> GamePh
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unable to join game. It may be full or you are already joined.",
         )
+    
+    if game.phase == GamePhase.COMPLETED:
+        logger.warning(
+            f"Player ID {player.id} attempted to join completed game ID {game.id}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to join completed game.",
+        )
 
     if not player in current_players:
         if num_current_players == 1:
@@ -77,13 +86,5 @@ async def join_game(player: Player, game: Game, session: AsyncSession) -> GamePh
                 detail="Unable to join full game.",
             )
 
-    if game.phase == GamePhase.COMPLETED:
-        logger.warning(
-            f"Player ID {player.id} attempted to join completed game ID {game.id}"
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unable to join completed game.",
-        )
 
     return game.phase

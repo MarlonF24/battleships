@@ -1,4 +1,4 @@
-import betterproto, asyncio
+import betterproto, asyncio, time
 from collections.abc import AsyncGenerator, Coroutine
 from contextlib import asynccontextmanager
 from uuid import UUID
@@ -52,12 +52,50 @@ class ConnectionManager(
         }
         self.background_tasks: set[asyncio.Task[Any]] = set()
 
-    def create_background_task(
+        self.heartbeat_clock_task: asyncio.Task[None] | None = None
+
+        from ..passive_cleaner import cleaner
+
+        cleaner.add_connection_manager(self)
+
+    def start_heartbeat_clock(self, interval: float = 30.0):
+        if self.heartbeat_clock_task:
+            logger.warning("Tried to start Heartbeat clock but it is already running.")
+            return
+
+        if not self.active_connections:
+            logger.error(
+                "Tried to start Heartbeat clock but there are no active connections. Aborting."
+            )
+            return
+
+        self.heartbeat_clock_task = self.create_background_task(
+            self.heartbeat_clock(interval=interval), name="heartbeat_clock"
+        )
+        logger.info("Heartbeat clock started.")
+
+    def stop_heartbeat_clock(self):
+        if not self.heartbeat_clock_task:
+            logger.warning("Tried to stop Heartbeat clock but it is not running.")
+            return
+
+        if self.active_connections:
+            logger.error(
+                "Tried to stop Heartbeat clock but there are still active connections. Aborting."
+            )
+            return
+
+        self.heartbeat_clock_task.cancel()
+        self.heartbeat_clock_task = None
+        logger.info("Heartbeat clock stopped.")
+
+ 
+    def create_background_task[P](
         self,
-        coro: Coroutine[Any, Any, Any],
+        coro: Coroutine[Any, Any, P],
         name: str,
         task_to_crash_along: asyncio.Task[Any] | None = None,
-    ) -> None:
+    ) -> asyncio.Task[P]:
         """
         Let a coroutine be executed in the global event loop as a background task, by being stored in the connection manager's background tasks set garbage collection is prevented. If the parent task is still running when the background task crashes, the parent task is cancelled as well.
 
@@ -82,15 +120,14 @@ class ConnectionManager(
                         logger.critical(
                             f"Killing parent consumer {task_to_crash_along.get_name()} due to background failure."
                         )
-
-                        # kill parent consumer
                         task_to_crash_along.cancel()
 
-            # raised by .exception() if the task was cancelled
             except asyncio.CancelledError:
                 logger.info(f"Background task {t.get_name()} was cancelled.")
 
         task.add_done_callback(task_done_callback)
+
+        return task
 
     @overload
     def get_game_connections(
@@ -162,12 +199,12 @@ class ConnectionManager(
             self.active_connections[game.id] = res
             logger.info(f"Created new GameConnections for game {game.id}")
 
-        await websocket.accept()
+        await self.add_player_connection(game, player, websocket)
 
+        await websocket.accept()
         logger.info(
             f"WebSocket connection accepted for game {game.id}, player {player.id}"
         )
-        await self.add_player_connection(game, player, websocket)
 
     async def disconnect(
         self,
@@ -202,14 +239,19 @@ class ConnectionManager(
             )
 
     async def close_player_connections(
-        self, game_id: UUID, reason: str, remove_game_connection: bool = False
+        self,
+        game_id: UUID,
+        reason: WebSocketException,
+        remove_game_connection: bool = False,
     ):
-        """Close all player connections in a game and remove the game from active connections."""
+        """Close all player connections in a game and optionally remove the game from active connections."""
         game_conns = self.get_game_connections(game_id)
 
         await asyncio.gather(
             *(
-                self.disconnect(game_id, player_id, reason=reason)
+                self.disconnect(
+                    game_id, player_id, code=reason.code, reason=reason.reason
+                )
                 for player_id in game_conns.players
             )
         )
@@ -243,11 +285,13 @@ class ConnectionManager(
             raise_on_closed_socket: If set, raises a WebSocketException with this reason when the socket is closed.
         """
         try:
-            message = ServerMessage(**{self.server_message_payload_map[type(message)]: message})  # type: ignore
 
-            await websocket.send_bytes(bytes(message))
+            msg = ServerMessage(timestamp=int(time.time() * 1000), **{self.server_message_payload_map[type(message)]: message})  # type: ignore
 
-        except RuntimeError:
+            await websocket.send_bytes(bytes(msg))
+
+        except RuntimeError as e:
+            logger.debug(f"WebSocket runtime error when sending message: {e}")
             if raise_on_closed_socket:
                 raise WebSocketException(
                     code=status.WS_1008_POLICY_VIOLATION, reason=raise_on_closed_socket
@@ -384,6 +428,10 @@ class ConnectionManager(
             websocket: The FastAPI WebSocket instance
         """
         await self.connect(game, player, websocket)
+
+        if not self.heartbeat_clock_task:
+            self.start_heartbeat_clock()
+
         await asyncio.gather(
             self.inform_opponent_about_own_connection_if_present(game.id, player.id),
             self.inform_self_about_opponent_connection(game.id, player.id),
@@ -400,7 +448,16 @@ class ConnectionManager(
             player: The player instance associated with the websocket connection
             wse: The WebSocketException instance to send in the closure if one occurred. Defaults to None.
         """
-        if game_id in self.active_connections:
+        player_conn = self.get_player_connection(
+            game_id=game_id, player_id=player_id, raise_on_missing=False
+        )
+
+        if not player_conn:
+            logger.warning(
+                f"Tried to clean up connection for game {game_id}, player {player_id} but no active connection found. Either it has already been removed or was never established. Please check whether this is intended."
+            )
+
+        elif not player_conn.duplicate_connection_cleanup:
             logger.info(
                 f"Cleaning up connection for game {game_id}, player {player_id}..."
             )
@@ -416,9 +473,14 @@ class ConnectionManager(
 
             await self.disconnect(game_id, player_id, code=code, reason=reason)
 
-        logger.warning(
-            f"Tried to clean up connection for game {game_id}, player {player_id} but no active connection found. Either it has already been removed or was never established. Please check whether this is intended."
-        )
+        else:
+            player_conn.duplicate_connection_cleanup = (
+                False  # reset flag for future connections
+            )
+
+        # If no active connections left, stop heartbeat clock. Technically we could only have closed sockets in all active connections. If that becomes an issue, we can loop over all websockets and check their state but might be overkill.
+        if not self.active_connections:
+            self.stop_heartbeat_clock()
 
     @asynccontextmanager
     async def websocket_lifecycle(
@@ -448,7 +510,7 @@ class ConnectionManager(
 
         except WebSocketException as e:
             wse = e
-            logger.info(
+            logger.exception(
                 f"WebSocketException caught in lifecycle for game {game.id}, player {player.id}: {e}"
             )
 
@@ -457,11 +519,10 @@ class ConnectionManager(
                 code=status.WS_1011_INTERNAL_ERROR,
                 reason="WebSocket closed due to internal error.",
             )
-            logger.error(
+            logger.exception(
                 f"Exception caught in lifecycle for game {game.id}, player {player.id}: {e}"
             )
-            logger.error("Traceback:", exc_info=True)
-
+            
         finally:
             logger.info(
                 f"Cleaning up WebSocket lifecycle for game {game.id}, player {player.id}"
@@ -498,8 +559,6 @@ class ConnectionManager(
                     )
                 )
 
-                tg.create_task(self.heartbeat_clock())
-
                 tg.create_task(
                     self.handle_general_messages(
                         game.id, player.id, websocket, general_message_queue
@@ -523,7 +582,7 @@ class ConnectionManager(
             yield
 
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"Exception raised in message producer for {output_queues} from {input_queue} for game {game_id}, player {player_id}: {e}"
             )
 
@@ -533,7 +592,7 @@ class ConnectionManager(
             if current_task := asyncio.current_task():
                 if current_task.cancelled():
                     logger.info(
-                        f"Message producer was cancelled (Likely due to a consumer in the task group crashing). Exiting immediately without draining queues."
+                        f"Message producer in {game_id} for player {player_id} was cancelled (Likely due to a consumer in the task group crashing). Exiting immediately without draining queues."
                     )
 
                     for queue in output_queues:
@@ -544,7 +603,7 @@ class ConnectionManager(
             # normal websocket closure or exception in producer
             # wait for consumers to finish
             logger.info(
-                f"Producer was not cancelled. Draining and then shutting down message queues..."
+                f"Producer in {game_id} for player {player_id} was not cancelled. Draining and then shutting down message queues..."
             )
 
             await asyncio.gather(
@@ -591,7 +650,7 @@ class ConnectionManager(
                     message_obj.parse(message)
 
                 logger.info(
-                    f"Received WebSocket message in game {game_id} from player {player_id}"
+                    f"Received PlayerMessage from player {player_id} in game {game_id}: {message_obj}"
                 )
 
                 _, payload = betterproto.which_one_of(message_obj, "payload")
@@ -609,10 +668,9 @@ class ConnectionManager(
                             f"Enqueued PlayerMessage from player {player_id} in game {game_id} to phase-specific queue: {payload}"
                         )
 
-    T = TypeVar("T")
-
+ 
     @staticmethod
-    async def message_generator(queue: asyncio.Queue[T]) -> AsyncGenerator[T, None]:
+    async def message_generator[T](queue: asyncio.Queue[T]) -> AsyncGenerator[T, None]:
         """
         Generator to simplify consuming messages. Exits on shutdown (see how shutdown is triggered in the producer_lifecycle).
         """
@@ -662,8 +720,7 @@ class ConnectionManager(
     ):
 
         player_conn = self.get_player_connection(game_id, player_id)
-        player_conn.heart_beat_event.set() # trigger event to stop timer
-
+        player_conn.heart_beat_event.set()  # trigger event to stop timer
 
     async def heartbeat_clock(self, interval: float = 30.0):
         """
@@ -699,7 +756,11 @@ class ConnectionManager(
                         )
 
     async def dispatch_heartbeat_request(
-        self, game_id: UUID, player_id: UUID, player_conn: PlayerConnectionType, timeout: float = 5.0
+        self,
+        game_id: UUID,
+        player_id: UUID,
+        player_conn: PlayerConnectionType,
+        timeout: float = 5.0,
     ):
         """
         Dispatch a heartbeat request to a player and wait for the response within a timeout period. If no response is received, close the websocket(suspect to have found a silent disconnection).
@@ -711,26 +772,36 @@ class ConnectionManager(
 
         player_conn.heart_beat_event.clear()
 
-        await self.send_personal_message(
-            game_id,
-            player_id,
-            GeneralServerMessage(heartbeat_request=ServerHeartbeatRequest()),
-        )
-
         try:
-            await asyncio.wait_for(player_conn.heart_beat_event.wait(), timeout=10.0)
-            logger.info(
-                f"Heartbeat response received in time from player {player_id} in game {game_id}."
+            await self.send_personal_message(
+                game_id,
+                player_id,
+                GeneralServerMessage(heartbeat_request=ServerHeartbeatRequest()),
             )
+        
+        # catch when the socket was closed while sending the heartbeat request
+        except WebSocketException:
+            logger.debug(f"Tried to send heartbeat request to closed socket for player {player_id} in game {game_id}, skipping wait for response.")
+        
+        else:
+            try:
+                await asyncio.wait_for(player_conn.heart_beat_event.wait(), timeout=10.0)
+                logger.info(
+                    f"Heartbeat response received in time from player {player_id} in game {game_id}."
+                )
+            except asyncio.TimeoutError:
+                logger.warning(
+                    f"No heartbeat response received from player {player_id} in game {game_id} within timeout period. Closing websocket..."
+                )
 
-        except asyncio.TimeoutError:
-            logger.warning(
-                f"No heartbeat response received from player {player_id} in game {game_id} within timeout period. Closing websocket..."
-            )
-            raise WebSocketException(
-                code=status.WS_1006_ABNORMAL_CLOSURE,
-                reason="No heartbeat response received within timeout period.",
-            )
+                asyncio.create_task(
+                    self.disconnect(
+                        game_id=game_id,
+                        player_id=player_id,
+                        code=status.WS_1006_ABNORMAL_CLOSURE,
+                        reason="No heartbeat response received within timeout period.",
+                    )
+                )
 
     @abstractmethod
     async def handle_type_messages(

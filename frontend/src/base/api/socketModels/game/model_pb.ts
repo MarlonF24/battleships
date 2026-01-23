@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file game/model.proto.
  */
 export const file_game_model: GenFile = /*@__PURE__*/
-  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyLsAQoMU2hpcEdyaWRWaWV3Ei8KCGhpdF9ncmlkGAEgAygLMh0uZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LlJvdxImCgVzaGlwcxgCIAMoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXAaOAoDUm93EjEKBWNlbGxzGAEgAygOMiIuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LkhpdFN0YXRlIkkKCEhpdFN0YXRlEgsKB1VOS05PV04QABINCglVTlRPVUNIRUQQARIICgRNSVNTEAISBwoDSElUEAMSDgoKSU1QT1NTSUJMRRAEIn0KCkFjdGl2ZVNoaXASDgoGbGVuZ3RoGAEgASgFEi0KC29yaWVudGF0aW9uGAIgASgOMhgucm9vdF9tb2RlbHMuT3JpZW50YXRpb24SEAoIaGVhZF9yb3cYAyABKAUSEAoIaGVhZF9jb2wYBCABKAUSDAoEaGl0cxgFIAMoCEJlCg9jb20uZ2FtZV9tb2RlbHNCCk1vZGVsUHJvdG9QAaICA0dYWKoCCkdhbWVNb2RlbHPKAgpHYW1lTW9kZWxz4gIWR2FtZU1vZGVsc1xHUEJNZXRhZGF0YeoCCkdhbWVNb2RlbHNiBnByb3RvMw", [file_root_model]);
+  fileDesc("ChBnYW1lL21vZGVsLnByb3RvEgtnYW1lX21vZGVscyLsAQoMU2hpcEdyaWRWaWV3Ei8KCGhpdF9ncmlkGAEgAygLMh0uZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LlJvdxImCgVzaGlwcxgCIAMoCzIXLmdhbWVfbW9kZWxzLkFjdGl2ZVNoaXAaOAoDUm93EjEKBWNlbGxzGAEgAygOMiIuZ2FtZV9tb2RlbHMuU2hpcEdyaWRWaWV3LkhpdFN0YXRlIkkKCEhpdFN0YXRlEgsKB1VOS05PV04QABINCglVTlRPVUNIRUQQARIICgRNSVNTEAISBwoDSElUEAMSDgoKSU1QT1NTSUJMRRAEIn0KCkFjdGl2ZVNoaXASDgoGbGVuZ3RoGAEgASgNEi0KC29yaWVudGF0aW9uGAIgASgOMhgucm9vdF9tb2RlbHMuT3JpZW50YXRpb24SEAoIaGVhZF9yb3cYAyABKA0SEAoIaGVhZF9jb2wYBCABKA0SDAoEaGl0cxgFIAMoCEJlCg9jb20uZ2FtZV9tb2RlbHNCCk1vZGVsUHJvdG9QAaICA0dYWKoCCkdhbWVNb2RlbHPKAgpHYW1lTW9kZWxz4gIWR2FtZU1vZGVsc1xHUEJNZXRhZGF0YeoCCkdhbWVNb2RlbHNiBnByb3RvMw", [file_root_model]);
 
 /**
  * @generated from message game_models.ShipGridView
@@ -94,7 +94,7 @@ export const ShipGridView_HitStateSchema: GenEnum<ShipGridView_HitState> = /*@__
  */
 export type ActiveShip = Message<"game_models.ActiveShip"> & {
   /**
-   * @generated from field: int32 length = 1;
+   * @generated from field: uint32 length = 1;
    */
   length: number;
 
@@ -104,12 +104,12 @@ export type ActiveShip = Message<"game_models.ActiveShip"> & {
   orientation: Orientation;
 
   /**
-   * @generated from field: int32 head_row = 3;
+   * @generated from field: uint32 head_row = 3;
    */
   headRow: number;
 
   /**
-   * @generated from field: int32 head_col = 4;
+   * @generated from field: uint32 head_col = 4;
    */
   headCol: number;
 

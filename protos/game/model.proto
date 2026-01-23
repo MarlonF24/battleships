@@ -25,10 +25,10 @@ message ShipGridView {
 
 
 message ActiveShip {
-    int32 length = 1;
+    uint32 length = 1;
     root_models.Orientation orientation = 2;
-    int32 head_row = 3; 
-    int32 head_col = 4;
+    uint32 head_row = 3; 
+    uint32 head_col = 4;
     repeated bool hits = 5;
 }
 

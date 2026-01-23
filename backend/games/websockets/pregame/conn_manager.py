@@ -13,9 +13,8 @@ from ...model import (
 from ...relations import (
     Game,
     GamePhase,
+    GamePlayerLink,
     Player,
-    Ship as DBShip,
-    Orientation as DBOrientation,
 )
 from ..conn_manager import *
 from .connection import PregameGameConnections, PregamePlayerConnection
@@ -44,7 +43,7 @@ class PregameConnectionManager(
     async def add_player_connection(
         self, game: Game, player: Player, websocket: WebSocket
     ):
-        self.active_connections[game.id].add_player(
+        await self.active_connections[game.id].add_player(
             player.id,
             PregamePlayerConnection(
                 websocket=websocket, heart_beat_event=asyncio.Event()
@@ -69,22 +68,31 @@ class PregameConnectionManager(
         self, game_id: UUID, player_id: UUID, wse: WebSocketException | None = None
     ):
         if game_conns := self.get_game_connections(game_id, raise_on_missing=False):
-
-            if game_conns.num_initially_connected() <= 1:
-                logger.info(
-                    f"Only initially connected player {player_id} disconnected from pregame of game {game_id} before a second player joined. Closing game connections and deleting game from DB."
-                )
-                await self.delete_game_from_db(game_id)
-
-                asyncio.create_task(
-                    self.close_player_connections(
-                        game_id,
-                        reason="A player disconnected before both players were ready.",
-                        remove_game_connection=True,
+            
+            player_conn = game_conns.players.get(player_id)
+            
+            if player_conn and not player_conn.duplicate_connection_cleanup:
+                
+                if game_conns.num_initially_connected() <= 1:
+                    logger.info(
+                            f"Only initially connected player {player_id} disconnected from pregame of game {game_id} before a second player joined. Closing game connections and deleting game from DB."
+                        )
+                    
+                    await self.delete_game_from_db(game_id)
+                    asyncio.create_task(
+                        self.close_player_connections(
+                            game_id,
+                            reason=WebSocketException(
+                                code=status.WS_1008_POLICY_VIOLATION,
+                                reason="Only initially connected player disconnected before game start.",
+                            ),
+                            remove_game_connection=True,
+                        )
                     )
-                )
 
             return await super().clean_up(game_id, player_id, wse)
+        
+        
         else:
             logger.warning(
                 f"Tried to clean up connection for player {player_id} in game {game_id}, but no game connections found. Maybe it was already removed earlier? Check whether this was intended."
@@ -187,8 +195,6 @@ class PregameConnectionManager(
         """
 
 
-        # Use a new session for DB operations in this handler as this is run via create_task in the main event loop
-        # if something cancels the consumer that called this handler, the session will be kept alive independently
         async with session_mkr.begin() as session:
 
             game_conns = self.get_game_connections(game_id)
@@ -197,19 +203,13 @@ class PregameConnectionManager(
             # update readiness state
             player_conn.ready = True
 
-            ships = [
-                DBShip(
-                    game_id=game_id,
-                    player_id=player_id,
-                    length=ship.length,
-                    head_row=ship.head_row,
-                    head_col=ship.head_col,
-                    orientation=DBOrientation(ship.orientation),
-                )
-                for ship in message.ships
-            ]
+            link = await session.get_one(
+                GamePlayerLink,
+                (game_id, player_id),
+            )
 
-            session.add_all(ships)
+            link.ships = message.ships # save the ships to DB
+            logger.debug(f"Saved ships for player {player_id} in game {game_id}: {message.ships}")
 
             await self.broadcast(
                 game_id,
@@ -221,8 +221,8 @@ class PregameConnectionManager(
             )
 
             if game_conns.num_ready_players() == 2:
-                # both players are ready, end pregame
                 game = await session.get_one(Game, game_id)
+                # both players are ready, end pregame
                 game.phase = GamePhase.GAME
                 session.add(game)
 
@@ -232,7 +232,11 @@ class PregameConnectionManager(
                 logger.info(f"Pregame ended for game {game.id}, phase set to GAME")
 
                 await self.close_player_connections(
-                    game_id, reason="Pregame completed.", remove_game_connection=True
+                    game_id, reason=WebSocketException(
+                        code=status.WS_1000_NORMAL_CLOSURE,
+                        reason="Both players are ready, transitioning to GAME phase.",
+                    ),
+                    remove_game_connection=True,
                 )
 
 

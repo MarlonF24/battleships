@@ -1,11 +1,14 @@
 from __future__ import annotations
 import asyncio
 import os, dotenv
+from typing import Awaitable, Callable
+
+
 
 dotenv.load_dotenv("backend/.env")
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, responses, staticfiles
+from fastapi import FastAPI, Request, responses, staticfiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from pathlib import Path
@@ -13,7 +16,7 @@ from pathlib import Path
 from .db import *
 from .logger import logger
 
-from .games import games_router
+from .games import games_router, cleaner
 from .players import players_router
 
 
@@ -29,6 +32,8 @@ async def lifespan(app: FastAPI):
         # Set eager task factory for websockets
 
     asyncio.get_running_loop().set_task_factory(asyncio.eager_task_factory)
+ 
+    asyncio.create_task(cleaner.run_passive_cleanup()) # start the passive cleaner
 
     yield
 
@@ -40,7 +45,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(games_router)
 app.include_router(players_router)
 
-allowed = os.getenv("CORS_ALLOW_ORIGINS", "*")[1:-1].split(",")
+allowed = os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
 
 logger.info(f"CORS allowed origins: {allowed}")
 app.add_middleware(
@@ -58,7 +63,23 @@ app.mount(
 )
 
 
+
+@app.middleware("http")
+async def noise_filter(request: Request, call_next: Callable[[Request], Awaitable[responses.Response]]):
+    path = request.url.path
+    if ".well-known" in path or path.endswith(".php"):
+        return responses.Response(status_code=404)
+    return await call_next(request)
+
+
+
 @app.get("/{full_path:path}")  # catch all route
 def welcome(full_path: str) -> responses.FileResponse:
+    file_path = FROTENTDIR / full_path
+
+    if file_path.exists() and file_path.is_file():
+        logger.info(f"Serving static file from path: {full_path}")
+        return responses.FileResponse(file_path)
+
     logger.info(f"Redirecting to welcome page from path: {full_path}")
     return responses.FileResponse(FROTENTDIR / "index.html")

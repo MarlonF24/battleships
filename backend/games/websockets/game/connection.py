@@ -5,6 +5,7 @@ from uuid import UUID
 
 from ...model import GameServerStateMessage, ShipGrid
 from ..connection import GameConnections, PlayerConnection
+from ...relations import GameMode
 
 
 @dataclass
@@ -14,6 +15,7 @@ class GamePlayerConnection(PlayerConnection):
 
 @dataclass
 class GameGameConnections(GameConnections[GamePlayerConnection]):
+    mode: GameMode = field(default=GameMode.SINGLESHOT)
     first_to_shoot: UUID | None = None
     turn_player_id: UUID | None = None
     _started: bool = field(default=False, init=False)
@@ -22,8 +24,8 @@ class GameGameConnections(GameConnections[GamePlayerConnection]):
     reconnect_event: asyncio.Event = field(default_factory=asyncio.Event, init=False)
     salvo_shots_remaining: int = field(default=3, init=False)
 
-    def add_player(self, player_id: UUID, connection: GamePlayerConnection):
-        super().add_player(player_id, connection)
+    async def add_player(self, player_id: UUID, connection: GamePlayerConnection):
+        await super().add_player(player_id, connection)
 
         if not self.first_to_shoot:
             self.first_to_shoot = player_id

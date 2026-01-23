@@ -8,20 +8,22 @@ import "general/messages.proto";
 package root_messages;
 
 message PlayerMessage {
+    uint64 timestamp = 1;
     oneof payload {
-        pregame_messages.PregamePlayerMessage pregame_message = 1;
-        game_messages.GamePlayerMessage game_message = 2;
-        general_messages.GeneralPlayerMessage general_message = 3;
+        pregame_messages.PregamePlayerMessage pregame_message = 2;
+        game_messages.GamePlayerMessage game_message = 3;
+        general_messages.GeneralPlayerMessage general_message = 4;
     }
 }
 
 
 
 message ServerMessage {
-  oneof payload {
-      general_messages.GeneralServerMessage general_message = 1;
-        pregame_messages.PregameServerMessage pregame_message = 2;
-        game_messages.GameServerMessage game_message = 3;
+    uint64 timestamp = 1;
+    oneof payload {
+      general_messages.GeneralServerMessage general_message = 2;
+        pregame_messages.PregameServerMessage pregame_message = 3;
+        game_messages.GameServerMessage game_message = 4;
     }
 }
 

@@ -31,7 +31,7 @@ export class BackendWebSocket {
     
     
     static sendPlayerMessage(ws: WebSocket, message: socketModels.PlayerMessage): void {
-        console.log("Sending player message:", message);
+        console.debug("Sending player message:", message);
         ws.send(toBinary(socketModels.PlayerMessageSchema, message));
     }
 
@@ -63,16 +63,16 @@ export class BackendWebSocket {
 
 
     static defaultOnMessage = (message: socketModels.ServerMessage) => {
-        console.log("WebSocket message received:", message.payload.value);
+        console.debug("WebSocket message received:", message.payload.value);
     }
 
     static defaultOnOpen = (e: Event) => {
-        console.log("WebSocket connection established");
+        console.debug("WebSocket connection established");
     }
 
     static defaultOnClose = (e: CloseEvent) => {
         this.currentSocket = null;
-        console.log("WebSocket connection closed and cleared");
+        console.debug("WebSocket connection closed and cleared");
     }
 
     static defaultOnError = (event: Event) => {

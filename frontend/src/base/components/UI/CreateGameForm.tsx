@@ -5,6 +5,7 @@ import { api, apiModels } from "../../api";
 import { ErrorMessage } from "../ErrorMessage.tsx";
 import { useSwitchView, Page } from "../../../routing/switch_view";
 import { Button } from "./Button.tsx";
+import { getPlayerId } from "../../utility";
 
 const FormContainer = styled.form.attrs({ className: "game-form-container" })({
   display: "flex",
@@ -93,7 +94,7 @@ export const CreateGameForm: React.FC = () => {
   const submitHandler = (event: React.FormEvent) => {
     event.preventDefault();
     executeApi(async () => {
-      const playerId = sessionStorage.getItem("playerId")!;
+      const playerId = getPlayerId()!;
       const battleGridRows: number = 10;
       const battleGridCols: number = 10;
       const shipLengths: Map<number, number> = new Map([[3, 1]]);

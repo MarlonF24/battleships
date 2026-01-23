@@ -44,10 +44,10 @@ class ShipGridViewRow(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ActiveShip(betterproto.Message):
-    length: int = betterproto.int32_field(1)
+    length: int = betterproto.uint32_field(1)
     orientation: "_root_models__.Orientation" = betterproto.enum_field(2)
-    head_row: int = betterproto.int32_field(3)
-    head_col: int = betterproto.int32_field(4)
+    head_row: int = betterproto.uint32_field(3)
+    head_col: int = betterproto.uint32_field(4)
     hits: "list[bool]" = betterproto.bool_field(5)
 
 

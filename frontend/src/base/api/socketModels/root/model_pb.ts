@@ -10,14 +10,14 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file root/model.proto.
  */
 export const file_root_model: GenFile = /*@__PURE__*/
-  fileDesc("ChByb290L21vZGVsLnByb3RvEgtyb290X21vZGVscyJpCgRTaGlwEg4KBmxlbmd0aBgBIAEoBRItCgtvcmllbnRhdGlvbhgCIAEoDjIYLnJvb3RfbW9kZWxzLk9yaWVudGF0aW9uEhAKCGhlYWRfcm93GAMgASgFEhAKCGhlYWRfY29sGAQgASgFKjwKC09yaWVudGF0aW9uEg8KC1VOU1BFQ0lGSUVEEAASDgoKSE9SSVpPTlRBTBABEgwKCFZFUlRJQ0FMEAJCZQoPY29tLnJvb3RfbW9kZWxzQgpNb2RlbFByb3RvUAGiAgNSWFiqAgpSb290TW9kZWxzygIKUm9vdE1vZGVsc+ICFlJvb3RNb2RlbHNcR1BCTWV0YWRhdGHqAgpSb290TW9kZWxzYgZwcm90bzM");
+  fileDesc("ChByb290L21vZGVsLnByb3RvEgtyb290X21vZGVscyJpCgRTaGlwEg4KBmxlbmd0aBgBIAEoDRItCgtvcmllbnRhdGlvbhgCIAEoDjIYLnJvb3RfbW9kZWxzLk9yaWVudGF0aW9uEhAKCGhlYWRfcm93GAMgASgNEhAKCGhlYWRfY29sGAQgASgNKjwKC09yaWVudGF0aW9uEg8KC1VOU1BFQ0lGSUVEEAASDgoKSE9SSVpPTlRBTBABEgwKCFZFUlRJQ0FMEAJCZQoPY29tLnJvb3RfbW9kZWxzQgpNb2RlbFByb3RvUAGiAgNSWFiqAgpSb290TW9kZWxzygIKUm9vdE1vZGVsc+ICFlJvb3RNb2RlbHNcR1BCTWV0YWRhdGHqAgpSb290TW9kZWxzYgZwcm90bzM");
 
 /**
  * @generated from message root_models.Ship
  */
 export type Ship = Message<"root_models.Ship"> & {
   /**
-   * @generated from field: int32 length = 1;
+   * @generated from field: uint32 length = 1;
    */
   length: number;
 
@@ -27,12 +27,12 @@ export type Ship = Message<"root_models.Ship"> & {
   orientation: Orientation;
 
   /**
-   * @generated from field: int32 head_row = 3;
+   * @generated from field: uint32 head_row = 3;
    */
   headRow: number;
 
   /**
-   * @generated from field: int32 head_col = 4;
+   * @generated from field: uint32 head_col = 4;
    */
   headCol: number;
 };
