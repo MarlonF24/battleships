@@ -1,6 +1,6 @@
 declare global {
     interface Window {
-        BACKEND_ORIGIN: string;
+        BACKEND_HOST: string;
     }
 }
 
@@ -14,11 +14,12 @@ export async function unpackErrorMessage(error: ResponseError): Promise<string> 
     return error.response.status + ": " + message;
 }
 
-const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_ORIGIN ?? window.location.origin;
+const BACKEND_HOST = import.meta.env.VITE_BACKEND_ADDRESS ?? window.location.host;
 
-window.BACKEND_ORIGIN = BACKEND_ORIGIN;
 
-export const api = new DefaultApi(new Configuration({ basePath: `http://${BACKEND_ORIGIN}` }));
+window.BACKEND_HOST = BACKEND_HOST;
+console.debug(`Using backend host: ${BACKEND_HOST}`);
+export const api = new DefaultApi(new Configuration({ basePath: `http://${BACKEND_HOST}` }));
 
 
 

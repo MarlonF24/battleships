@@ -1,0 +1,39 @@
+# Git and IDE
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+LICENSE
+
+# Frontend Junk
+node_modules/
+dist/
+npm-debug.log
+stats.html
+
+# Backend Junk
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.venv/
+api-docs-html/
+requirements-dev.txt
+
+# Documentation
+README.md
+docs/
+
+# Protocol buffers
+protos/
+**/*.proto
+
+
+**/openapitools.json
+**/.env
+**/.env.example
+**/*.yaml
+**/*.sh
+**/*.md
+
+technologies.txt

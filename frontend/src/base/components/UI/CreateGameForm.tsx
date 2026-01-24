@@ -97,7 +97,9 @@ export const CreateGameForm: React.FC = () => {
       const playerId = getPlayerId()!;
       const battleGridRows: number = 10;
       const battleGridCols: number = 10;
-      const shipLengths: Map<number, number> = new Map([[3, 1]]);
+      const shipLengths: Map<number, number> = new Map([[5, 1], [4, 2], [3, 3], [2, 4]]);
+    
+      // const shipLengths: Map<number, number> = new Map([[3, 1]]);
 
       const gameId = await api.createGameGamesCreatePost({
         playerId,

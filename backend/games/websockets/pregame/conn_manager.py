@@ -79,7 +79,7 @@ class PregameConnectionManager(
                         )
                     
                     await self.delete_game_from_db(game_id)
-                    asyncio.create_task(
+                    self.create_background_task(
                         self.close_player_connections(
                             game_id,
                             reason=WebSocketException(
@@ -87,7 +87,8 @@ class PregameConnectionManager(
                                 reason="Only initially connected player disconnected before game start.",
                             ),
                             remove_game_connection=True,
-                        )
+                        ),
+                        name=f"close_pregame_connections_game_{game_id}_after_single_disconnect",
                     )
 
             return await super().clean_up(game_id, player_id, wse)

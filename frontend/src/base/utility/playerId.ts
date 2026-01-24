@@ -1,26 +1,26 @@
 export function getPlayerId(): string | null {
-    const storage: "DEVELOPMENT" | "PRODUCTION" = import.meta.env.VITE_PLAYERID_BROWSER_STORAGE?.toUpperCase() ?? "PRODUCTION";
+    const storage: "SESSION" | "LOCAL" = import.meta.env.VITE_PLAYERID_BROWSER_STORAGE?.toUpperCase() ?? "LOCAL";
 
-    if (storage === "DEVELOPMENT") {
+    if (storage === "SESSION") {
         return sessionStorage.getItem("playerId");
     } 
 
-    if (storage !== "PRODUCTION") {
-        console.warn(`Unknown VITE_PLAYERID_BROWSER_STORAGE value: ${storage}. Expected "DEVELOPMENT" or "PRODUCTION". Falling back to PRODUCTION.`);
+    if (storage !== "LOCAL") {
+        console.warn(`Unknown VITE_PLAYERID_BROWSER_STORAGE value: ${storage}. Expected "SESSION" or "LOCAL". Falling back to LOCAL.`);
     }
 
     return localStorage.getItem("playerId");
 }
 
 export function setPlayerId(playerId: string): void {
-    const storage: "DEVELOPMENT" | "PRODUCTION" = import.meta.env.VITE_PLAYERID_BROWSER_STORAGE ?? "PRODUCTION";
-    if (storage === "DEVELOPMENT") {
+    const storage: "SESSION" | "LOCAL" = import.meta.env.VITE_PLAYERID_BROWSER_STORAGE?.toUpperCase() ?? "LOCAL";
+    if (storage === "SESSION") {
         sessionStorage.setItem("playerId", playerId);
         return;
     }
 
-    if (storage !== "PRODUCTION") {
-        console.warn(`Unknown VITE_PLAYERID_BROWSER_STORAGE value: ${storage}. Expected "DEVELOPMENT" or "PRODUCTION". Falling back to PRODUCTION.`);
+    if (storage !== "LOCAL") {
+        console.warn(`Unknown VITE_PLAYERID_BROWSER_STORAGE value: ${storage}. Expected "SESSION" or "LOCAL". Falling back to LOCAL.`);
     }
     localStorage.setItem("playerId", playerId);
 }

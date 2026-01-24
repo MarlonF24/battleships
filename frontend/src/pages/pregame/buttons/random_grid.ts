@@ -6,7 +6,7 @@ import { BattleGrid } from "../BattleGrid/BattleGrid.js";
 
 
 export const generateRandomBoard = (battleGrid: BattleGrid, shipGarage: ShipGarage, resetAll: boolean = false): void => {
-	// Logic to randomize ship placement goes here
+	// Logic to Randomise ship placement goes here
 	const initialShips = Array.from(shipGarage.ships.keys()).concat(
 		Array.from(battleGrid.ships.keys())
 	);

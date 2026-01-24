@@ -13,6 +13,7 @@ const StyledErrorMessage = styled.div.attrs({className: 'error-message'})({
     alignItems: "center",
     gap: "0.5rem",
     width: "fit-content",
+    maxWidth: "100%",
 })
 
 

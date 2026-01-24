@@ -556,17 +556,20 @@ class ConnectionManager(
                         player.id,
                         general_message_queue,
                         message_type_queue,
-                    )
+                    ),
+                    name=f"PlayerMessageRouter-{game.id}-{player.id}"
                 )
 
                 tg.create_task(
                     self.handle_general_messages(
                         game.id, player.id, websocket, general_message_queue
-                    )
+                    ),
+                    name=f"GeneralMessageHandler-{game.id}-{player.id}",
                 )
 
                 tg.create_task(
-                    self.handle_type_messages(game.id, player.id, message_type_queue)
+                    self.handle_type_messages(game.id, player.id, message_type_queue),
+                    name=f"TypeMessageHandler-{game.id}-{player.id}",
                 )
 
     @asynccontextmanager
@@ -592,7 +595,7 @@ class ConnectionManager(
             if current_task := asyncio.current_task():
                 if current_task.cancelled():
                     logger.info(
-                        f"Message producer in {game_id} for player {player_id} was cancelled (Likely due to a consumer in the task group crashing). Exiting immediately without draining queues."
+                        f"Message producer {current_task.get_name()} in {game_id} for player {player_id} was cancelled (Likely due to a consumer in the task group crashing). Exiting immediately without draining queues."
                     )
 
                     for queue in output_queues:
@@ -600,11 +603,11 @@ class ConnectionManager(
 
                     return
 
-            # normal websocket closure or exception in producer
-            # wait for consumers to finish
-            logger.info(
-                f"Producer in {game_id} for player {player_id} was not cancelled. Draining and then shutting down message queues..."
-            )
+                # normal websocket closure or exception in producer
+                # wait for consumers to finish
+                logger.info(
+                    f"Producer {current_task.get_name()} in {game_id} for player {player_id} was not cancelled. Draining and then shutting down message queues..."
+                )
 
             await asyncio.gather(
                 *(self.drain_and_shutdown_queue(queue) for queue in output_queues)

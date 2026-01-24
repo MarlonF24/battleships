@@ -79,7 +79,7 @@ export const RandomButton: React.FC<PregameButtonProps> = ({battleGrid, shipGara
 
 
 	return (
-		<Button $type="primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomize Ships
+		<Button $type="primary" onClick={clickHandler} onContextMenu={rightClickHandler}> Randomise Ships
 			<Tooltip position={TooltipPosition.TOP} text="Left Click: unplaced ships&#10;Right Click: all ships" />
 		</Button>
 	);

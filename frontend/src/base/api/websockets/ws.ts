@@ -96,7 +96,7 @@ export class BackendWebSocket {
             this.currentSocket = null;
         }
 
-        const newSocket = new WebSocket(`ws://${window.BACKEND_ORIGIN}/games/ws/${gameId}/${page}?playerId=${playerId}`);
+        const newSocket = new WebSocket(`ws://${window.BACKEND_HOST}/games/ws/${gameId}/${page}?playerId=${playerId}`);
         newSocket.binaryType = "arraybuffer";
         
         this.currentSocket = {

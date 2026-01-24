@@ -13,7 +13,7 @@
 
 dist/
 pyrightconfig.json
-
+technologies.txt
 
 # API Documentation (auto-generated)
 **/api-docs-html/

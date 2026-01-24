@@ -161,11 +161,11 @@ class GameConnectionManager(
                 self.type_player_message_router(
                     game_id, player_id, message_queue, shot_message_queue
                 ),
-                name="game_message_type_router",
+                name=f"game_player_message_router_{game_id}_{player_id}",
             )
             tg.create_task(
                 self.shot_message_consumer(game_id, player_id, shot_message_queue),
-                name="game_shot_consumer",
+                name=f"game_shot_consumer_{game_id}_{player_id}",
             )
 
     async def type_player_message_router(
@@ -232,7 +232,7 @@ class GameConnectionManager(
 
             self.create_background_task(
                 self.handle_shot_message(game_id, player_id, message),
-                f"handle_shot_message_{game_id}_{player_id}",
+                name=f"handle_shot_message_{game_id}_{player_id}",
                 task_to_crash_along=self_task,
             )
 

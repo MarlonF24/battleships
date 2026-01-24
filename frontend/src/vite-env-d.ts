@@ -2,7 +2,7 @@
 
 // If you want to add custom env variables, extend ImportMetaEnv:
 interface ImportMetaEnv {
-  readonly VITE_BACKEND_ORIGIN?: string;
+  readonly VITE_BACKEND_ADDRESS?: string;
   // add more env variables here...
 }
 

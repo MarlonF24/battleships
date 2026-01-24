@@ -17,15 +17,3 @@ plugins:
     opt:
       - target=ts
   
-  # - local: frontend\node_modules\.bin\protoc-gen-ts_proto.cmd
-  #   out: frontend/src/base/socketModels
-  #   opt:
-  #     - env=browser
-  #     - oneof=unions
-  #     - exportCommonSymbols=false
-  #     - outputJsonMethods=true
-  #     - lowerCaseServiceMethods=true
-  #     - esModuleInterop=true
-  #     - stringEnums=true
-  #     - unrecognizedEnum=throw
-  #     - outputTypeRegistry=true
