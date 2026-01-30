@@ -9,7 +9,7 @@ To do so without setting up a whole development environment:
 
 1. If not done already, install [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 2. Open Docker Desktop, if needed login/sign up, and ensure it's running.
-3. Run the following command in your terminal (for further configuration/information esp. regarding the DB, see the [Development](#development) section):
+3. Run the following command in your terminal (for further configuration/information esp. regarding the DB, see the [Development](#development-setup) section):
 
    ```bash
    curl -sL https://raw.githubusercontent.com/MarlonF24/battleships/refs/heads/main/docker-compose.yml | docker compose -f - up
