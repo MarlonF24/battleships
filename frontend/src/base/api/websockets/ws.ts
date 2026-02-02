@@ -96,7 +96,14 @@ export class BackendWebSocket {
             this.currentSocket = null;
         }
 
-        const newSocket = new WebSocket(`ws://${window.BACKEND_HOST}/games/ws/${gameId}/${page}?playerId=${playerId}`);
+        const BACKEND_HOST = import.meta.env.VITE_BACKEND_ADDRESS ?? window.location.host; 
+        const WS_PROTOCOL = window.location.protocol === "https:" ? "wss" : "ws";
+
+        const WS_URL = `${WS_PROTOCOL}://${BACKEND_HOST}/games/ws/${gameId}/${page}?playerId=${playerId}`;
+        
+        console.debug(`Connecting to WebSocket at ${WS_URL}`);
+
+        const newSocket = new WebSocket(WS_URL);
         newSocket.binaryType = "arraybuffer";
         
         this.currentSocket = {

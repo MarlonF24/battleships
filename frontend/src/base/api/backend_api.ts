@@ -1,9 +1,3 @@
-declare global {
-    interface Window {
-        BACKEND_HOST: string;
-    }
-}
-
 
 import { DefaultApi, Configuration, ResponseError } from "./api-client";
 
@@ -14,13 +8,19 @@ export async function unpackErrorMessage(error: ResponseError): Promise<string> 
     return error.response.status + ": " + message;
 }
 
-const BACKEND_HOST = import.meta.env.VITE_BACKEND_ADDRESS ?? window.location.host;
+const ENV_BACKEND_ADDRESS = import.meta.env.VITE_BACKEND_ADDRESS;
+
+const BACKEND_HOST = ENV_BACKEND_ADDRESS ?? window.location.host;
+
+if (window.location.protocol === "https:") {
+    console.warn("connecting to backend over HTTPS. Make sure this is a proxy server that will forward HTTP to the backend!");
+}
+
+const BACKEND_ORIGIN = `${window.location.protocol}//${BACKEND_HOST}`;
 
 
-window.BACKEND_HOST = BACKEND_HOST;
-console.debug(`Using backend host: ${BACKEND_HOST}`);
-export const api = new DefaultApi(new Configuration({ basePath: `http://${BACKEND_HOST}` }));
-
+console.debug(`Using backend origin: ${BACKEND_ORIGIN}`);
+export const api = new DefaultApi(new Configuration({ basePath: BACKEND_ORIGIN }));
 
 
 

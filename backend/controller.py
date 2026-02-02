@@ -12,6 +12,7 @@ load_dotenv(BACKENDDIR.parent / ".env")
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, responses, staticfiles
 from fastapi.middleware.cors import CORSMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from sqlalchemy import text
 
 from .db import *
@@ -61,6 +62,9 @@ if allowed := os.getenv("CORS_ALLOW_ORIGINS"):
         allow_headers=["*"],
     )
 
+
+# this is needed to have correct http/https selection for the messages between proxy and app
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 FROTENTDIR = BACKENDDIR.parent / "frontend/dist"
 
