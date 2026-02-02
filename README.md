@@ -4,6 +4,14 @@ A full-stack, real-time Battleships web-app built with FastAPI, React, PostgreSQ
 
 ## 🚀 Quick Start
 
+### Play directly
+
+You can play the game directly with anybody on: https://battleships-app-marlon-31537f00.koyeb.app/
+
+<img src="./assets/showcase.png" alt="Screenshot of the Battleships Game" height="400">
+
+### Self-Host
+
 You can play with your friends by deploying your own instance of the game server.
 To do so without setting up a whole development environment:
 
@@ -19,9 +27,8 @@ To do so without setting up a whole development environment:
 For your friends in the same private network to join your game, share your private network IP address (e.g., `192.168.x.x:8000`).
 You can find your local IP address by running `ipconfig` (Windows) or `ifconfig` (Mac/Linux) in your terminal.
 
-5. Enjoy playing Battleships!
 
-<img src="./assets/showcase.png" alt="Screenshot of the Battleships Game" height="400">
+
 
 ## 🛠️ Tech Stack & Architecture
 
