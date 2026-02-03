@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: FastAPI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "backend.controller:app", // Change "main" if your file is named differently
+                "--reload"
+            ],
+            "jinja": true
+        }
+    ]
+}

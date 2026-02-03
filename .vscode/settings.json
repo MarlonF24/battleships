@@ -1,0 +1,12 @@
+{
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "python.analysis.ignore": [
+        "**/__init__.py"
+    ],
+    "protobuf.protoSrcsDir": "protos",
+    "protobuf.protoc.useAbsolutePath": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+    }
+}
