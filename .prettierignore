@@ -1,11 +1,6 @@
-.env
-.env.prod
-.tmp/
-.DS_Store
-
 node_modules/
 dist/
 coverage/
 playwright-report/
 test-results/
-*.tsbuildinfo
+bun.lock

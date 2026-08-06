@@ -1,0 +1,35 @@
+{
+  "name": "@battleship/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@battleship/contracts": "workspace:*",
+    "@battleship/game-domain": "workspace:*",
+    "@battleship/server": "workspace:*",
+    "@elysiajs/eden": "latest",
+    "@radix-ui/react-alert-dialog": "latest",
+    "@radix-ui/react-tooltip": "latest",
+    "@sinclair/typebox": "latest",
+    "clsx": "latest",
+    "mobx": "latest",
+    "mobx-react-lite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest",
+    "tailwind-merge": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "tailwindcss": "latest",
+    "vite": "latest"
+  }
+}

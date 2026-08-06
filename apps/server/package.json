@@ -1,0 +1,27 @@
+{
+  "name": "@battleship/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./app": "./src/app.ts"
+  },
+  "scripts": {
+    "dev": "bun --env-file ../../.env --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --target bun --outdir dist --sourcemap=external --external @aws-sdk/client-secrets-manager"
+  },
+  "dependencies": {
+    "@battleship/contracts": "workspace:*",
+    "@battleship/game-domain": "workspace:*",
+    "@elysiajs/cors": "latest",
+    "@elysiajs/openapi": "latest",
+    "@elysiajs/static": "latest",
+    "@sinclair/typebox": "latest",
+    "drizzle-orm": "latest",
+    "elysia": "latest",
+    "pino": "latest",
+    "postgres": "latest",
+    "tydantic-settings": "^0.1.2"
+  }
+}
