@@ -17,21 +17,16 @@ COPY apps ./apps
 COPY packages ./packages
 RUN bun run build
 
-FROM dependencies AS schema
+FROM dependencies AS runtime
 
-# Drizzle needs only the declared schema and its strict database configuration.
+ENV NODE_ENV=production
+
+# The runtime includes the schema sources required by Drizzle Kit, followed by
+# the bundled server and static frontend used after schema synchronization.
 COPY apps/server/drizzle.config.ts apps/server/drizzle.config.ts
 COPY apps/server/src/config.ts apps/server/src/config.ts
 COPY apps/server/src/db/schema.ts apps/server/src/db/schema.ts
-CMD ["bun", "run", "db:push", "--force"]
-
-FROM oven/bun:1.3.9-alpine AS runtime
-
-WORKDIR /app
-ENV NODE_ENV=production
-
-# The server bundle resolves the Vite output at apps/web/dist at runtime.
 COPY --from=builder /app/apps/server/dist ./apps/server/dist
 COPY --from=builder /app/apps/web/dist ./apps/web/dist
 
-CMD ["bun", "apps/server/dist/index.js"]
+CMD ["sh", "-c", "bun run db:push && bun apps/server/dist/index.js"]

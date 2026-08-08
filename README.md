@@ -31,7 +31,7 @@ Set a real `DB_PASSWORD`, review the other explicit values, then start the stack
 docker compose up --build
 ```
 
-Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose runs and publishes PostgreSQL on `DB_PORT`, synchronizes it with the Drizzle schema, and starts one application replica after the schema service succeeds.
+Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose runs and publishes PostgreSQL on `DB_PORT`; the application container synchronizes the schema before starting its single server replica.
 
 To intentionally discard the local development database and recreate the current schema:
 

@@ -19,22 +19,6 @@ services:
       timeout: 3s
       retries: 20
 
-  schema:
-    build:
-      context: .
-      target: schema
-    environment:
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_HOST: db
-      DB_PORT: ${DB_PORT}
-      DB_SSL: ${DB_SSL:?Set DB_SSL in .env}
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: "no"
-
   server:
     build:
       context: .
@@ -56,8 +40,8 @@ services:
       HUB_SHARED_TOKEN: ${HUB_SHARED_TOKEN}
       HUB_RESULT_WEBHOOK_URL: ${HUB_RESULT_WEBHOOK_URL}
     depends_on:
-      schema:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:

@@ -5,10 +5,9 @@
 The production Compose file defines:
 
 - PostgreSQL with a readiness healthcheck;
-- a one-shot Drizzle schema container;
-- one Elysia server that starts only after schema synchronization succeeds.
+- one Elysia server that starts after PostgreSQL is healthy.
 
-The multi-stage Dockerfile performs a frozen workspace install, builds the server bundle and Vite SPA, uses the build image to apply the Drizzle schema, and copies only runtime outputs into the server image. Elysia serves the SPA while keeping `/api`, `/health`, and `/openapi` outside the history fallback.
+The multi-stage Dockerfile performs a frozen workspace install and builds the server bundle and Vite SPA. At container startup, the runtime runs `drizzle-kit push` without `--force`; the server starts only after schema synchronization succeeds. A destructive or ambiguous schema change therefore requires explicit operator handling rather than automatic approval. Elysia then serves the SPA while keeping `/api`, `/health`, and `/openapi` outside the history fallback.
 
 ## Single-replica requirement
 
@@ -36,7 +35,7 @@ Synchronize the configured database with the current Drizzle schema before serve
 bun run db:push
 ```
 
-Compose performs the same operation in its one-shot `schema` service. `drizzle-kit push` compares the live database with the declared schema and may apply destructive changes, so resolve and back up the target before production deployment.
+Container startup performs the same operation before launching Elysia. `drizzle-kit push` compares the live database with the declared schema and may require operator input for destructive changes, so resolve and back up the target before production deployment.
 
 For a deliberate pre-cutover development reset only:
 

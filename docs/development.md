@@ -37,9 +37,9 @@ Open `http://localhost:<VITE_PORT>` for the Vite application. The production ser
 - Vite proxies relative `/api` and WebSocket requests to Elysia at `http://localhost:<SERVER_PORT>`; returned application links remain relative and therefore stay on the Vite origin.
 - Starting only Vite renders the page, but games cannot connect unless the backend and your local PostgreSQL service are also running.
 - The production image runs one Bun process. Elysia serves the API, WebSockets, built frontend files, and the React Router fallback. There is no second frontend server in that image.
-- `docker compose up --build` is a separate deployment path: Compose runs its own PostgreSQL container and a short-lived schema container before starting the application container.
+- `docker compose up --build` is a separate deployment path: Compose starts PostgreSQL, then the application container synchronizes the schema before starting Elysia.
 
-Run `db:push` after editing the Drizzle schema or creating a fresh database. The server deliberately fails when PostgreSQL is unavailable or its required tables are absent; application startup never starts PostgreSQL or changes its schema.
+Run `db:push` after editing the Drizzle schema or creating a fresh database. The watched development server deliberately fails when PostgreSQL is unavailable or its required tables are absent; unlike the deployment container, it never starts PostgreSQL or changes its schema.
 
 ## TypeScript and editor checks
 
