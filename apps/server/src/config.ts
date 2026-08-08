@@ -16,6 +16,7 @@ const databaseProperties = {
   dbName: Settings.String({ minLength: 1 }),
   dbHost: Settings.String({ minLength: 1 }),
   dbPort: Settings.Number({ minimum: 1, maximum: 65_535 }),
+  dbSsl: Settings.Boolean({ default: false }),
 };
 
 function databaseUrl(config: {
@@ -24,8 +25,10 @@ function databaseUrl(config: {
   dbName: string;
   dbHost: string;
   dbPort: number;
+  dbSsl: boolean;
 }): string {
-  return `postgresql://${encodeURIComponent(config.dbUser)}:${encodeURIComponent(config.dbPassword)}@${config.dbHost}:${config.dbPort}/${encodeURIComponent(config.dbName)}`;
+  const ssl = config.dbSsl ? "?sslmode=require" : "";
+  return `postgresql://${encodeURIComponent(config.dbUser)}:${encodeURIComponent(config.dbPassword)}@${config.dbHost}:${config.dbPort}/${encodeURIComponent(config.dbName)}${ssl}`;
 }
 
 const DatabaseSettings = Settings(databaseProperties, { databaseUrl });
@@ -50,7 +53,7 @@ const AppSettings = Settings(
   {
     ...databaseProperties,
     serverPort: Settings.Number({ default: 8000, minimum: 1, maximum: 65_535 }),
-    corsAllowedOrigins: Settings.String(),
+    corsAllowedOrigins: Settings.String({ default: "" }),
     logLevel: Settings.Union([
       Settings.Literal("fatal"),
       Settings.Literal("error"),

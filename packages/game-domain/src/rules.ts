@@ -34,7 +34,7 @@ export const CLASSIC_RULESET: GameRules = Object.freeze({
   modes: GAME_MODES,
   orientations: ORIENTATIONS,
   salvoShots: 3,
-  placementTimeoutMs: 60_000,
+  placementTimeoutMs: 40_000,
   shotTimeoutMs: 10_000,
   reconnectTimeoutMs: 8_000,
   battleStartDelayMs: 1_500,

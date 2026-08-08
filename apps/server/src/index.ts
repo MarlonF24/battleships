@@ -3,20 +3,59 @@
 import { resolve } from "node:path";
 import { staticPlugin } from "@elysiajs/static";
 import { createApp } from "./app";
-import { getConfig } from "./config";
+import { getConfig, type ServerConfig } from "./config";
 import { createPostgresRepository } from "./db/repository";
 import { createLogger } from "./logger";
+import type { StoredMatch } from "./repository";
 import { MatchSessionRegistry } from "./session/registry";
 import { WebhookWorker } from "./webhook";
 
 const SHUTDOWN_DRAIN_MS = 5_000;
 
-const config = getConfig();
+const bootstrapLogger = createLogger("info");
+let config: ServerConfig;
+try {
+  config = getConfig();
+} catch (error) {
+  bootstrapLogger.fatal({ err: error }, "Server configuration is invalid");
+  process.exit(1);
+}
 const logger = createLogger(config.logLevel);
 const repository = createPostgresRepository(config.databaseUrl);
 
+logger.info(
+  {
+    environment: config.nodeEnv,
+    port: config.serverPort,
+    databaseHost: config.dbHost,
+    databasePort: config.dbPort,
+    databaseName: config.dbName,
+    databaseSsl: config.dbSsl,
+    corsOriginCount: config.corsOrigins.length,
+    hubEnabled: config.hub.enabled,
+  },
+  "Server configuration loaded",
+);
+
 // Any live rows predate this process and cannot have recoverable board state.
-const aborted = await repository.abortNonterminalMatches();
+let aborted: readonly StoredMatch[];
+try {
+  aborted = await repository.abortNonterminalMatches();
+  logger.info("Database connection and startup recovery succeeded");
+} catch (error) {
+  logger.fatal(
+    {
+      err: error,
+      databaseHost: config.dbHost,
+      databasePort: config.dbPort,
+      databaseName: config.dbName,
+      databaseSsl: config.dbSsl,
+    },
+    "Database startup failed",
+  );
+  await repository.close().catch(() => undefined);
+  process.exit(1);
+}
 if (aborted.length > 0) {
   logger.warn(
     { count: aborted.length },
@@ -70,7 +109,10 @@ const app =
 app.listen({ hostname: "0.0.0.0", port: config.serverPort });
 registry.startCleanup();
 webhookWorker.start();
-logger.info({ port: config.serverPort }, "Battleship server listening");
+logger.info(
+  { hostname: "0.0.0.0", port: config.serverPort },
+  "Battleship server listening",
+);
 
 let shuttingDown = false;
 async function shutdown(signal: string): Promise<void> {

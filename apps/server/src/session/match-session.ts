@@ -103,7 +103,7 @@ export class MatchSession {
     options: SessionOptions,
   ) {
     this.repository = options.repository;
-    this.logger = options.logger;
+    this.logger = options.logger.child({ matchId: stored.id });
     this.clock = options.clock ?? systemClock;
     this.scheduler = options.scheduler ?? systemScheduler;
     this.random = options.random ?? systemRandom;
@@ -152,6 +152,7 @@ export class MatchSession {
       throw new Error(result.error.message);
     }
     this.stored = stored;
+    this.logger.info({ seat: 2 }, "Open match seat joined");
     this.bumpAndPublish();
     this.scheduleForCurrentState(2);
   }
@@ -160,15 +161,21 @@ export class MatchSession {
   public connectPlayer(capability: string, peer: SocketPeer): boolean {
     const seat = this.findCapabilitySeat(capability);
     if (!seat) {
+      this.logger.warn({ peerId: peer.id }, "Invalid player socket rejected");
       peer.close(1008, "This player link is not valid for the match.");
       return false;
     }
 
     const previous = this.playerPeers.get(seat);
     if (previous?.id && previous.id !== peer.id) {
+      this.logger.info(
+        { seat, previousPeerId: previous.id, peerId: peer.id },
+        "Player socket replaced",
+      );
       previous.close(1008, "A newer connection replaced this player socket.");
     }
     this.playerPeers.set(seat, peer);
+    this.logger.info({ seat, peerId: peer.id }, "Player socket connected");
     this.lastActivityMs = this.clock.now();
 
     this.serialise(() => {
@@ -181,6 +188,10 @@ export class MatchSession {
   /** Attach a public read-only spectator connection for this match. */
   public connectSpectator(peer: SocketPeer): void {
     this.spectatorPeers.set(peer.id, peer);
+    this.logger.debug(
+      { peerId: peer.id, spectatorCount: this.spectatorPeers.size },
+      "Spectator socket connected",
+    );
     this.serialise(() => this.bumpAndPublish());
   }
 
@@ -191,6 +202,7 @@ export class MatchSession {
       return;
     }
     this.playerPeers.delete(seat);
+    this.logger.info({ seat, peerId }, "Player socket disconnected");
     this.lastActivityMs = this.clock.now();
 
     this.serialise(async () => {
@@ -211,6 +223,10 @@ export class MatchSession {
 
   public disconnectSpectator(peerId: string): void {
     if (this.spectatorPeers.delete(peerId)) {
+      this.logger.debug(
+        { peerId, spectatorCount: this.spectatorPeers.size },
+        "Spectator socket disconnected",
+      );
       this.serialise(() => this.bumpAndPublish());
     }
   }
@@ -232,6 +248,7 @@ export class MatchSession {
 
         this.lastActivityMs = this.clock.now();
         await this.repository.touchMatch(this.id);
+        this.logger.info({ seat }, "Player fleet accepted");
         this.bumpAndPublish();
         if (result.value.bothReady) {
           this.setDeadline(
@@ -256,6 +273,10 @@ export class MatchSession {
 
       this.lastActivityMs = this.clock.now();
       await this.repository.touchMatch(this.id);
+      this.logger.debug(
+        { seat, row: command.row, column: command.column },
+        "Player shot accepted",
+      );
       this.bumpAndPublish();
 
       await this.afterShot();
@@ -273,6 +294,7 @@ export class MatchSession {
 
   /** Close sockets during server shutdown without pretending they completed. */
   public closeForShutdown(): void {
+    this.logger.info("Closing session for server shutdown");
     this.cancelDeadline();
     this.closePeers(
       1012,
@@ -299,6 +321,10 @@ export class MatchSession {
     requestId: string,
     error: Readonly<{ code: string; message: string }>,
   ): void {
+    this.logger.debug(
+      { seat, requestId, commandError: error.code },
+      "Player command rejected",
+    );
     this.playerPeers.get(seat)?.send({
       type: "commandRejected",
       requestId,
@@ -313,10 +339,7 @@ export class MatchSession {
     // is the session's concurrency boundary and keeps the domain synchronous.
     const next = this.commandChain.then(action);
     this.commandChain = next.catch((cause: unknown) => {
-      this.logger.error(
-        { cause, matchId: this.id },
-        "Match session action failed",
-      );
+      this.logger.error({ err: cause }, "Match session action failed");
       this.closePeers(1011, "Unexpected server error.");
     });
   }
@@ -364,6 +387,7 @@ export class MatchSession {
       const result = this.match.startBattle();
       if (!result.ok) throw new Error(result.error.message);
       await this.repository.markBattleStarted(this.id);
+      this.logger.info("Battle started");
       this.bumpAndPublish();
       this.scheduleTurn();
       return;
@@ -375,6 +399,7 @@ export class MatchSession {
       const ready = this.match.readyPlayer(seat, fleet.value.placements);
       if (!ready.ok) throw new Error(ready.error.message);
       await this.repository.touchMatch(this.id);
+      this.logger.warn({ seat }, "Placement deadline generated a fleet");
       this.bumpAndPublish();
       if (ready.value.bothReady) {
         this.setDeadline(
@@ -390,6 +415,7 @@ export class MatchSession {
       const result = this.match.takeAutomaticShot(seat, this.random);
       if (!result.ok) throw new Error(result.error.message);
       await this.repository.touchMatch(this.id);
+      this.logger.warn({ seat, deadlineKind: kind }, "Automatic shot taken");
       this.bumpAndPublish();
       await this.afterShot();
       return;
@@ -399,6 +425,7 @@ export class MatchSession {
       const result = this.match.takeBotShot(seat, this.random);
       if (!result.ok) throw new Error(result.error.message);
       await this.repository.touchMatch(this.id);
+      this.logger.debug({ seat }, "Bot shot taken");
       this.bumpAndPublish();
       await this.afterShot();
     }
@@ -500,6 +527,7 @@ export class MatchSession {
   private async completePremature(
     reason: "no_players_connected" | "placement_expired" | "battle_expired",
   ): Promise<void> {
+    this.logger.warn({ reason }, "Match ending prematurely");
     this.match.abort(reason);
     await this.persistAndClose();
   }
@@ -517,6 +545,10 @@ export class MatchSession {
       winnerSeat: state.winnerSeat,
       reason: state.reason,
     });
+    this.logger.info(
+      { reason: state.reason, winnerSeat: state.winnerSeat },
+      "Match completed and persisted",
+    );
     this.bumpAndPublish();
     this.closePeers(1000, "Match completed.");
     this.onCompleted(this.id);

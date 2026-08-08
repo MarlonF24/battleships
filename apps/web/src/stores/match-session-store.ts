@@ -97,6 +97,10 @@ export class MatchSessionStore {
     this.socketState = this.projection ? "reconnecting" : "connecting";
     const connection = connectLiveMatch(this.identity, {
       open: () => {
+        console.info("Live match connection opened.", {
+          role: this.identity.role,
+          matchId: this.identity.matchId,
+        });
         runInAction(() => {
           this.socketState = "connected";
           this.rejection = null;
@@ -104,7 +108,13 @@ export class MatchSessionStore {
       },
       message: (message) => this.acceptServerMessage(message),
       close: (event) => this.handleClose(connection, event),
-      error: () => connection.close(),
+      error: () => {
+        console.error("Live match connection failed.", {
+          role: this.identity.role,
+          matchId: this.identity.matchId,
+        });
+        connection.close();
+      },
     });
     this.socket = connection;
   }
@@ -188,11 +198,18 @@ export class MatchSessionStore {
       return;
     }
     if (event.code === 1008) {
+      console.warn("Live match connection was rejected.", {
+        matchId: this.identity.matchId,
+        reason: event.reason,
+      });
       this.socketState = "closed";
       this.rejection = event.reason || "This match link is no longer valid.";
       return;
     }
     if (event.code === 1012) {
+      console.warn("Live match connection closed for server restart.", {
+        matchId: this.identity.matchId,
+      });
       this.socketState = "closed";
       this.rejection =
         event.reason ||
@@ -202,6 +219,10 @@ export class MatchSessionStore {
 
     // Protocol and restart closures are terminal; transient transport failures
     // alone enter the bounded reconnect loop.
+    console.warn("Live match connection lost; retrying.", {
+      matchId: this.identity.matchId,
+      closeCode: event.code,
+    });
     this.socketState = "reconnecting";
     this.reconnectHandle = window.setTimeout(() => {
       this.reconnectHandle = null;

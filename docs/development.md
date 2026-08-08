@@ -6,7 +6,7 @@ Copy `.env.example` to `.env`. Server configuration accepts one canonical shape 
 
 Application fields:
 
-- `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST`, `DB_PORT`;
+- `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_SSL`;
 - `SERVER_PORT`, `VITE_PORT` (both optional and defaulted);
 - `CORS_ALLOWED_ORIGINS`;
 - `LOG_LEVEL`, `NODE_ENV`;

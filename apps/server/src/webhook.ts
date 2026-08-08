@@ -94,7 +94,7 @@ export class WebhookWorker {
         await this.deliver(event);
       }
     } catch (cause) {
-      this.logger.error({ cause }, "Result outbox processing failed");
+      this.logger.error({ err: cause }, "Result outbox processing failed");
     } finally {
       this.running = false;
       if (this.shouldContinue()) {
@@ -149,7 +149,7 @@ export class WebhookWorker {
         message,
       );
       this.logger.warn(
-        { eventId: event.eventId, attemptCount, cause },
+        { eventId: event.eventId, attemptCount, err: cause },
         retryDelay === undefined
           ? "Result webhook retries exhausted"
           : "Result webhook attempt failed",

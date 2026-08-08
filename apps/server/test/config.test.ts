@@ -26,6 +26,12 @@ describe("strict server configuration", () => {
       "postgresql://battleship:secret%3A%2F%3F%23%5B%5D%40@localhost:5432/battleship",
     );
     expect(drizzleConfig.databaseUrl).toBe(config.databaseUrl);
+    expect(
+      loadDatabaseConfig({
+        ...validEnvironment,
+        DB_SSL: "true",
+      }).databaseUrl.endsWith("?sslmode=require"),
+    ).toBe(true);
     expect(config.serverPort).toBe(8000);
     expect(config.corsOrigins).toEqual([]);
     expect(config.hub).toEqual({ enabled: false });

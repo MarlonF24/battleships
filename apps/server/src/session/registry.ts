@@ -75,6 +75,10 @@ export class MatchSessionRegistry {
       },
     });
     this.sessions.set(match.id, session);
+    this.logger.debug(
+      { matchId: match.id, source: match.source, mode: match.mode },
+      "Live match session registered",
+    );
     return session;
   }
 
@@ -107,6 +111,10 @@ export class MatchSessionRegistry {
           ? PLACEMENT_IDLE_TIMEOUT_MS
           : BATTLE_IDLE_TIMEOUT_MS;
       if (now - session.lastActivityMs >= timeout) {
+        this.logger.warn(
+          { matchId: session.id, phase: session.phase, idleTimeoutMs: timeout },
+          "Aborting idle match session",
+        );
         session.abortForIdleTimeout();
       }
     }
@@ -114,6 +122,10 @@ export class MatchSessionRegistry {
 
   /** Stop cleanup and close every socket during graceful process shutdown. */
   public shutdown(): void {
+    this.logger.info(
+      { liveSessionCount: this.sessions.size },
+      "Closing live match sessions",
+    );
     if (this.cleanupHandle) {
       this.scheduler.cancel(this.cleanupHandle);
       this.cleanupHandle = null;

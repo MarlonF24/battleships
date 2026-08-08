@@ -219,7 +219,7 @@ export function createApp({
           message: "The request does not match the documented schema.",
         });
       }
-      logger.error({ code, cause: error }, "Unhandled request error");
+      logger.error({ code, err: error }, "Unhandled request error");
       return status(500, {
         code: "internal_error",
         message: "The server could not complete this request.",
@@ -236,7 +236,7 @@ export function createApp({
           await repository.checkReady();
           return { status: "ok" as const };
         } catch (cause) {
-          logger.warn({ cause }, "Readiness check failed");
+          logger.warn({ err: cause }, "Readiness check failed");
           return status(503, {
             code: "not_ready",
             message: "Database access or the required schema is unavailable.",
@@ -252,6 +252,10 @@ export function createApp({
       "/api/v1/matches",
       async ({ body, status }) => {
         const match = await matchService.createStandalone(body);
+        logger.info(
+          { matchId: match.id, mode: match.mode, opponent: body.opponent },
+          "Standalone match created",
+        );
         return status(201, createResponse(match));
       },
       {
@@ -265,9 +269,14 @@ export function createApp({
       async ({ params, body, status }) => {
         try {
           const match = await matchService.joinStandalone(params.matchId, body);
+          logger.info({ matchId: match.id, seat: 2 }, "Match seat claimed");
           return joinResponse(match);
         } catch (cause) {
           if (cause instanceof RepositoryError) {
+            logger.warn(
+              { matchId: params.matchId, conflict: cause.code },
+              "Match join rejected",
+            );
             return status(cause.code === "match_not_found" ? 404 : 409, {
               code: cause.code,
               message: cause.message,
@@ -296,6 +305,7 @@ export function createApp({
         );
 
         if (access === "unavailable") {
+          logger.warn("Hub request received while integration is disabled");
           return status(503, {
             code: "hub_unavailable",
             message:
@@ -304,6 +314,7 @@ export function createApp({
         }
 
         if (access === "unauthorized") {
+          logger.warn("Unauthorized hub match creation request");
           return status(401, {
             code: "unauthorized",
             message: "A valid hub bearer token is required.",
@@ -320,6 +331,10 @@ export function createApp({
         const existing = await repository.findHubMatch(body.hubMatchId);
 
         if (existing) {
+          logger.debug(
+            { hubMatchId: body.hubMatchId, matchId: existing.id },
+            "Hub match creation replayed",
+          );
           return sameHubRequest(existing.hubRequest, body)
             ? hubResponse(existing)
             : status(409, {
@@ -344,6 +359,10 @@ export function createApp({
                   "This hub match ID was already used with different input.",
               });
         }
+        logger.info(
+          { hubMatchId: body.hubMatchId, matchId: match.id, mode: match.mode },
+          "Hub match created",
+        );
         return status(201, hubResponse(match));
       },
       {
@@ -411,6 +430,10 @@ export function createApp({
       open(ws) {
         const session = registry.get(ws.data.params.matchId);
         if (!session) {
+          logger.warn(
+            { matchId: ws.data.params.matchId, peerId: ws.id },
+            "Player socket requested an unavailable match",
+          );
           ws.close(1008, "Match is not live.");
           return;
         }
@@ -444,6 +467,10 @@ export function createApp({
       open(ws) {
         const session = registry.get(ws.data.params.matchId);
         if (!session) {
+          logger.debug(
+            { matchId: ws.data.params.matchId, peerId: ws.id },
+            "Spectator requested an unavailable match",
+          );
           ws.close(1008, "Match is not live.");
           return;
         }
@@ -458,6 +485,10 @@ export function createApp({
         });
       },
       message(ws) {
+        logger.warn(
+          { matchId: ws.data.params.matchId, peerId: ws.id },
+          "Spectator socket sent a prohibited message",
+        );
         ws.close(1008, "Spectator sockets are read-only.");
       },
       close(ws) {
