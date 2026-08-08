@@ -9,6 +9,7 @@ const validEnvironment = Object.freeze({
   DB_NAME: "battleship",
   DB_HOST: "localhost",
   DB_PORT: "5432",
+  DB_SSL: "false",
   CORS_ALLOWED_ORIGINS: "",
   LOG_LEVEL: "info",
   NODE_ENV: "test",

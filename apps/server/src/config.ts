@@ -16,7 +16,7 @@ const databaseProperties = {
   dbName: Settings.String({ minLength: 1 }),
   dbHost: Settings.String({ minLength: 1 }),
   dbPort: Settings.Number({ minimum: 1, maximum: 65_535 }),
-  dbSsl: Settings.Boolean({ default: false }),
+  dbSsl: Settings.Boolean(),
 };
 
 function databaseUrl(config: {
