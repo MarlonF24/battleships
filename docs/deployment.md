@@ -7,7 +7,9 @@ The production Compose file defines:
 - PostgreSQL with a readiness healthcheck;
 - one Elysia server that starts after PostgreSQL is healthy.
 
-The multi-stage Dockerfile performs a frozen workspace install and builds the server bundle and Vite SPA. At container startup, the runtime runs `drizzle-kit push` without `--force`; the server starts only after schema synchronization succeeds. A destructive or ambiguous schema change therefore requires explicit operator handling rather than automatic approval. Elysia then serves the SPA while keeping `/api`, `/health`, and `/openapi` outside the history fallback.
+The multi-stage Dockerfile performs a frozen workspace install and builds the server bundle and Vite SPA. Pushes to `main` publish `ghcr.io/marlonf24/battleships:latest` plus a commit-specific tag for both AMD64 and ARM64; `v1.2.3`-style Git tags additionally publish semantic `1.2.3`, `1.2`, and `1` image tags. Pull requests build without publishing. The default Compose file pulls `latest` rather than building locally. The GHCR package must be made public after its first publication if unauthenticated users should be able to run Compose directly.
+
+At container startup, the runtime runs `drizzle-kit push` without `--force`; the server starts only after schema synchronization succeeds. A destructive or ambiguous schema change therefore requires explicit operator handling rather than automatic approval. Elysia then serves the SPA while keeping `/api`, `/health`, and `/openapi` outside the history fallback.
 
 ## Single-replica requirement
 
@@ -41,7 +43,7 @@ For a deliberate pre-cutover development reset only:
 
 ```bash
 docker compose down --volumes
-docker compose up --build
+docker compose up
 ```
 
 There is no automatic drop/reset switch or legacy-schema compatibility layer.

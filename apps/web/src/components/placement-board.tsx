@@ -302,7 +302,7 @@ export const PlacementBoard = observer(function PlacementBoard({
       : undefined;
 
   return (
-    <div className="placement-geometry flex w-full flex-row items-start justify-center gap-4">
+    <div className="placement-geometry flex min-w-max flex-row items-start justify-center gap-4">
       <div
         ref={boardRef}
         role="grid"

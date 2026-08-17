@@ -28,16 +28,18 @@ cp .env.example .env
 Set a real `DB_PASSWORD`, review the other explicit values, then start the stack:
 
 ```bash
-docker compose up --build
+docker compose up
 ```
 
-Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose runs and publishes PostgreSQL on `DB_PORT`; the application container synchronizes the schema before starting its single server replica.
+Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose pulls `ghcr.io/marlonf24/battleships:latest`, runs and publishes PostgreSQL on `DB_PORT`, then lets the application container synchronize the schema before starting its single server replica.
+
+Pushes to `main` publish `latest` and a commit-specific tag to GitHub Container Registry. Tags such as `v1.2.3` additionally publish `1.2.3`, `1.2`, and `1`. Pull requests build the same multi-platform image without publishing it. The GHCR package must be public for unauthenticated Compose users; after its first publication, set its visibility to public in the package settings.
 
 To intentionally discard the local development database and recreate the current schema:
 
 ```bash
 docker compose down --volumes
-docker compose up --build
+docker compose up
 ```
 
 This deletes local database data permanently.

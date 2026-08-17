@@ -50,41 +50,43 @@ export const GamePage = observer(function GamePage({
 
   return (
     <AppShell gameLayout>
-      {!session.projection ? (
-        <section className="flex min-h-52 max-w-xl flex-col items-center justify-center gap-4 text-center">
-          <h1 className="text-primary text-2xl font-bold">
-            {unavailable ? "Match unavailable" : "Loading Game Data..."}
-          </h1>
-          <p className="text-sm text-[#666] italic">
-            {unavailable
-              ? unavailableMessage
-              : "Connecting to the game server..."}
-          </p>
-          {session.rejection && <ErrorMessage message={session.rejection} />}
-        </section>
-      ) : (
-        <>
-          <MatchHeader projection={session.projection} store={session} />
-          {session.rejection && <ErrorMessage message={session.rejection} />}
-          {session.socketState === "reconnecting" && (
-            <p className="mb-4 text-center text-[#666] italic">
-              Connection lost. Reconnecting...
+      <div className="game-content flex h-full min-h-0 w-full flex-col items-center">
+        {!session.projection ? (
+          <section className="flex min-h-52 max-w-xl flex-col items-center justify-center gap-4 text-center">
+            <h1 className="text-primary text-2xl font-bold">
+              {unavailable ? "Match unavailable" : "Loading Game Data..."}
+            </h1>
+            <p className="text-sm text-[#666] italic">
+              {unavailable
+                ? unavailableMessage
+                : "Connecting to the game server..."}
             </p>
-          )}
-          {session.projection.phase === "placement" ? (
-            <PlacementView
-              projection={session.projection}
-              session={session}
-              draft={draft}
-            />
-          ) : (
-            <BattleView projection={session.projection} session={session} />
-          )}
-          {session.projection.phase === "completed" && (
-            <CompletionDialog projection={session.projection} />
-          )}
-        </>
-      )}
+            {session.rejection && <ErrorMessage message={session.rejection} />}
+          </section>
+        ) : (
+          <>
+            <MatchHeader projection={session.projection} store={session} />
+            {session.rejection && <ErrorMessage message={session.rejection} />}
+            {session.socketState === "reconnecting" && (
+              <p className="mb-4 text-center text-[#666] italic">
+                Connection lost. Reconnecting...
+              </p>
+            )}
+            {session.projection.phase === "placement" ? (
+              <PlacementView
+                projection={session.projection}
+                session={session}
+                draft={draft}
+              />
+            ) : (
+              <BattleView projection={session.projection} session={session} />
+            )}
+            {session.projection.phase === "completed" && (
+              <CompletionDialog projection={session.projection} />
+            )}
+          </>
+        )}
+      </div>
     </AppShell>
   );
 });

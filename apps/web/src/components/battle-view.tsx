@@ -52,7 +52,7 @@ function BoardGroup({
     />
   );
   return (
-    <div className="battle-board-group flex shrink-0 items-start justify-center gap-2">
+    <div className="battle-board-group flex shrink-0 items-start justify-center gap-[var(--board-fleet-gap)]">
       {item.fleetSide === "left" && fleet}
       <BattleBoard
         board={item.board}
@@ -168,7 +168,7 @@ export const BattleView = observer(function BattleView({
     projection.phase === "completed" || targetedSeat === seat ? 1 : 0.6;
 
   return (
-    <section className="battle-geometry @container flex w-full flex-col items-center">
+    <section className="battle-view flex min-h-0 w-full flex-1 flex-col items-center">
       <p
         className={
           projection.phase === "battle" && canShoot
@@ -182,29 +182,31 @@ export const BattleView = observer(function BattleView({
           : ""}
       </p>
 
-      <div className="battle-all-boards w-full items-start justify-center gap-3">
-        {boards.map((board) => (
-          <BoardGroup
-            key={board.seat}
-            item={board}
-            fleetLengths={projection.rules.fleetLengths}
-            opacity={boardOpacity(board.seat)}
-            interactive={boardInteractive(board.seat)}
-            lastShot={projection.lastShot}
-            onTarget={(row, column) => session.shoot(row, column)}
-          />
-        ))}
-      </div>
+      <div className="battle-stage battle-geometry min-h-0 w-full flex-1">
+        <div className="battle-all-boards items-center justify-center gap-3">
+          {boards.map((board) => (
+            <BoardGroup
+              key={board.seat}
+              item={board}
+              fleetLengths={projection.rules.fleetLengths}
+              opacity={boardOpacity(board.seat)}
+              interactive={boardInteractive(board.seat)}
+              lastShot={projection.lastShot}
+              onTarget={(row, column) => session.shoot(row, column)}
+            />
+          ))}
+        </div>
 
-      <div className="battle-single-board items-start justify-center">
-        <BoardGroup
-          item={displayed}
-          fleetLengths={projection.rules.fleetLengths}
-          opacity={1}
-          interactive={boardInteractive(displayed.seat)}
-          onTarget={(row, column) => session.shoot(row, column)}
-          lastShot={projection.lastShot}
-        />
+        <div className="battle-single-board items-center justify-center">
+          <BoardGroup
+            item={displayed}
+            fleetLengths={projection.rules.fleetLengths}
+            opacity={1}
+            interactive={boardInteractive(displayed.seat)}
+            onTarget={(row, column) => session.shoot(row, column)}
+            lastShot={projection.lastShot}
+          />
+        </div>
       </div>
 
       {projection.phase === "completed" && (

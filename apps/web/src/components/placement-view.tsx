@@ -7,7 +7,7 @@ import type { PlacementProjection } from "@battleship/contracts";
 import { PlacementDraftStore } from "../stores/placement-draft-store";
 import { MatchSessionStore } from "../stores/match-session-store";
 import { PlacementBoard } from "./placement-board";
-import { Button, HelpTip } from "./ui";
+import { Button } from "./ui";
 
 function DiceFiveIcon() {
   return (
@@ -78,7 +78,7 @@ export const PlacementView = observer(function PlacementView({
 
   return (
     <section
-      className="@container relative flex w-full flex-col items-center"
+      className="placement-view relative flex min-h-0 w-full flex-1 flex-col items-center"
       aria-label="Place your fleet"
     >
       <div className="placement-actions mb-4 flex shrink-0 flex-wrap items-center justify-center gap-3">
@@ -129,20 +129,14 @@ export const PlacementView = observer(function PlacementView({
           Reset
         </Button>
 
-        <HelpTip label={"Left click: unplaced ships\nRight click: all ships"}>
-          <Button
-            aria-label="Randomize unplaced ships"
-            className="gap-1.5"
-            disabled={editingLocked}
-            onClick={() => draft.randomiseRemaining()}
-            onContextMenu={(event) => {
-              event.preventDefault();
-              draft.randomiseAll();
-            }}
-          >
-            <DiceFiveIcon /> Unplaced
-          </Button>
-        </HelpTip>
+        <Button
+          aria-label="Randomize unplaced ships"
+          className="gap-1.5"
+          disabled={editingLocked}
+          onClick={() => draft.randomiseRemaining()}
+        >
+          <DiceFiveIcon /> Unplaced
+        </Button>
 
         <Button
           aria-label="Randomize all ships"
@@ -154,7 +148,9 @@ export const PlacementView = observer(function PlacementView({
         </Button>
       </div>
 
-      <PlacementBoard store={draft} />
+      <div className="placement-stage flex min-h-0 w-full flex-1 overflow-hidden">
+        <PlacementBoard store={draft} />
+      </div>
     </section>
   );
 });

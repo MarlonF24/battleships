@@ -20,8 +20,9 @@ services:
       retries: 20
 
   server:
-    image: ghcr.io/marlonf24/battleships:latest
-    pull_policy: always
+    build:
+      context: .
+      target: runtime
     ports:
       - "${SERVER_PORT:-8000}:${SERVER_PORT:-8000}"
     environment:

@@ -25,7 +25,7 @@ export function FleetDisplay({
     <div
       aria-label={`${board.remainingShipLengths.length} ships afloat`}
       className={cn(
-        "fleet-display flex shrink-0 flex-col gap-2",
+        "fleet-display flex shrink-0 flex-col gap-[var(--fleet-gap)]",
         side === "left" ? "items-end" : "items-start",
       )}
     >
@@ -33,7 +33,7 @@ export function FleetDisplay({
         const total = count(fleetLengths, length);
         const afloat = count(board.remainingShipLengths, length);
         return (
-          <div key={length} className="flex gap-2">
+          <div key={length} className="flex gap-[var(--fleet-gap)]">
             {Array.from({ length: total }, (_, shipIndex) => (
               <div key={shipIndex} className="flex" aria-hidden="true">
                 {Array.from({ length }, (_, cellIndex) => (
