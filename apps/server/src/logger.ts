@@ -10,8 +10,7 @@ export function createLogger(level: string): Logger {
     redact: [
       "authorization",
       "seatToken",
-      "capability",
-      "*.capability",
+      "*.seatToken",
       "databaseUrl",
       "dbPassword",
       "hub.sharedToken",

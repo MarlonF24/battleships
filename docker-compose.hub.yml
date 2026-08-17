@@ -1,0 +1,50 @@
+name: battleship
+
+services:
+  db:
+    image: postgres:17-alpine
+    command: ["postgres", "-p", "${DB_PORT:-5432}"]
+    environment:
+      POSTGRES_USER: ${DB_USER:-battleship_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      POSTGRES_DB: ${DB_NAME:-battleship}
+    ports:
+      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-battleship_user} -d ${DB_NAME:-battleship} -p ${DB_PORT:-5432}",
+        ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  server:
+    image: ghcr.io/marlonf24/battleship:latest
+    pull_policy: always
+    ports:
+      - "${SERVER_PORT:-8000}:${SERVER_PORT:-8000}"
+    environment:
+      DB_USER: ${DB_USER:-battleship_user}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      DB_NAME: ${DB_NAME:-battleship}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+      DB_SSL: false
+      SERVER_PORT: ${SERVER_PORT:-8000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS in environment as comma-separated list of origins, including the hub origin}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      NODE_ENV: production
+      HUB_ENABLED: true
+      HUB_SHARED_TOKEN: ${HUB_SHARED_TOKEN:?Set HUB_SHARED_TOKEN in environment}
+      HUB_RESULT_WEBHOOK_URL: ${HUB_RESULT_WEBHOOK_URL:?Set HUB_RESULT_WEBHOOK_URL in environment}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

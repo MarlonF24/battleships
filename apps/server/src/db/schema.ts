@@ -99,7 +99,7 @@ export const matches = pgTable(
   ],
 );
 
-/** Ordered participants and their unguessable human-seat capabilities. */
+/** Ordered participants and their unguessable human-seat tokens. */
 export const matchSeats = pgTable(
   "match_seats",
   {
@@ -109,17 +109,17 @@ export const matchSeats = pgTable(
     seat: integer("seat").notNull(),
     kind: seatKindEnum("kind").notNull(),
     playerId: uuid("player_id").references(() => players.id),
-    capability: uuid("capability"),
+    seatToken: uuid("seat_token"),
     outcome: outcomeEnum("outcome"),
   },
   (table) => [
     primaryKey({ columns: [table.matchId, table.seat] }),
     uniqueIndex("match_seats_human_unique").on(table.matchId, table.playerId),
-    uniqueIndex("match_seats_capability_unique").on(table.capability),
+    uniqueIndex("match_seats_seat_token_unique").on(table.seatToken),
     check("match_seats_number_check", sql`${table.seat} in (1, 2)`),
     check(
       "match_seats_kind_access_check",
-      sql`(${table.kind} = 'human' and ${table.playerId} is not null and ${table.capability} is not null) or (${table.kind} = 'bot' and ${table.playerId} is null and ${table.capability} is null)`,
+      sql`(${table.kind} = 'human' and ${table.playerId} is not null and ${table.seatToken} is not null) or (${table.kind} = 'bot' and ${table.playerId} is null and ${table.seatToken} is null)`,
     ),
   ],
 );

@@ -7,7 +7,7 @@ The production Compose file defines:
 - PostgreSQL with a readiness healthcheck;
 - one Elysia server that starts after PostgreSQL is healthy.
 
-The multi-stage Dockerfile performs a frozen workspace install and builds the server bundle and Vite SPA. Pushes to `main` publish `ghcr.io/marlonf24/battleships:latest` plus a commit-specific tag for both AMD64 and ARM64; `v1.2.3`-style Git tags additionally publish semantic `1.2.3`, `1.2`, and `1` image tags. Pull requests build without publishing. The default Compose file pulls `latest` rather than building locally. The GHCR package must be made public after its first publication if unauthenticated users should be able to run Compose directly.
+The multi-stage Dockerfile performs a frozen workspace install and builds the server bundle and Vite SPA. Pushes to `main` publish `ghcr.io/marlonf24/battleship:latest` plus a commit-specific tag for both AMD64 and ARM64; `v1.2.3`-style Git tags additionally publish semantic `1.2.3`, `1.2`, and `1` image tags. Pull requests build without publishing. The default Compose file pulls `latest` rather than building locally. The GHCR package must be made public after its first publication if unauthenticated users should be able to run Compose directly.
 
 At container startup, the runtime runs `drizzle-kit push` without `--force`; the server starts only after schema synchronization succeeds. A destructive or ambiguous schema change therefore requires explicit operator handling rather than automatic approval. Elysia then serves the SPA while keeping `/api`, `/health`, and `/openapi` outside the history fallback.
 
@@ -23,6 +23,12 @@ Use the canonical variables documented directly in `.env.example` and set `NODE_
 
 Hub integration is explicitly enabled or disabled. Never accept callback URLs from match requests; only `HUB_RESULT_WEBHOOK_URL` is used.
 
+The hub Compose file is a minimal overlay. After setting the hub token and webhook URL in `.env`, enable it together with the base stack:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.hub.yml up
+```
+
 ## Readiness and shutdown
 
 `GET /health/live` proves the process can answer. `GET /health/ready` queries an application table, proving database access and schema readiness.
@@ -30,6 +36,18 @@ Hub integration is explicitly enabled or disabled. Never accept callback URLs fr
 On shutdown, the server stops accepting work, closes sockets with a restart reason, cancels cleanup, stops webhook polling, and gives persistence a bounded drain. Any row that remains nonterminal is finalized during the next startup.
 
 ## Database operations
+
+Deployments created with the former `match_seats.capability` column must run this statement once through the database provider before deploying an image that expects `seat_token`:
+
+```sql
+BEGIN;
+ALTER TABLE match_seats RENAME COLUMN capability TO seat_token;
+ALTER INDEX match_seats_capability_unique
+  RENAME TO match_seats_seat_token_unique;
+COMMIT;
+```
+
+Fresh databases already receive `seat_token` and must skip that statement.
 
 Synchronize the configured database with the current Drizzle schema before server rollout:
 

@@ -1,14 +1,14 @@
 /** Production process startup, recovery, SPA serving, and graceful shutdown. */
 
 import { resolve } from "node:path";
-import { staticPlugin } from "@elysiajs/static";
 import { createApp } from "./app";
 import { getConfig, type ServerConfig } from "./config";
 import { createPostgresRepository } from "./db/repository";
 import { createLogger } from "./logger";
 import type { StoredMatch } from "./repository";
+import { createSpaRoutes } from "./routes/spa";
 import { MatchSessionRegistry } from "./session/registry";
-import { WebhookWorker } from "./webhook";
+import { ResultWebhookWorker } from "./webhook";
 
 const SHUTDOWN_DRAIN_MS = 5_000;
 
@@ -63,7 +63,7 @@ if (aborted.length > 0) {
   );
 }
 
-const webhookWorker = new WebhookWorker({
+const resultWebhookWorker = new ResultWebhookWorker({
   repository,
   logger,
   hub: config.hub,
@@ -71,44 +71,21 @@ const webhookWorker = new WebhookWorker({
 const registry = new MatchSessionRegistry({
   repository,
   logger,
-  onMatchCompleted: () => webhookWorker.wake(),
+  onMatchCompleted: () => resultWebhookWorker.wake(),
 });
 const baseApp = createApp({ config, repository, registry, logger });
 
 // The runtime image contains the Vite output; development uses Vite directly.
 const app =
   config.nodeEnv === "production"
-    ? baseApp
-        .use(
-          await staticPlugin({
-            assets: resolve(import.meta.dir, "../../web/dist"),
-            prefix: "/",
-            alwaysStatic: true,
-            indexHTML: true,
-            silent: true,
-          }),
-        )
-        .get("/*", ({ request, status }) => {
-          const pathname = new URL(request.url).pathname;
-          if (
-            pathname.startsWith("/api/") ||
-            pathname.startsWith("/health/") ||
-            pathname.startsWith("/openapi")
-          ) {
-            return status(404, {
-              code: "not_found",
-              message: "No endpoint exists at this path.",
-            });
-          }
-          return Bun.file(
-            resolve(import.meta.dir, "../../web/dist/index.html"),
-          );
-        })
+    ? baseApp.use(
+        await createSpaRoutes(resolve(import.meta.dir, "../../web/dist")),
+      )
     : baseApp;
 
 app.listen({ hostname: "0.0.0.0", port: config.serverPort });
 registry.startCleanup();
-webhookWorker.start();
+resultWebhookWorker.start();
 logger.info(
   { hostname: "0.0.0.0", port: config.serverPort },
   "Battleship server listening",
@@ -121,7 +98,7 @@ async function shutdown(signal: string): Promise<void> {
   logger.info({ signal }, "Graceful shutdown started");
   await app.stop(false);
   registry.shutdown();
-  webhookWorker.stop();
+  resultWebhookWorker.stop();
 
   // Bound the drain so orchestration does not hang on an external callback.
   await Promise.race([

@@ -32,7 +32,7 @@ export type StoredHumanSeat = Readonly<{
   seat: Seat;
   kind: "human";
   player: StoredPlayer;
-  capability: string;
+  seatToken: string;
   outcome: MatchOutcome | null;
 }>;
 
@@ -81,7 +81,7 @@ export type CreateStoredSeatInput =
       seat: Seat;
       kind: "human";
       identity: PlayerIdentity;
-      capability: string;
+      seatToken: string;
     }>
   | Readonly<{ seat: Seat; kind: "bot" }>;
 
@@ -129,7 +129,7 @@ export type MatchRepository = Readonly<{
   joinMatch: (
     matchId: string,
     identity: PlayerIdentity,
-    capability: string,
+    seatToken: string,
   ) => Promise<StoredMatch>;
   markBattleStarted: (matchId: string) => Promise<void>;
   touchMatch: (matchId: string) => Promise<void>;

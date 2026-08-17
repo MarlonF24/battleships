@@ -38,7 +38,7 @@ export class MatchService {
             source: "standalone",
             externalId: request.standalonePlayerId,
           },
-          capability: crypto.randomUUID(),
+          seatToken: crypto.randomUUID(),
         },
         request.opponent === "bot" ? { seat: 2, kind: "bot" } : null,
       ],
@@ -50,7 +50,7 @@ export class MatchService {
   /**
    * Create a complete two-seat match labelled by hub identities.
    *
-   * Capability generation happens here so neither controller nor domain needs
+   * Seat-token generation happens here so neither controller nor domain needs
    * to understand how durable identity differs from seat authorization.
    */
   public async createHub(request: HubCreateMatchRequest): Promise<StoredMatch> {
@@ -64,7 +64,7 @@ export class MatchService {
             seat,
             kind: "human",
             identity: { source: "hub", externalId: descriptor.playerId },
-            capability: crypto.randomUUID(),
+            seatToken: crypto.randomUUID(),
           } as const);
 
     const match = await this.repository.createMatch({

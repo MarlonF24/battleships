@@ -81,7 +81,7 @@ const MatchAccessBase = {
   playerUrl: RelativeUrlSchema,
   spectatorUrl: RelativeUrlSchema,
 };
-/** Capability-bearing links returned for either human or bot matches. */
+/** Seat-token links returned for either human or bot matches. */
 export const CreateMatchResponseSchema = Type.Union([
   Type.Object(
     {

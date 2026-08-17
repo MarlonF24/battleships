@@ -40,14 +40,14 @@ Bot responses use `kind: "botMatch"` and omit `joinUrl` entirely.
 }
 ```
 
-The response contains `matchId`, that player's private `playerUrl`, and the public `spectatorUrl`. Repeating the request for the player already in seat two returns the same capability URL. Expected conflicts are `already_participating`, `match_full`, and `match_closed`; a missing match returns `match_not_found`.
+The response contains `matchId`, that player's private `playerUrl`, and the public `spectatorUrl`. Repeating the request for the player already in seat two returns the same **Seat Token** URL. Expected conflicts are `already_participating`, `match_full`, and `match_closed`; a missing match returns `match_not_found`.
 
 ## Socket routes
 
 Player:
 
 ```text
-/api/v1/ws/player/{matchId}?seatToken={capability UUID}
+/api/v1/ws/player/{matchId}?seatToken={UUID}
 ```
 
 Spectator:
@@ -56,7 +56,7 @@ Spectator:
 /api/v1/ws/spectator/{matchId}
 ```
 
-The player capability resolves to one human seat. Unknown, bot, mismatched, or expired values close with code `1008`. Spectators have no query credential and may never send messages; sending one closes only that socket with `1008`.
+The **Seat Token** resolves to one human seat. Unknown, bot, mismatched, or expired values close with code `1008`. Spectators have no query credential and may never send messages; sending one closes only that socket with `1008`.
 
 ## Player commands
 
@@ -121,4 +121,4 @@ Absolute deadlines may be null when no timer is relevant to the receiving role. 
 
 ## Close behavior
 
-Normal completion sends one terminal projection and then closes with code `1000`. A replaced player socket, invalid capability, unavailable live session, or spectator protocol violation closes with `1008` and a safe reason. Graceful server shutdown closes live sockets with service-restart code `1012`; the browser retains the last projection and explains that active games are intentionally not resumed. Native WebSocket ping/pong and the server idle timeout provide liveness; there is no application heartbeat envelope.
+Normal completion sends one terminal projection and then closes with code `1000`. A replaced player socket, invalid **Seat Token**, unavailable live session, or spectator protocol violation closes with `1008` and a safe reason. Graceful server shutdown closes live sockets with service-restart code `1012`; the browser retains the last projection and explains that active games are intentionally not resumed. Native WebSocket ping/pong and the server idle timeout provide liveness; there is no application heartbeat envelope.

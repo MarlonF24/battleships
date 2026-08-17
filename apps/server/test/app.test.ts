@@ -1,4 +1,4 @@
-/** Integration coverage for lifecycle routes, capabilities, and hub privacy. */
+/** Focused integration coverage for lifecycle routes, seat tokens, and hub access. */
 
 import { describe, expect, test } from "bun:test";
 import { Value } from "@sinclair/typebox/value";
@@ -25,7 +25,7 @@ const config: AppConfig = Object.freeze({
   },
 });
 
-function testApp() {
+function testApp(appConfig: AppConfig = config) {
   const repository = new MemoryMatchRepository();
   const registry = new MatchSessionRegistry({
     repository,
@@ -33,7 +33,12 @@ function testApp() {
   });
   return {
     repository,
-    app: createApp({ config, repository, registry, logger: silentLogger }),
+    app: createApp({
+      config: appConfig,
+      repository,
+      registry,
+      logger: silentLogger,
+    }),
   };
 }
 
@@ -174,6 +179,31 @@ describe("lifecycle HTTP API", () => {
     );
     expect(unauthorized.status).toBe(401);
 
+    const wrongToken = await app.handle(
+      new Request("http://localhost/api/v1/hub/matches", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer wrong-token",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(request),
+      }),
+    );
+    expect(wrongToken.status).toBe(401);
+
+    const { app: disabledApp } = testApp({
+      corsOrigins: [],
+      hub: { enabled: false },
+    });
+    const disabled = await disabledApp.handle(
+      new Request("http://localhost/api/v1/hub/matches", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request),
+      }),
+    );
+    expect(disabled.status).toBe(503);
+
     const send = () =>
       app.handle(
         new Request("http://localhost/api/v1/hub/matches", {
@@ -217,5 +247,28 @@ describe("lifecycle HTTP API", () => {
     );
     expect(standalone.status).toBe(201);
     expect(repository.playerCount).toBe(2);
+  });
+
+  test("documents bearer authentication only on hub operations", async () => {
+    const { app } = testApp();
+    const response = await app.handle(
+      new Request("http://localhost/openapi/json"),
+    );
+    const document = (await response.json()) as {
+      components?: { securitySchemes?: Record<string, unknown> };
+      paths?: Record<
+        string,
+        { get?: { security?: unknown }; post?: { security?: unknown } }
+      >;
+    };
+
+    expect(document.components?.securitySchemes?.hubBearer).toEqual({
+      type: "http",
+      scheme: "bearer",
+    });
+    expect(document.paths?.["/api/v1/hub/matches"]?.post?.security).toEqual([
+      { hubBearer: [] },
+    ]);
+    expect(document.paths?.["/api/v1/matches"]?.post?.security).toBeUndefined();
   });
 });

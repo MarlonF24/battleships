@@ -2,6 +2,8 @@
 
 The hub API creates live sessions and reports outcomes. The hub owns player accounts, Elo, ranking policy, and whether bot games affect ratings.
 
+A **Hub Player** is the durable UUID supplied by the hub. Reusing that UUID attributes later matches to the same namespaced database identity. A **Seat Token** is a separate match-specific secret embedded in a returned player URL; possessing that URL grants control of its seat. Opening a hub player URL neither reads nor changes the browser's standalone identity.
+
 Set `HUB_ENABLED=true`, a non-empty `HUB_SHARED_TOKEN`, and an absolute `HUB_RESULT_WEBHOOK_URL`. All hub HTTP requests require:
 
 ```text
@@ -9,6 +11,12 @@ Authorization: Bearer <HUB_SHARED_TOKEN>
 ```
 
 Disabled hub configuration returns `503 hub_unavailable`; standalone play remains available.
+
+The same token authenticates completion requests sent from Battleship to the configured hub webhook. It identifies the integration service, not an individual player, and must never be exposed to browsers.
+
+## OpenAPI
+
+Interactive API documentation is available at `/openapi`, and generators can consume the OpenAPI document at `/openapi/json`. Hub operations declare the `hubBearer` security scheme, so a generated client can accept the shared bearer token. This schema describes the hub's calls into Battleship; if the hub later publishes an OpenAPI schema for receiving results, only the final webhook sender needs to adopt that client.
 
 ## Create a match
 
@@ -53,14 +61,13 @@ At least one seat must be human. Human UUIDs are stored in the `hub` identity na
 }
 ```
 
-Player URLs contain private seat capabilities. Spectator URLs contain only the shareable internal match ID.
-All returned URLs are root-relative to the Battleship origin used for the API request.
+Player URLs contain private **Seat Tokens**. Spectator URLs contain only the shareable internal match ID. All returned URLs are root-relative to the Battleship origin used for the API request.
 
-`hubMatchId` is the idempotency key. Repeating the identical payload returns the stored links, including the same capabilities. Reusing it with different mode or seats returns `409 hub_match_conflict`.
+`hubMatchId` is the idempotency key. Repeating the identical payload returns the stored links, including the same **Seat Tokens**. Reusing it with different mode or seats returns `409 hub_match_conflict`.
 
 ## Query status and recover a result
 
-`GET /api/v1/hub/matches/{hubMatchId}` returns source-safe participant descriptors, phase, terminal outcome/reason, and timestamps. It never returns a fleet, board, capability, standalone identity, or connection detail.
+`GET /api/v1/hub/matches/{hubMatchId}` returns source-safe participant descriptors, phase, terminal outcome/reason, and timestamps. It never returns a fleet, board, **Seat Token**, standalone identity, or connection detail.
 
 This endpoint is the authoritative recovery path when webhook retries are exhausted.
 
@@ -99,4 +106,4 @@ The server posts only to the configured `HUB_RESULT_WEBHOOK_URL` and sends the s
 
 Terminal reasons are `fleet_destroyed`, `no_players_connected`, `server_restart`, `placement_expired`, or `battle_expired`. Outcomes are `win`, `loss`, or `premature`.
 
-The result and outbox event commit in the same transaction before clients are notified. Delivery is asynchronous and retries immediately, after 5 seconds, after 30 seconds, and after 5 minutes. Attempt count, last error, next attempt, and delivery time are durable. Due events resume at startup. Webhook payloads contain hub player UUIDs only—never anonymous IDs or seat capabilities.
+The result and outbox event commit in the same transaction before clients are notified. Delivery is asynchronous and retries immediately, after 5 seconds, after 30 seconds, and after 5 minutes. Attempt count, last error, next attempt, and delivery time are durable. Due events resume at startup. Webhook payloads contain hub player UUIDs only—never anonymous IDs or **Seat Tokens**.

@@ -157,9 +157,9 @@ export class MatchSession {
     this.scheduleForCurrentState(2);
   }
 
-  /** Attach a player connection after resolving its match-scoped capability. */
-  public connectPlayer(capability: string, peer: SocketPeer): boolean {
-    const seat = this.findCapabilitySeat(capability);
+  /** Attach a player connection after resolving its match-scoped seat token. */
+  public connectPlayer(seatToken: string, peer: SocketPeer): boolean {
+    const seat = this.findSeatByToken(seatToken);
     if (!seat) {
       this.logger.warn({ peerId: peer.id }, "Invalid player socket rejected");
       peer.close(1008, "This player link is not valid for the match.");
@@ -196,8 +196,8 @@ export class MatchSession {
   }
 
   /** Remove exactly the socket that closed, preserving any replacement. */
-  public disconnectPlayer(capability: string, peerId: string): void {
-    const seat = this.findCapabilitySeat(capability);
+  public disconnectPlayer(seatToken: string, peerId: string): void {
+    const seat = this.findSeatByToken(seatToken);
     if (!seat || this.playerPeers.get(seat)?.id !== peerId) {
       return;
     }
@@ -232,9 +232,9 @@ export class MatchSession {
   }
 
   /** Submit one structurally validated player command to the serial chain. */
-  public dispatch(capability: string, command: PlayerCommand): void {
+  public dispatch(seatToken: string, command: PlayerCommand): void {
     this.serialise(async () => {
-      const seat = this.findCapabilitySeat(capability);
+      const seat = this.findSeatByToken(seatToken);
       if (!seat) {
         return;
       }
@@ -302,9 +302,9 @@ export class MatchSession {
     );
   }
 
-  private findCapabilitySeat(capability: string): Seat | null {
+  private findSeatByToken(seatToken: string): Seat | null {
     const index = this.stored.seats.findIndex(
-      (seat) => seat?.kind === "human" && seat.capability === capability,
+      (seat) => seat?.kind === "human" && seat.seatToken === seatToken,
     );
     return index === 0 ? 1 : index === 1 ? 2 : null;
   }

@@ -68,6 +68,6 @@ docker run --rm --network host \
 
 ## Debugging multiple roles
 
-Use separate browser contexts or profiles so each context can hold a different anonymous UUID. Create a human match, open the join path in the second context, and open `/spectate/{matchId}` in any number of additional contexts. Player URLs are private capabilities; the plain match ID is intentionally shareable for spectators.
+Use separate browser contexts or profiles so each context can hold a different anonymous UUID. Create a human match, open the join path in the second context, and open `/spectate/{matchId}` in any number of additional contexts. Player URLs contain private **Seat Tokens**; the plain match ID is intentionally shareable for spectators.
 
 The browser never reconstructs accepted gameplay. Debug live discrepancies by comparing the latest WebSocket projection revision with server session logs and the role privacy rules in the protocol document.

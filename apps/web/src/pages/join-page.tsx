@@ -6,7 +6,7 @@ import { AppShell } from "../components/app-shell";
 import { Button, ErrorMessage } from "../components/ui";
 import { joinMatch, localPath, standalonePlayerId } from "../lib/api";
 
-/** Claim an open human seat once, then replace the route with its capability URL. */
+/** Claim an open human seat once, then replace the route with its seat-token URL. */
 export function JoinPage() {
   const { matchId = "" } = useParams();
   const navigate = useNavigate();

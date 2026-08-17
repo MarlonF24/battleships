@@ -21,7 +21,7 @@ type Fetcher = (
   init?: RequestInit,
 ) => Promise<Response>;
 
-type WebhookWorkerOptions = Readonly<{
+type ResultWebhookWorkerOptions = Readonly<{
   repository: MatchRepository;
   logger: Logger;
   hub: HubConfig;
@@ -36,7 +36,7 @@ type WebhookWorkerOptions = Readonly<{
  * The database is the queue. Stable event IDs and attempt state survive a
  * process restart, while this worker remains deliberately single-process.
  */
-export class WebhookWorker {
+export class ResultWebhookWorker {
   private readonly repository: MatchRepository;
   private readonly logger: Logger;
   private readonly hub: HubConfig;
@@ -47,7 +47,7 @@ export class WebhookWorker {
   private running = false;
   private stopped = true;
 
-  public constructor(options: WebhookWorkerOptions) {
+  public constructor(options: ResultWebhookWorkerOptions) {
     this.repository = options.repository;
     this.logger = options.logger;
     this.hub = options.hub;

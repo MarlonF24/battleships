@@ -15,7 +15,7 @@ function apiClient() {
   return treaty<App>(window.location.origin);
 }
 
-/** Route-derived capability identifying either a player seat or spectator. */
+/** Route-derived seat token identifying either a player seat or spectator. */
 export type LiveMatchIdentity =
   | Readonly<{ role: "player"; matchId: string; seatToken: string }>
   | Readonly<{ role: "spectator"; matchId: string }>;
@@ -72,7 +72,7 @@ export async function joinMatch(
 /**
  * Open an Eden-inferred live socket without duplicating route or JSON handling.
  *
- * @param identity - Player capability or public spectator match identity.
+ * @param identity - Player seat token or public spectator match identity.
  * @param handlers - Store callbacks for the native socket lifecycle.
  * @returns A small role-safe connection facade; spectators have no `send`.
  */

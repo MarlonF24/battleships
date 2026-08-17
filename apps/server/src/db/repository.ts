@@ -44,16 +44,16 @@ function storedSeat(
     return { seat: row.seat, kind: "bot", outcome: row.outcome };
   }
   const player = row.playerId ? playersById.get(row.playerId) : undefined;
-  if (!player || !row.capability) {
+  if (!player || !row.seatToken) {
     throw new Error(
-      "A persisted human seat must have a player and seat capability.",
+      "A persisted human seat must have a player and seat token.",
     );
   }
   return {
     seat: row.seat,
     kind: "human",
     player: storedPlayer(player),
-    capability: row.capability,
+    seatToken: row.seatToken,
     outcome: row.outcome,
   };
 }
@@ -163,7 +163,7 @@ function seatRow(
         seat: seat.seat,
         kind: seat.kind,
         playerId,
-        capability: seat.capability,
+        seatToken: seat.seatToken,
       }
     : { matchId, seat: seat.seat, kind: seat.kind };
 }
@@ -274,7 +274,7 @@ export function createPostgresRepository(databaseUrl: string): MatchRepository {
       return loadMatch(database, eq(matches.hubMatchId, hubMatchId));
     },
 
-    async joinMatch(matchId, identity, capability) {
+    async joinMatch(matchId, identity, seatToken) {
       await database.transaction(async (transaction) => {
         // Lock admission so concurrent joiners cannot both observe an open seat.
         const [match] = await transaction
@@ -330,7 +330,7 @@ export function createPostgresRepository(databaseUrl: string): MatchRepository {
           seat: 2,
           kind: "human",
           playerId,
-          capability,
+          seatToken,
         });
       });
 

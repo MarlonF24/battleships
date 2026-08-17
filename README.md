@@ -12,7 +12,7 @@ These terms are intentionally separate:
 
 - An **Anonymous Player** is a browser-scoped standalone identity. The browser creates one UUID in local storage and reuses it for match-history attribution. Clearing browser data creates a new identity.
 - A **Hub Player** is identified by a UUID supplied by the external game hub. Hub and anonymous UUIDs occupy different namespaces and are never correlated.
-- A **Seat Capability** is the secret UUID embedded in a player link. It authorizes control of exactly one human seat in one match. Anyone with that link can control the seat, so do not share player links.
+- A **Seat Token** is the secret UUID embedded in a player link. It authorizes control of exactly one human seat in one match. Anyone with that link can control the seat, so do not share player links.
 - A **Spectator** is an unauthenticated, read-only live connection. A shareable match ID is enough to spectate; no spectator identity is stored.
 
 The external hub owns accounts, Elo, and ranking. This service only reports ordered match outcomes.
@@ -31,7 +31,7 @@ Set a real `DB_PASSWORD`, review the other explicit values, then start the stack
 docker compose up
 ```
 
-Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose pulls `ghcr.io/marlonf24/battleships:latest`, runs and publishes PostgreSQL on `DB_PORT`, then lets the application container synchronize the schema before starting its single server replica.
+Open `http://localhost:<SERVER_PORT>` (port `8000` by default). Compose pulls `ghcr.io/marlonf24/battleship:latest`, runs and publishes PostgreSQL on `DB_PORT`, then lets the application container synchronize the schema before starting its single server replica.
 
 Pushes to `main` publish `latest` and a commit-specific tag to GitHub Container Registry. Tags such as `v1.2.3` additionally publish `1.2.3`, `1.2`, and `1`. Pull requests build the same multi-platform image without publishing it. The GHCR package must be public for unauthenticated Compose users; after its first publication, set its visibility to public in the package settings.
 
@@ -87,7 +87,7 @@ apps/server              Elysia HTTP/WS server, sessions, Drizzle persistence
 packages/game-domain     Pure rules, placement, board transitions, PDF agent
 packages/contracts       Strict TypeBox HTTP and WebSocket schemas
 tests/e2e                Multi-viewport Playwright acceptance tests
-docs                     Protocol, architecture, rules, operations, and ADRs
+docs                     Protocol, architecture, rules, and operations
 ```
 
 ## Deliberate runtime limitation
@@ -104,4 +104,3 @@ Run exactly one production server replica unless the live-session architecture i
 - [Game-hub integration](docs/hub-integration.md)
 - [Development guide](docs/development.md)
 - [Deployment guide](docs/deployment.md)
-- [Architecture decisions](docs/adr/)

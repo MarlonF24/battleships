@@ -3,7 +3,7 @@
 import { expect, test } from "bun:test";
 import { Value } from "@sinclair/typebox/value";
 import { WebhookEventSchema, type WebhookEvent } from "@battleship/contracts";
-import { WebhookWorker } from "../src/webhook";
+import { ResultWebhookWorker } from "../src/webhook";
 import { MemoryMatchRepository } from "../src/testing/memory-repository";
 import { ManualRuntime, silentLogger } from "./helpers";
 
@@ -34,7 +34,7 @@ test("webhook delivery keeps a stable event ID and retries on the shared schedul
           source: "hub",
           externalId: "11111111-1111-4111-8111-111111111111",
         },
-        capability: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+        seatToken: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
       },
       { seat: 2, kind: "bot" },
     ],
@@ -48,7 +48,7 @@ test("webhook delivery keeps a stable event ID and retries on the shared schedul
   const runtime = new ManualRuntime(Date.now() + 1_000);
   const requests: { headers: HeadersInit | undefined; body: string }[] = [];
   let calls = 0;
-  const worker = new WebhookWorker({
+  const worker = new ResultWebhookWorker({
     repository,
     logger: silentLogger,
     hub: {
@@ -80,7 +80,7 @@ test("webhook delivery keeps a stable event ID and retries on the shared schedul
   ).toHaveLength(0);
   worker.stop();
   runtime.advanceBy(5_000);
-  const retryWorker = new WebhookWorker({
+  const retryWorker = new ResultWebhookWorker({
     repository,
     logger: silentLogger,
     hub: {

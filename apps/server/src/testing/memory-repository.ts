@@ -83,7 +83,7 @@ export class MemoryMatchRepository implements MatchRepository {
   public joinMatch(
     matchId: string,
     identity: PlayerIdentity,
-    capability: string,
+    seatToken: string,
   ): Promise<StoredMatch> {
     const match = this.matches.get(matchId);
     if (!match) {
@@ -113,7 +113,7 @@ export class MemoryMatchRepository implements MatchRepository {
       seat: 2,
       kind: "human",
       identity,
-      capability,
+      seatToken,
     });
     const joined: StoredMatch = { ...match, seats: [match.seats[0], second] };
     this.matches.set(matchId, joined);
@@ -255,7 +255,7 @@ export class MemoryMatchRepository implements MatchRepository {
       seat: input.seat,
       kind: "human",
       player,
-      capability: input.capability,
+      seatToken: input.seatToken,
       outcome: null,
     };
   }
