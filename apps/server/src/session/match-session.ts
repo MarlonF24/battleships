@@ -277,8 +277,6 @@ export class MatchSession {
         { seat, row: command.row, column: command.column },
         "Player shot accepted",
       );
-      this.bumpAndPublish();
-
       await this.afterShot();
     });
   }
@@ -495,6 +493,7 @@ export class MatchSession {
       await this.completePremature("no_players_connected");
       return;
     }
+    // Installing the next action deadline also publishes the accepted shot.
     this.scheduleTurn();
   }
 

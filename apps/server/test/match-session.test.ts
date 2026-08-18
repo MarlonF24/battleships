@@ -1,7 +1,11 @@
 /** Critical session orchestration, timer, and projection privacy tests. */
 
 import { describe, expect, test } from "bun:test";
-import { CLASSIC_RULESET } from "@battleship/game-domain";
+import {
+  CLASSIC_RULESET,
+  placementCoordinates,
+  type GameMode,
+} from "@battleship/game-domain";
 import { MatchSession } from "../src/session/match-session";
 import { MemoryMatchRepository } from "../src/testing/memory-repository";
 import {
@@ -19,14 +23,37 @@ const firstSeatToken = "33333333-3333-4333-8333-333333333333";
 const secondSeatToken = "44444444-4444-4444-8444-444444444444";
 const matchId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 
-async function createHumanSession(runtime: ManualRuntime) {
-  const repository = new MemoryMatchRepository();
+class DelayedCompletionRepository extends MemoryMatchRepository {
+  public completionStarted = false;
+  private releaseGate: () => void = () => undefined;
+  private readonly completionGate = new Promise<void>((resolve) => {
+    this.releaseGate = resolve;
+  });
+
+  public override async completeMatch(
+    input: Parameters<MemoryMatchRepository["completeMatch"]>[0],
+  ) {
+    this.completionStarted = true;
+    await this.completionGate;
+    return super.completeMatch(input);
+  }
+
+  public releaseCompletion(): void {
+    this.releaseGate();
+  }
+}
+
+async function createHumanSession(
+  runtime: ManualRuntime,
+  repository = new MemoryMatchRepository(),
+  mode: GameMode = "singleShot",
+) {
   const stored = await repository.createMatch({
     id: matchId,
     hubMatchId: null,
     hubRequest: null,
     source: "standalone",
-    mode: "singleShot",
+    mode,
     seats: [
       {
         seat: 1,
@@ -161,6 +188,67 @@ describe("match session", () => {
     session.disconnectPlayer(firstSeatToken, oldPeer.id);
     await settle();
     expect(latestProjection(newPeer).participants[0].connected).toBe(true);
+  });
+
+  test("persists a terminal result before publishing it exactly once", async () => {
+    const runtime = new ManualRuntime();
+    const repository = new DelayedCompletionRepository();
+    const { session } = await createHumanSession(runtime, repository, "streak");
+    const first = new CapturingPeer("first");
+    const second = new CapturingPeer("second");
+    session.connectPlayer(firstSeatToken, first);
+    session.connectPlayer(secondSeatToken, second);
+    await settle();
+
+    session.dispatch(firstSeatToken, {
+      type: "ready",
+      requestId: crypto.randomUUID(),
+      fleet: [...validFleet],
+    });
+    session.dispatch(secondSeatToken, {
+      type: "ready",
+      requestId: crypto.randomUUID(),
+      fleet: [...validFleet],
+    });
+    await settle();
+    runtime.advanceBy(CLASSIC_RULESET.battleStartDelayMs);
+    await settle();
+
+    for (const { row, column } of validFleet.flatMap((placement) =>
+      placementCoordinates(placement),
+    )) {
+      session.dispatch(firstSeatToken, {
+        type: "shoot",
+        requestId: crypto.randomUUID(),
+        row,
+        column,
+      });
+    }
+    await settle();
+
+    expect(repository.completionStarted).toBe(true);
+    expect(
+      first.messages.filter(
+        (message) =>
+          message.type === "projection" &&
+          message.projection.phase === "completed",
+      ),
+    ).toHaveLength(0);
+
+    repository.releaseCompletion();
+    await settle();
+
+    expect((await repository.findMatch(matchId))?.phase).toBe("completed");
+    expect(
+      first.messages.filter(
+        (message) =>
+          message.type === "projection" &&
+          message.projection.phase === "completed",
+      ),
+    ).toHaveLength(1);
+    expect(first.closures).toContainEqual(
+      expect.objectContaining({ code: 1000 }),
+    );
   });
 
   test("an unknown seat token cannot attach to a player seat", async () => {
