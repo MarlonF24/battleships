@@ -182,7 +182,9 @@ export const BattleView = observer(function BattleView({
           : ""}
       </p>
 
-      <div className="battle-stage battle-geometry min-h-0 w-full flex-1">
+      <div
+        className={`battle-stage battle-geometry min-h-0 w-full flex-1 ${projection.phase === "completed" ? "battle-stage-completed" : ""}`}
+      >
         <div className="battle-all-boards items-center justify-center gap-3">
           {boards.map((board) => (
             <BoardGroup
@@ -197,7 +199,7 @@ export const BattleView = observer(function BattleView({
           ))}
         </div>
 
-        <div className="battle-single-board items-center justify-center">
+        <div className="battle-single-board flex-col items-center justify-center gap-4">
           <BoardGroup
             item={displayed}
             fleetLengths={projection.rules.fleetLengths}
@@ -206,22 +208,22 @@ export const BattleView = observer(function BattleView({
             onTarget={(row, column) => session.shoot(row, column)}
             lastShot={projection.lastShot}
           />
+
+          {projection.phase === "completed" && (
+            <div className="battle-final-switch flex-wrap justify-center gap-3">
+              {boards.map((board) => (
+                <Button
+                  key={board.seat}
+                  variant={displayed.seat === board.seat ? "primary" : "neutral"}
+                  onClick={() => responsive.selectFinalBoard(board.seat)}
+                >
+                  {board.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      {projection.phase === "completed" && (
-        <div className="battle-final-switch mt-4 flex-wrap justify-center gap-3">
-          {boards.map((board) => (
-            <Button
-              key={board.seat}
-              variant={displayed.seat === board.seat ? "primary" : "neutral"}
-              onClick={() => responsive.selectFinalBoard(board.seat)}
-            >
-              {board.label}
-            </Button>
-          ))}
-        </div>
-      )}
     </section>
   );
 });

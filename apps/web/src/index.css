@@ -148,6 +148,16 @@
     display: flex;
   }
 
+  /* Reserve room for terminal board controls inside the single-board layout.
+     Keeping them inside the responsive view hides them whenever both boards fit. */
+  .battle-stage-completed .battle-single-board {
+    --cell-size: clamp(
+      20px,
+      min(calc((100cqw - 6.5rem) / 10), calc((100cqh - 4rem) / 10)),
+      30px
+    );
+  }
+
   .drag-clone {
     transform: rotate(var(--rotation-angle, 0deg));
     transform-origin: center;
